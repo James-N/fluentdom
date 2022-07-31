@@ -19,7 +19,7 @@ class VIf extends VNode {
     constructor (condition, templates) {
         super(NodeType.IF);
 
-        if (!utility.isFunction(condition)) {
+        if (!utility.isFunc(condition)) {
             LOG.warn("condition input of VIf node must be function");
             condition = null;
         }

@@ -13,9 +13,9 @@ import { Compiler } from '../service/compiler';
  * @returns {Number[]}
  */
 function generateNumberSeq (size) {
-    var seq = [];
+    var seq = new Array(size);
     for (var i = 0; i < size; i++) {
-        seq.push(i);
+        seq[i] = i;
     }
 
     return seq;
@@ -28,13 +28,13 @@ function generateNumberSeq (size) {
 class VRepeat extends VNode {
     /**
      * @param {Number|Array|function(VNode):Number|Array} dataOrProvider  iteration target
-     * @param {function(VNode):Number|String} key  key function
+     * @param {function(VNode):String|String} key  key function
      * @param {VTemplate[]} templates  children templates
      */
     constructor (dataOrProvider, key, templates) {
         super(NodeType.REPEAT);
 
-        if (utility.isFunction(dataOrProvider)) {
+        if (utility.isFunc(dataOrProvider)) {
             this._provider = dataOrProvider;
             this._data = null;
             this._static = false;
@@ -46,10 +46,10 @@ class VRepeat extends VNode {
         this._tpls = templates;
 
         if (key) {
-            if (utility.isString(key)) {
-                this._key = e => e[key];
-            } else {
+            if (utility.isFunc(key)) {
                 this._key = key;
+            } else {
+                this._key = e => e[key];
             }
         } else {
             this._key = null;
@@ -59,13 +59,8 @@ class VRepeat extends VNode {
     }
 
     _initData (data) {
-        if (utility.isNumber(data)) {
-            if (!isNaN(data)) {
-                return generateNumberSeq(data);
-            } else {
-                LOG.warn("invalid number for repeat node");
-                return [];
-            }
+        if (utility.isValidNum(data)) {
+            return generateNumberSeq(data);
         } else if (Array.isArray(data)) {
             return data.slice(0);
         } else {

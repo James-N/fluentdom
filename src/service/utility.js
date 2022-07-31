@@ -1,22 +1,39 @@
+/* -------------------- --- -------------------- */
+// type or value checking utilities
+/* -------------------- --- -------------------- */
+
+const isNullOrUndef = o => o === null || o === undefined;
+const isStr = s => typeof s == 'string';
+const isNum = n => typeof n == 'number';
+const isValidNum = n => typeof n == 'number' && !isNaN(n) && n !== Infinity;
+const isFunc = f => typeof f == 'function';
+const isObject = o => typeof o == 'object';
+const isDOMNode = n => n instanceof window.Node;
+const isElementNode = n => n instanceof window.Element;
+
+/* -------------------- --- -------------------- */
+// utility namespace
+/* -------------------- --- -------------------- */
+
 export default {
-    isNullOrUndefined: o => o === null || o === undefined,
-    isString: s => typeof s == 'string',
-    isNumber: n => typeof n == 'number',
-    isValidNumber: n => typeof n == 'number' && !isNaN(n) && n !== Infinity,
-    isFunction: f => typeof f == 'function',
-    isObject: o => typeof o == 'object',
-    isDOMNode: n => n instanceof window.Node,
-    isElementNode: n => n instanceof window.Element,
+    isNullOrUndef: isNullOrUndef,
+    isStr: isStr,
+    isNum: isNum,
+    isValidNum: isValidNum,
+    isFunc: isFunc,
+    isObject: isObject,
+    isDOMNode: isDOMNode,
+    isElementNode: isElementNode,
 
     /**
      * subclass checking, only works for ES6 `class` syntax based classes
      */
     isSubclass: function (cls1, cls2) {
-        if (typeof cls1 != 'function' || !cls1.prototype) {
+        if (!isFunc(cls1) || !cls1.prototype) {
             throw new Error("cls1 is not a class");
         }
 
-        if (typeof cls2 != 'function' || !cls2.prototype) {
+        if (!isFunc(cls2) || !cls2.prototype) {
             throw new Error("cls2 is not a class");
         }
 
@@ -28,12 +45,8 @@ export default {
     },
 
     extend: Object.assign || function (target, source) {
-        if (target === null) {
-            throw new TypeError("cannot extend null");
-        }
-
-        if (target === undefined) {
-            throw new TypeError("cannot extend undefined");
+        if (isNullOrUndef(target)) {
+            throw new TypeError("cannot extend null or undefined");
         }
 
         if (source !== null && source !== undefined) {
@@ -53,7 +66,7 @@ export default {
      * @param {String} name
      */
     ensureValidString: function (value, name) {
-        if (typeof value != 'string') {
+        if (!isStr(value)) {
             throw new TypeError(`${name} must be string`);
         }
 

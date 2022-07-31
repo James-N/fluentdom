@@ -66,7 +66,7 @@ class VNode {
      * @param {Number=} index  child position index
      */
     addChild (node, index) {
-        if (utility.isNullOrUndefined(node)) {
+        if (utility.isNullOrUndef(node)) {
             throw new Error("child node is null");
         }
 
@@ -171,7 +171,7 @@ class VNode {
     hook (name, hook) {
         utility.ensureValidString(name, 'hook name');
 
-        if (!utility.isFunction(hook)) {
+        if (!utility.isFunc(hook)) {
             throw new TypeError("hook must be function");
         }
 
@@ -195,7 +195,7 @@ class VNode {
     unhook (name, hook) {
         var hooks = this._hooks[name];
         if (hooks) {
-            if (utility.isNullOrUndefined(hook)) {
+            if (utility.isNullOrUndef(hook)) {
                 delete this._hooks[name];
                 return true;
             } else {

@@ -46,9 +46,9 @@ class VText extends VNode {
      * @param {String|function(VText):String} text  text content or provider
      */
     setText (text) {
-        if (utility.isNullOrUndefined(text)) {
+        if (utility.isNullOrUndef(text)) {
             this.text = '';
-        } else if (utility.isFunction(text)) {
+        } else if (utility.isFunc(text)) {
             this._textProvider = text;
         } else {
             this.text = String(text);

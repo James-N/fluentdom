@@ -133,7 +133,7 @@ class VElement extends VNode {
     }
 
     _setValueSetItem (valueSet, getters, key, value) {
-        if (utility.isFunction(value)) {
+        if (utility.isFunc(value)) {
             getters[key] = value;
             valueSet[key] = null;
         } else {
@@ -144,9 +144,9 @@ class VElement extends VNode {
     _getClassList () {
         return this._getters.class
             .map(c => {
-                if (utility.isString(c)) {
+                if (utility.isStr(c)) {
                     return c;
-                } else if (utility.isFunction(c)) {
+                } else if (utility.isFunc(c)) {
                     var cls = c(this);
                     return Array.isArray(cls) ? cls.join(' ') : cls;
                 } else if (c instanceof ClassDecl) {
@@ -323,12 +323,12 @@ class VElement extends VNode {
     addClass (cls, value) {
         this._ensureNotStatic("cannot add class to static node");
 
-        if (!utility.isFunction(cls)) {
+        if (!utility.isFunc(cls)) {
             utility.ensureValidString(cls, 'cls');
         }
 
-        if (utility.isFunction(value)) {
-            if (utility.isString(cls)) {
+        if (utility.isFunc(value)) {
+            if (utility.isStr(cls)) {
                 this._getters.class.push(new ClassDecl(cls, value));
             } else {
                 throw new TypeError("cls must be string when getter function is provided");
@@ -360,7 +360,7 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot register event handle on static node");
         utility.ensureValidString(evt, 'evt');
 
-        if (!utility.isFunction(callback)) {
+        if (!utility.isFunc(callback)) {
             throw new TypeError("callback must be function");
         }
 

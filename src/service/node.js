@@ -235,7 +235,7 @@ NodeTreeWalker.WALK_METHOD = WALK_METHOD;
  * @returns {NodeTreeWalker}
  */
 export function getNodeIter (node, dfs = false, filter = null) {
-    if (utility.isNullOrUndefined(node)) {
+    if (utility.isNullOrUndef(node)) {
         throw new Error("node is null");
     }
 

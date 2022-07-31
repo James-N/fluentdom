@@ -67,7 +67,7 @@ class VComponent extends VNode {
 
         this._propDefs[prop] = {
             defaultValue: defaultValue,
-            getter: utility.isFunction(getter) ? getter : null
+            getter: utility.isFunc(getter) ? getter : null
         };
     }
 

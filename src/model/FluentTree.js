@@ -83,9 +83,9 @@ class FluentTree {
     }
 
     _getElement (el, errMsg) {
-        if (utility.isNullOrUndefined(el)) {
+        if (utility.isNullOrUndef(el)) {
             return null;
-        } else if (utility.isString(el)) {
+        } else if (utility.isStr(el)) {
             var elm = document.querySelector(el);
 
             if (elm) {

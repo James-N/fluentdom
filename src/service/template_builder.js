@@ -67,13 +67,13 @@ function readTemplateCreateArgs (args, start) {
 
     for (var i = start; i < args.length; i++) {
         var arg = args[i];
-        if (utility.isString(arg)) {
+        if (utility.isStr(arg)) {
             children.push(buildText(arg));
         } else if (Array.isArray(arg)) {
             for (let a of arg) {
                 if (a instanceof VTemplate) {
                     children.push(a);
-                } else if (utility.isString(a)) {
+                } else if (utility.isStr(a)) {
                     children.push(buildText(a));
                 } else {
                     throw new TypeError("invalid item inside template list");
@@ -139,7 +139,7 @@ export function buildElement (tagName, ...args) {
  * @returns {VTemplate}
  */
 export function buildVoidElement (tagName, options) {
-    if (!utility.isNullOrUndefined(options)) {
+    if (!utility.isNullOrUndef(options)) {
         ensuerNotTemplate(options, `${tagName} element cannot contain any child nodes`);
     }
 
@@ -191,9 +191,9 @@ function readParametrizedTemplateArgs (args, start, paramCount) {
 export function buildImage (src, options) {
     [[src], options] = readParametrizedTemplateArgs(arguments, 0, 1);
 
-    if (utility.isNullOrUndefined(src)) {
+    if (utility.isNullOrUndef(src)) {
         src = '';
-    } else if (!utility.isString(src)) {
+    } else if (!utility.isStr(src)) {
         throw new TypeError("src must be string");
     }
 
@@ -213,9 +213,9 @@ export function buildImage (src, options) {
  * @returns {VTemplate}
  */
 export function buildMediaElement (tagName, src, ...args) {
-    if (utility.isNullOrUndefined(src)) {
+    if (utility.isNullOrUndef(src)) {
         src = '';
-    } else if (!utility.isString(src)) {
+    } else if (!utility.isStr(src)) {
         throw new TypeError("src input must be string");
     }
 
@@ -236,9 +236,9 @@ export function buildMediaElement (tagName, src, ...args) {
 export function buildInput (type, options) {
     [[type], options] = readParametrizedTemplateArgs(arguments, 0, 1);
 
-    if (utility.isNullOrUndefined(type)) {
+    if (utility.isNullOrUndef(type)) {
         type = '';
-    } else if (!utility.isString(type)) {
+    } else if (!utility.isStr(type)) {
         throw new TypeError("type input must be string");
     }
 
@@ -261,7 +261,7 @@ export function buildHLink (...args) {
     var options = null;
 
     if (args.length > 0) {
-        if (utility.isString(args[0]) || utility.isFunction(args[0])) {
+        if (utility.isStr(args[0]) || utility.isFunc(args[0])) {
             href = args[0];
             [children, options] = readTemplateCreateArgs(args, 1);
         } else {
@@ -303,7 +303,7 @@ export function buildEmpty(...args) {
  * @returns {VTemplate}
  */
 export function buildIf (condition, ...args) {
-    if (!utility.isFunction(condition)) {
+    if (!utility.isFunc(condition)) {
         condition = ((c) => () => !!c)(condition);
     }
 
@@ -325,12 +325,18 @@ export function buildIf (condition, ...args) {
  */
 export function buildRepeat (dataOrProvider, ...args) {
     if (!Array.isArray(dataOrProvider) &&
-        !utility.isValidNumber(dataOrProvider) &&
-        !utility.isFunction(dataOrProvider)) {
+        !utility.isValidNum(dataOrProvider) &&
+        !utility.isFunc(dataOrProvider)) {
         throw new TypeError("dataOrProvider input must be array, number or function");
     }
 
-    var [children, options] = readTemplateCreateArgs(args, 0);
+    var key = utility.isFunc(args[0]) ? args[0] : null;
+    var [children, options] = readTemplateCreateArgs(args, key ? 1 : 0);
+
+    if (key) {
+        options = options || {};
+        options.key = key;
+    }
 
     var template = new VTemplate(NodeType.REPEAT, dataOrProvider, options);
     template.children = children;
@@ -347,7 +353,7 @@ export function buildRepeat (dataOrProvider, ...args) {
  * @returns {VTemplate}
  */
 export function buildDynamic (provider, once = true) {
-    if (!utility.isFunction(provider)) {
+    if (!utility.isFunc(provider)) {
         throw new TypeError("provider input must be function");
     }
 
@@ -392,7 +398,7 @@ export function buildSlot (...args) {
  */
 export function getComponentBuilder (componentDef) {
     var argCount;
-    if (utility.isFunction(componentDef.nodeClass)) {
+    if (utility.isFunc(componentDef.nodeClass)) {
         if (utility.isSubclass(componentDef.nodeClass, VComponent)) {
             argCount = componentDef.nodeClass.length;
         } else {

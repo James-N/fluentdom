@@ -37,7 +37,7 @@ function mergeOptions (opt1, opt2) {
             }, {});
         } else if (utility.isObject(opt)) {
             return opt;
-        } else if (utility.isString(opt)) {
+        } else if (utility.isStr(opt)) {
             return { [opt]: true };
         } else {
             return {};
@@ -171,7 +171,7 @@ export class Compiler {
      * @returns {VNode}
      */
     compile (template) {
-        if (utility.isNullOrUndefined(template)) {
+        if (utility.isNullOrUndef(template)) {
             throw new Error("input template is null");
         }
 
@@ -327,7 +327,7 @@ export class Compiler {
                         classes.forEach(cls => elmNode.addClass(cls));
                     } else if (utility.isObject(classes)) {
                         utility.entries(classes).forEach(e => elmNode.addClass(e[0], e[1]));
-                    } else if (utility.isString(classes) || utility.isFunction(classes)) {
+                    } else if (utility.isStr(classes) || utility.isFunc(classes)) {
                         elmNode.addClass(classes);
                     }
                 }
@@ -441,7 +441,7 @@ export class Compiler {
 
         // create component node
         var componentNode, postInitializer = null;
-        if (utility.isFunction(cdef.nodeClass)) {
+        if (utility.isFunc(cdef.nodeClass)) {
             if (utility.isSubclass(cdef.nodeClass, VComponent)) {
                 componentNode = new cdef.nodeClass(...tpl.initValue);
             } else {
@@ -501,7 +501,7 @@ export class Compiler {
             .forEach(([prop, val]) => {
                 if (props.hasOwnProperty(prop)) {
                     var nodePropVal = props[prop];
-                    if (utility.isFunction(nodePropVal)) {
+                    if (utility.isFunc(nodePropVal)) {
                         componentNode.setProp(prop, nodePropVal, val);
                     } else {
                         componentNode.setProp(prop, null, nodePropVal);

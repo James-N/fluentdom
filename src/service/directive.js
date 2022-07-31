@@ -17,7 +17,7 @@ class DirectiveDelegate {
     invoke (method, ...args) {
         for (let ext of this.directives) {
             var fun = ext[method];
-            if (utility.isFunction(fun)) {
+            if (utility.isFunc(fun)) {
                 fun.apply(ext, args);
             }
         }
@@ -35,7 +35,7 @@ class DirectiveDelegate {
  * @param {Object|Function} directive  directive implementation
  */
 export function registerDirective (name, directive) {
-    directive = utility.isFunction(directive) ? { setup: directive } : directive;
+    directive = utility.isFunc(directive) ? { setup: directive } : directive;
 
     var delegate = DIRECTIEV_REGISTRATION[name];
     if (!delegate) {

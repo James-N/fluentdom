@@ -32,9 +32,9 @@ class VFragment extends VNode {
      * @param {String|function(VFragment):String} content  fragment content or provider
      */
     setContent (content) {
-        if (utility.isNullOrUndefined(content)) {
+        if (utility.isNullOrUndef(content)) {
             this.content = '';
-        } else if (utility.isFunction(content)) {
+        } else if (utility.isFunc(content)) {
             this._contentProvider = content;
         } else {
             this.content = String(content);

@@ -71,7 +71,7 @@ export function createFluentTree (options) {
 function getDOMNode (input) {
     if (utility.isDOMNode(input)) {
         return input;
-    } else if (utility.isString(input)) {
+    } else if (utility.isStr(input)) {
         return document.querySelector(input);
     } else {
         throw new TypeError(`invalid element selector [${input}]`);
