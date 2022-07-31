@@ -73,5 +73,38 @@ export default {
         if (value.length === 0) {
             throw new Error(`${name} is empty string`);
         }
+    },
+
+    /**
+     * @param {Object?} options
+     * @param {String[]} keyPath
+     * @param {any} value
+     * @param {Boolean=} whenAbsent
+     *
+     * @returns {Object}
+     */
+    setOptionValue: function (options, keyPath, value, whenAbsent) {
+        if (isNullOrUndef(options)) {
+            options = {};
+        }
+
+        var valueSet = options;
+        for (var i = 0; i < keyPath.length; i++) {
+            if (i < (keyPath.length - 1)) {
+                var key = keyPath[i];
+                var newSet = valueSet[key];
+                if (!newSet) {
+                    newSet = {};
+                    valueSet[key] = newSet;
+                }
+                valueSet = newSet;
+            } else {
+                if (!whenAbsent || !valueSet.hasOwnProperty(keyPath[i])) {
+                    valueSet[keyPath[i]] = value;
+                }
+            }
+        }
+
+        return options;
     }
 };

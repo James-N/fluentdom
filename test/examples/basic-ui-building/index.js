@@ -56,21 +56,16 @@ window.addEventListener('DOMContentLoaded', evt => {
                     // vn => data.arrCount,
                     FN.Div(
                         FN.Span(FN.TEXT(vn => `${vn.ctx.$index + 1} - title`)),
-                        FN.Div(
-                            FN.TEXT(vn => `the content is : ${vn.ctx.$value}`),
-                            {
-                                class: 'card-body'
-                            }
-                        ),
-                    {
-                        class: 'card',
-                        styles: {
-                            'background-color': '#fdc765',
-                            'padding': '8px',
-                            'margin': '5px 0',
-                            'width': '300px',
-                            'min-height': '130px'
-                        }
+                        FN.Div(FN.TEXT(vn => `the content is : ${vn.ctx.$value}`))
+                            .class('card-body')
+                    )
+                    .class('card')
+                    .style({
+                        'background-color': '#fdc765',
+                        'padding': '8px',
+                        'margin': '5px 0',
+                        'width': '300px',
+                        'min-height': '130px'
                     })
                 ),
                 FC.Fragment(

@@ -3,7 +3,7 @@ import VNode from '../model/VNode';
 import VText from '../model/VText';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
-import { VTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
+import { VTemplate, VElementTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';
 
@@ -12,29 +12,6 @@ function ensuerNotTemplate (obj, msg) {
     if (obj instanceof VTemplate) {
         throw new TypeError(msg);
     }
-}
-
-function setOptionsValue (options, keyPath, value) {
-    if (utility.isNullOrUndefined(options)) {
-        options = {};
-    }
-
-    var valueSet = options;
-    for (var i = 0; i < keyPath.length; i++) {
-        if (i < (keyPath.length - 1)) {
-            var key = keyPath[i];
-            var newSet = valueSet[key];
-            if (!newSet) {
-                newSet = {};
-                valueSet[key] = newSet;
-            }
-            valueSet = newSet;
-        } else {
-            valueSet[keyPath[i]] = value;
-        }
-    }
-
-    return options;
 }
 
 /* -------------------- --- -------------------- */
@@ -107,7 +84,7 @@ function readTemplateCreateArgs (args, start) {
  * @returns {VTemplate}
  */
 function createElementTemplate (tagName, children, options) {
-    var template = new VTemplate(NodeType.ELEMENT, tagName, options);
+    var template = new VElementTemplate(tagName, options);
 
     if (children !== null) {
         template.children = children;
@@ -199,7 +176,7 @@ export function buildImage (src, options) {
 
     ensuerNotTemplate(options, 'IMG element cannot contain any child nodes');
 
-    options = setOptionsValue(options, ['attrs', 'src'], src);
+    options = utility.setOptionValue(options, ['attrs', 'src'], src);
 
     return createElementTemplate('img', null, options);
 }
@@ -221,7 +198,7 @@ export function buildMediaElement (tagName, src, ...args) {
 
     var [children, options] = readTemplateCreateArgs(args, 0);
 
-    options = setOptionsValue(options, ['attrs', 'src'], src);
+    options = utility.setOptionValue(options, ['attrs', 'src'], src);
 
     return createElementTemplate(tagName, children, options);
 }
@@ -244,7 +221,7 @@ export function buildInput (type, options) {
 
     ensuerNotTemplate(options, 'INPUT element cannot contain any child nodes');
 
-    options = setOptionsValue(options, ['attrs', 'type'], type);
+    options = utility.setOptionValue(options, ['attrs', 'type'], type);
 
     return createElementTemplate('input', null, options);
 }
@@ -270,7 +247,7 @@ export function buildHLink (...args) {
         }
     }
 
-    options = setOptionsValue(options, ['attrs', 'href'], href);
+    options = utility.setOptionValue(options, ['attrs', 'href'], href);
 
     return createElementTemplate('a', children, options);
 }
