@@ -9,7 +9,7 @@ import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
-import { VTemplate, VComponentTemplate } from '../model/VTemplate';
+import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 import FluentTree from '../model/FluentTree';
 
 
@@ -26,8 +26,9 @@ var API = {
     VFragment: VFragment,
     VComponent: VComponent,
     VTemplate: VTemplate,
+    VElementTemplate: VElementTemplate,
     VComponentTemplate: VComponentTemplate,
-    FluentTree: FluentTree,
+    FluentTree: FluentTree
 };
 
 export default API;
