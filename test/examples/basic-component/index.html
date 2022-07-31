@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+        <title>FluentDom Test</title>
+
+        <style>
+            my-card {
+                display: inline-block;
+                padding: 8px;
+                margin: 0 10px 10px 0;
+                width: 250px;
+                height: 150px;
+                vertical-align: middle;
+                border-radius: 8px;
+                border: 1px solid rgb(187, 187, 187);
+                box-shadow: 0 0 5px rgba(0,0,0,0.3);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            my-card.state-normal {
+                color: #fff;
+                background-color: rgb(74, 168, 255);
+            }
+
+            my-card.state-mute {
+                background-color: rgb(233, 233, 233);
+            }
+
+            my-card .card-title {
+                margin-bottom: 2px;
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            my-card .card-body {
+                padding: 5px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <!--  -->
+        <script src="../../../dist/fluentdom-0.1.0.js"></script>
+        <script src="index.js"></script>
+    </body>
+</html>

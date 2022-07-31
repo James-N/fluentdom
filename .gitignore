@@ -1,0 +1,6 @@
+.DS_Store
+node_modules
+study
+.vscode
+dist
+docs

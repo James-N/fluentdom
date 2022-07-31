@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
+        <style>
+            #container {
+                width: 500px;
+            }
+
+            .article {
+                text-align: justify;
+            }
+
+            .article.hilit {
+                background-color: yellow;
+            }
+
+            .controller {
+                margin-top: 12px;
+                padding: 10px 0;
+                border-top: 1px solid rgb(195, 195, 195);
+            }
+
+            .controller button {
+                padding: 6px 8px;
+            }
+
+            .controller button + button {
+                margin-left: 10px;
+            }
+
+            .tags {
+                padding: 12px 0 7px 0;
+            }
+
+            .tags .tag {
+                display: inline-block;
+                margin: 0 5px 5px 0;
+                padding: 3px 8px;
+                min-width: 30px;
+                height: 26px;
+                line-height: 20px;
+                border-radius: 15px;
+                text-align: center;
+                color: #fff;
+                background-color: #2f81e7;
+                box-sizing: border-box;
+            }
+        </style>
+
+        <title>FluentDom Test</title>
+    </head>
+    <body>
+        <div id="container">
+            <div class="header">
+                <h3>Page Header - page {{pageIndex}}</h3>
+            </div>
+
+            <div class="content">
+                <div class="article" v:if="showArticle" v:class="{ hilit: highlightArticle }">
+                    The literal notation results in compilation of the regular expression when the expression is evaluated. Use literal notation when the regular expression will remain constant. For example, if you use literal notation to construct a regular expression used in a loop, the regular expression won't be recompiled on each iteration.
+                </div>
+
+                <div class="tags">
+                    <span class="tag" v:repeat="t:tags">{{t}}</span>
+                </div>
+            </div>
+
+            <div class="controller"></div>
+        </div>
+        <!--  -->
+        <script src="../../../dist/fluentdom-0.1.0.js"></script>
+        <script src="index.js"></script>
+    </body>
+</html>

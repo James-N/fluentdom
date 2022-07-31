@@ -1,0 +1,26 @@
+{
+  "name": "fluentdom",
+  "version": "0.1.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --progress",
+    "build:es5": "webpack --env es5 --progress",
+    "lint": "npx eslint ./src/**/**.js & exit 0"
+  },
+  "keywords": [
+    "dom"
+  ],
+  "author": "James.Ni",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.8",
+    "babel-loader": "^8.2.2",
+    "del": "^6.0.0",
+    "eslint": "^7.31.0",
+    "webpack": "^5.71.0",
+    "webpack-cli": "^4.9.2"
+  }
+}

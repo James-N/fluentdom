@@ -1,0 +1,73 @@
+.input-line {
+    margin-bottom: 10px;
+    height: 28px;
+}
+
+.input-line input {
+    padding: 3px 4px;
+    height: 100%;
+    width: 250px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    outline: 0;
+}
+
+.input-line input:focus,
+.input-line input:active {
+    border: 1px solid #ef9b00;
+}
+
+.input-line button {
+    height: 100%;
+    border: 1px solid #ccc;
+    margin-left: 5px;
+}
+
+.input-line button:active:not(:disabled) {
+    background-color: #d7d7d7;
+}
+
+.input-list {
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+    width: 400px;
+}
+
+.input-list .list-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.input-list .list-item .item-index {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 40px;
+    padding-right: 10px;
+    line-height: 40px;
+    text-align: right;
+    color: #fff;
+    background-color: #769fd7;
+}
+
+.input-list .list-item .item-text {
+    flex: 1 1 auto;
+    padding-left: 5px;
+}
+
+.input-list .list-item .remove-btn {
+    margin: 0 5px;
+    height: 24px;
+    width: 24px;
+    line-height: 24px;
+    border-radius: 50%;
+    border: 0;
+    font-size: 22px;
+    color: #8b8b8b;
+    background-color: transparent;
+}
+
+.input-list .list-item .remove-btn:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}
