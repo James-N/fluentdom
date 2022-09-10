@@ -17,7 +17,7 @@ class VFragment extends VNode {
         /**
          * @type {String}
          */
-         this.content = '';
+        this.content = '';
 
         this._contentProvider = null;
         this._evaluated = false;

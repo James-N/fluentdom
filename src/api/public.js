@@ -88,7 +88,7 @@ function getDOMNode (input) {
  */
 export function templateFromDOM (domNode, options) {
     function convertTextDefault (domNode, parentTpl, state) {
-        if (domNode.textContent.trim() == '\n') {
+        if (domNode.textContent.trim() == '') {
             return null;
         } else {
             return new VTemplate(NodeType.TEXT, domNode.textContent);
@@ -216,3 +216,10 @@ export const defineComponent = component.defineComponent;
  * @param {Object|Function} directive  directive implementation
  */
 export const registerdirective = directive.registerDirective;
+
+/**
+ * override the internal compiler factory
+ *
+ * @param {function(VNode:?):compiler.Compiler} factory 
+ */
+export const setCompilerFactory = compiler.setCompilerFactory;

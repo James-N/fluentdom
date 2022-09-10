@@ -5,7 +5,7 @@ import { VTemplate } from './VTemplate';
 import * as NODE from '../service/node';
 import utility from '../service/utility';
 import LOG from '../service/log';
-import { Compiler } from '../service/compiler';
+import { getCompiler } from '../service/compiler';
 
 
 /**
@@ -142,7 +142,7 @@ class VRepeat extends VNode {
         // update children
         if (this.children.length === 0) {
             if (arr.length > 0) {
-                compiler = new Compiler();
+                compiler = getCompiler();
                 compiler.initFrom(this);
 
                 arr.forEach((e, i) => {
@@ -150,7 +150,7 @@ class VRepeat extends VNode {
                 });
             }
         } else if (!this._static) {
-            compiler = new Compiler();
+            compiler = getCompiler();
             compiler.initFrom(this);
 
             if (this._key) {

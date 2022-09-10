@@ -133,7 +133,16 @@ export class Compiler {
         this.ctx = new CompileContext();
 
         /**
-         * @type {[x: String]: (tpl: any, ctx: any) => VNode}
+         * node pre-compilation handle
+         */
+        this.onBeforeNodeCompile = null;
+        /**
+         * node compilation finish handle
+         */
+        this.onNodeCompiled = null;
+
+        /**
+         * @type {[x: (tpl: any, ctx: any) => VNode]}
          */
         this._compileFuncs = {
             [NodeType.TEXT]: this._compileText,
@@ -185,6 +194,11 @@ export class Compiler {
     _compileTemplate (tpl, ctx) {
         var compileFunc = this._compileFuncs[tpl.nodeType];
         if (compileFunc) {
+            // invoke `BeforeNoeCompile` handle
+            if (this.onBeforeNodeCompile) {
+                this.onBeforeNodeCompile(null, tpl);
+            }
+
             // compile the input template into vnode
             var node = compileFunc.call(this, tpl, ctx);
 
@@ -198,7 +212,12 @@ export class Compiler {
             this._attachNodeHooks(node, tpl.options);
 
             // load and run directives
-            this._loadNodeDirectives(node, tpl.options);
+            this._loadPostCompileDirectives(node, tpl.options);
+
+            // invoke `NodeCompiled` handle
+            if (this.onNodeCompiled) {
+                this.onNodeCompiled.call(null, node, tpl);
+            }
 
             // invoke node init hook
             node.invokeHook('nodeInit');
@@ -251,7 +270,7 @@ export class Compiler {
         }
     }
 
-    _loadNodeDirectives (node, options) {
+    _loadPostCompileDirectives (node, options) {
         if (options) {
             utility.entries(options).forEach(([name, value]) => {
                 var directive = getDirective(name);
@@ -511,23 +530,58 @@ export class Compiler {
                 }
             });
 
-        // invoke component init method and post initializer if exists
-        try {
-            componentNode.init();
-        } catch (err) {
-            LOG.error(`error inside \`init\` method of component [${componentNode.name}]`, err);
-        }
-
-        if (postInitializer) {
+        // schedule initialization
+        componentNode.hook('nodeInit', () => {
+            // invoke component init method and post initializer if exists
             try {
-                postInitializer(componentNode, ...tpl.initValue);
+                componentNode.init();
             } catch (err) {
-                LOG.error(`error inside initializer function of component [${componentNode.name}]`, err);
+                LOG.error(`error inside \`init\` method of component [${componentNode.name}]`, err);
             }
-        }
+
+            if (postInitializer) {
+                try {
+                    postInitializer(componentNode, ...tpl.initValue);
+                } catch (err) {
+                    LOG.error(`error inside initializer function of component [${componentNode.name}]`, err);
+                }
+            }
+        }, { once: true });
 
         return componentNode;
     }
+}
+
+/**
+ * @type {function(VNode?):Compiler}
+ */
+var compilerFactory = null;
+
+/**
+ * create a new compiler
+ *
+ * @param {VNode?} caller  the object which requires a new compiler
+ * @returns {Compiler}
+ */
+export function getCompiler (caller) {
+    if (compilerFactory) {
+        return compilerFactory(caller);
+    } else {
+        return new Compiler();
+    }
+}
+
+/**
+ * override the internal compiler factory
+ *
+ * @param {function(VNode:?):Compiler} factory 
+ */
+export function setCompilerFactory (factory) {
+    if (!!factory && !utility.isFunc(factory)) {
+        throw new TypeError("invalid compiler factory");
+    }
+
+    compilerFactory = factory || null;
 }
 
 /**
@@ -537,6 +591,6 @@ export class Compiler {
  * @returns {VNode}
  */
 export function compile (template) {
-    var compiler = new Compiler();
+    var compiler = getCompiler(null);
     return compiler.compile(template);
 }

@@ -16,5 +16,6 @@ export default {
     newComponent: pub.defineComponent,
     addDirective: pub.registerdirective,
 
-    compile: pub.compileTemplate
+    compile: pub.compileTemplate,
+    useCompiler: pub.setCompilerFactory
 };

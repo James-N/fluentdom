@@ -19,7 +19,7 @@ class VNode {
          */
         this.nodeType = nodeType;
         /**
-         * the actual dom node
+         * the actual dom node(s)
          * @type {Node|Node[]}
          */
         this.domNode = null;
@@ -54,9 +54,9 @@ class VNode {
 
         /**
          * hook registration
-         * @type {Map<String, Function[]}
+         * @type {Map<String, Function[]>}
          */
-         this._hooks = {};
+        this._hooks = {};
     }
 
     /**
@@ -167,20 +167,30 @@ class VNode {
      *
      * @param {String} name  hook name
      * @param {Function} hook  the hook function
+     * @param {Object=} flags  hook flags
      */
-    hook (name, hook) {
+    hook (name, hook, flags) {
         utility.ensureValidString(name, 'hook name');
 
         if (!utility.isFunc(hook)) {
             throw new TypeError("hook must be function");
         }
 
+        // attach flags to hook function
+        if (flags) {
+            if (flags.once) {
+                hook.$once = true;
+            }
+        }
+
+        // create hook set
         var hooks = this._hooks[name];
         if (!hooks) {
             hooks = [];
             this._hooks[name] = hooks;
         }
 
+        // add hook function to set
         hooks.push(hook);
     }
 
@@ -231,10 +241,17 @@ class VNode {
             msg = msg || new HookMessage(this);
 
             for (var i = 0; i < hooks.length; i++) {
+                var hook = hooks[i];
                 try {
-                    args.length > 0 ? hooks[i].call(null, msg, ...args) : hooks[i].call(null, msg);
+                    hook.call(null, msg, ...args);
                 } catch (err) {
                     LOG.error(`error inside hook callback [${name}]`, err);
+                }
+
+                // remove hook with the `once` flag after invocation
+                if (hook.$once) {
+                    hooks.splice(i, 1);
+                    i--;
                 }
             }
         }

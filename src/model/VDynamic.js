@@ -3,7 +3,7 @@ import VNode from './VNode';
 import { VTemplate } from './VTemplate';
 
 import * as NODE from '../service/node';
-import { Compiler } from '../service/compiler';
+import { getCompiler } from '../service/compiler';
 
 
 /**
@@ -40,7 +40,7 @@ class VDynamic extends VNode {
                 }
 
                 // compile template to nodes
-                var compiler = new Compiler();
+                var compiler = getCompiler();
                 compiler.initFrom(this);
                 if (Array.isArray(tpl)) {
                     tpl.forEach(t => {
