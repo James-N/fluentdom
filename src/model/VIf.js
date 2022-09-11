@@ -25,6 +25,7 @@ class VIf extends VNode {
         }
 
         this._cond = condition;
+        this._condValue = false;
         this._tpls = templates || [];
 
         /**
@@ -39,26 +40,32 @@ class VIf extends VNode {
             return;
         }
 
-        if (this._cond.call(null, this)) {
-            if (this.children.length === 0 && this._tpls.length > 0) {
-                var compiler = getCompiler();
-                compiler.initFrom(this);
+        if (NODE.needCompute(this)) {
+            this._condValue = this._cond.call(null, this);
+            if (this._condValue) {
+                if (this.children.length === 0 && this._tpls.length > 0) {
+                    var compiler = getCompiler(this);
 
-                this._tpls.forEach(t => {
-                    this.addChild(compiler.compile(t));
-                });
+                    this._tpls.forEach(t => {
+                        this.addChild(compiler.compile(t));
+                    });
+                }
+
+                super.render();
+                this.domNode = NODE.collectChildDOMNodes(this);
+            } else {
+                if (this.children.length > 0 && !this.cacheNode) {
+                    NODE.destroyNodes(this.children);
+                    this.children.length = 0;
+                }
+
+                this.domNode = null;
             }
-
-            super.render();
-
-            this.domNode = NODE.collectChildDOMNodes(this);
         } else {
-            if (this.children.length > 0 && !this.cacheNode) {
-                NODE.destroyNodes(this.children);
-                this.children.length = 0;
+            if (this._condValue) {
+                super.render();
+                this.domNode = NODE.collectChildDOMNodes(this);
             }
-
-            this.domNode = null;
         }
     }
 }

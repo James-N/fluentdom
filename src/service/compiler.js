@@ -206,7 +206,7 @@ export class Compiler {
             node.dep = ctx.getDepNode();
 
             // set basic infos
-            this._setNodeBasicInfos(node, tpl.options);
+            this._setNodeBasicProps(node, tpl.options);
 
             // register hooks
             this._attachNodeHooks(node, tpl.options);
@@ -250,10 +250,18 @@ export class Compiler {
         }
     }
 
-    _setNodeBasicInfos (node, options) {
+    _setNodeBasicProps (node, options) {
+        // set alias
         var alias = getFromNodeOptions(options, 'alias', '');
         if (alias) {
             node.alias = alias;
+        }
+
+        // set lazy
+        var lazy = getFromNodeOptions(options, 'lazy', false);
+        if (lazy) {
+            node.lazy = true;
+            node.states.dirty = true;       // initial value of `dirty` state should be true
         }
     }
 
@@ -552,10 +560,11 @@ export class Compiler {
     }
 }
 
+
 /**
- * @type {function(VNode?):Compiler}
+ * @type {Array<function(Compiler):void>}
  */
-var compilerFactory = null;
+const COMPILER_EXTENSIONS = [];
 
 /**
  * create a new compiler
@@ -564,24 +573,30 @@ var compilerFactory = null;
  * @returns {Compiler}
  */
 export function getCompiler (caller) {
-    if (compilerFactory) {
-        return compilerFactory(caller);
-    } else {
-        return new Compiler();
+    var compiler = new Compiler();
+
+    for (let ext of COMPILER_EXTENSIONS) {
+        ext(compiler);
     }
+
+    if (caller) {
+        compiler.initFrom(caller);
+    }
+
+    return compiler;
 }
 
 /**
- * override the internal compiler factory
+ * register compiler extension
  *
- * @param {function(VNode:?):Compiler} factory 
+ * @param {function(Compiler):void} extension  the extension callback
  */
-export function setCompilerFactory (factory) {
-    if (!!factory && !utility.isFunc(factory)) {
-        throw new TypeError("invalid compiler factory");
+export function useCompilerExtension (extension) {
+    if (!utility.isFunc(extension)) {
+        throw new TypeError("invalid compiler extension");
     }
 
-    compilerFactory = factory || null;
+    COMPILER_EXTENSIONS.push(extension);
 }
 
 /**

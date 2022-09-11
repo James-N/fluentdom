@@ -2,6 +2,7 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
+import * as NODE from '../service/node';
 
 
 /**
@@ -20,7 +21,7 @@ class VFragment extends VNode {
         this.content = '';
 
         this._contentProvider = null;
-        this._evaluated = false;
+        this._updated = false;
 
         // init content if necessray
         this.setContent(contentOrProvider);
@@ -32,6 +33,8 @@ class VFragment extends VNode {
      * @param {String|function(VFragment):String} content  fragment content or provider
      */
     setContent (content) {
+        this._contentProvider = null;
+
         if (utility.isNullOrUndef(content)) {
             this.content = '';
         } else if (utility.isFunc(content)) {
@@ -40,7 +43,7 @@ class VFragment extends VNode {
             this.content = String(content);
         }
 
-        this._evaluated = false;
+        this._updated = false;
     }
 
     _tryUpdateContent () {
@@ -58,13 +61,13 @@ class VFragment extends VNode {
     }
 
     render () {
-        if (this._tryUpdateContent() || !this._evaluated) {
+        if (NODE.needCompute(this) && (this._tryUpdateContent() || !this._updated)) {
             var wrapper = document.createElement('div');
             wrapper.innerHTML = this.content;
 
             this.domNode = Array.prototype.slice.call(wrapper.childNodes, 0);
 
-            this._evaluated = true;
+            this._updated = true;
         }
     }
 }

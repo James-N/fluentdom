@@ -73,6 +73,11 @@ class VElement extends VNode {
          */
         this.static = false;
 
+        /**
+         * whether the element has been updated for at least once
+         */
+        this._updated = false;
+
         // element property getter functions
         this._getters = {
             attr: {},
@@ -198,7 +203,7 @@ class VElement extends VNode {
     }
 
     render () {
-        var needUpdateElm = !this.domNode || !this.static;
+        var needUpdateElm = NODE.needCompute(this) && (!this.static || !this._updated);
         if (needUpdateElm) {
             // update states of this virtual node
             this._updateValueSet(this.attrs, this._getters.attr);
@@ -219,6 +224,9 @@ class VElement extends VNode {
         if (needUpdateElm) {
             // update element states
             this._updateElementStates(elm);
+
+            // set `updated` state
+            this._updated = true;
         }
     }
 

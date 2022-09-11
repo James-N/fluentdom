@@ -220,6 +220,6 @@ export const registerdirective = directive.registerDirective;
 /**
  * override the internal compiler factory
  *
- * @param {function(VNode:?):compiler.Compiler} factory 
+ * @param {function(compiler.Compiler):void} factory
  */
-export const setCompilerFactory = compiler.setCompilerFactory;
+export const useCompilerExtension = compiler.useCompilerExtension;

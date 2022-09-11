@@ -2,6 +2,7 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
+import * as NODE from '../service/node';
 
 
 /**
@@ -20,6 +21,9 @@ class VText extends VNode {
          */
         this.text = '';
 
+        /**
+         * get getter function
+         */
         this._textProvider = null;
 
         this.setText(textOrProvider);
@@ -46,6 +50,8 @@ class VText extends VNode {
      * @param {String|function(VText):String} text  text content or provider
      */
     setText (text) {
+        this._textProvider = null;
+
         if (utility.isNullOrUndef(text)) {
             this.text = '';
         } else if (utility.isFunc(text)) {
@@ -56,8 +62,10 @@ class VText extends VNode {
     }
 
     render () {
-        if (this._textProvider) {
-            this.text = String(this._textProvider.call(null, this));
+        if (NODE.needCompute(this)) {
+            if (this._textProvider) {
+                this.text = String(this._textProvider.call(null, this));
+            }
         }
 
         var node = this._initNode();

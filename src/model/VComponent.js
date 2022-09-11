@@ -81,7 +81,9 @@ class VComponent extends VNode {
     }
 
     render () {
-        this._updateProps();
+        if (NODE.needCompute(this)) {
+            this._updateProps();
+        }
 
         super.render();
         this.domNode = NODE.collectChildDOMNodes(this);

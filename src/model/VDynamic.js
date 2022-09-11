@@ -22,14 +22,14 @@ class VDynamic extends VNode {
          */
         this.once = true;
 
-        this._evaluated = false;
+        this._updated = false;
 
         this._tpl = null;
         this._tplProvider = provider;
     }
 
     render () {
-        if (!this._evaluated || !this.once) {
+        if (NODE.needCompute(this) && (!this._updated || !this.once)) {
             var tpl = this._tplProvider.call(null, this);
 
             if (tpl !== this._tpl) {
@@ -40,8 +40,7 @@ class VDynamic extends VNode {
                 }
 
                 // compile template to nodes
-                var compiler = getCompiler();
-                compiler.initFrom(this);
+                var compiler = getCompiler(this);
                 if (Array.isArray(tpl)) {
                     tpl.forEach(t => {
                         this.addChild(compiler.compile(t));
@@ -52,7 +51,7 @@ class VDynamic extends VNode {
             }
 
             this._tpl = tpl;
-            this._evaluated = true;
+            this._updated = true;
         }
 
         super.render();

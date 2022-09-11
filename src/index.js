@@ -17,5 +17,5 @@ export default {
     addDirective: pub.registerdirective,
 
     compile: pub.compileTemplate,
-    useCompiler: pub.setCompilerFactory
+    extendCompiler: pub.useCompilerExtension
 };

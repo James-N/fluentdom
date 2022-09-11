@@ -133,37 +133,37 @@ class VRepeat extends VNode {
     }
 
     render () {
-        var arr = this._static ?
-                  this._data :
-                  this._initData(this._provider.call(null, this));
+        if (NODE.needCompute(this)) {
+            var arr = this._static ?
+                      this._data :
+                      this._initData(this._provider.call(null, this));
 
-        var compiler;
+            var compiler;
 
-        // update children
-        if (this.children.length === 0) {
-            if (arr.length > 0) {
-                compiler = getCompiler();
-                compiler.initFrom(this);
+            // update children
+            if (this.children.length === 0) {
+                if (arr.length > 0) {
+                    compiler = getCompiler(this);
 
-                arr.forEach((e, i) => {
-                    this.children.push(this._compileChild(compiler, e, i));
-                });
+                    arr.forEach((e, i) => {
+                        this.children.push(this._compileChild(compiler, e, i));
+                    });
+                }
+            } else if (!this._static) {
+                compiler = getCompiler(this);
+
+                if (this._key) {
+                    this._updateChildrenByKey(compiler, arr);
+                } else {
+                    this._updateChildrenByCompare(compiler, arr);
+                }
             }
-        } else if (!this._static) {
-            compiler = getCompiler();
-            compiler.initFrom(this);
 
-            if (this._key) {
-                this._updateChildrenByKey(compiler, arr);
-            } else {
-                this._updateChildrenByCompare(compiler, arr);
-            }
+            this._data = arr;
+
+            // invoke repeat init hooks
+            this.children.forEach(c => this.invokeHook('repeatInit', null, c, c.ctx.$value, c.ctx.$index));
         }
-
-        this._data = arr;
-
-        // invoke repeat init hooks
-        this.children.forEach(c => this.invokeHook('repeatInit', null, c, c.ctx.$value, c.ctx.$index));
 
         // render
         super.render();

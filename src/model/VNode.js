@@ -31,6 +31,19 @@ class VNode {
         this.ctx = null;
 
         /**
+         * lazy rendering mode switcher
+         * @type {Boolean}
+         */
+        this.lazy = false;
+
+        /**
+         * node state table
+         */
+        this.states = {
+            dirty: false
+        };
+
+        /**
          * reference to the parent virtual node
          * @type {VNode}
          */
@@ -145,6 +158,9 @@ class VNode {
                 LOG.error('error when rendering child node', err);
             }
         });
+
+        // reset `dirty` state
+        this.states.dirty = false;
     }
 
     /**

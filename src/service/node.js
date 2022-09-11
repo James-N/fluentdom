@@ -260,3 +260,13 @@ export function destroyNodes (nodes) {
         }
     });
 }
+
+/**
+ * check whether the given needs to be recomputed
+ *
+ * @param {VNode} node
+ * @returns {Boolean}
+ */
+export function needCompute (node) {
+    return !node.lazy || node.states.dirty;
+}
