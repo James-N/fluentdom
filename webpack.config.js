@@ -1,5 +1,6 @@
 const path = require('path');
 
+const webpack = require('webpack');
 const del = require('del');
 
 
@@ -26,11 +27,24 @@ function addES5Option (config) {
     };
 }
 
+function addMetadataOption (config, metadata) {
+    if (!config.plugins) {
+        config.plugins = [];
+    }
+
+    config.plugins.push(
+        new webpack.DefinePlugin({
+            '__VERSION__': `'${metadata.version}'`
+        })
+    );
+}
+
 module.exports = (env, args) => {
     var es5 = !!env.es5;
     var dev = !!env.development;
 
     var distPath = path.resolve(__dirname, 'dist');
+    var packageVersion = getVersion();
 
     var exportConfig = {
         type: 'window',
@@ -51,7 +65,7 @@ module.exports = (env, args) => {
         entry: './src/index.js',
         output: {
             path: distPath,
-            filename: `fluentdom-${getVersion()}.js`,
+            filename: `fluentdom-${packageVersion}.js`,
             library: exportConfig,
             environment: envConfig
         },
@@ -61,16 +75,12 @@ module.exports = (env, args) => {
         devtool: false
     };
 
-    if (es5) {
-        addES5Option(normalConfig);
-    }
-
     var minifyConfig = {
         mode: dev ? 'development' : 'production',
         entry: './src/index.js',
         output: {
             path: distPath,
-            filename: `fluentdom-${getVersion()}.min.js`,
+            filename: `fluentdom-${packageVersion}.min.js`,
             library: exportConfig,
             environment: envConfig
         },
@@ -80,11 +90,17 @@ module.exports = (env, args) => {
         devtool: false
     };
 
-    if (es5) {
-        addES5Option(minifyConfig);
-    }
+    var configs = [normalConfig, minifyConfig];
+
+    configs.forEach(config => {
+        addMetadataOption(config, { version: packageVersion });
+
+        if (es5) {
+            addES5Option(config);
+        }
+    });
 
     del.sync(distPath);
 
-    return [normalConfig, minifyConfig];
+    return configs;
 };

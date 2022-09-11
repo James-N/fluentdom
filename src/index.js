@@ -9,6 +9,7 @@ export default {
     node: Node,
     control: Control,
     component: Component,
+    version: __VERSION__,
 
     new: pub.createFluentTree,
     fromDOM: pub.fluentTreeFromDOM,
