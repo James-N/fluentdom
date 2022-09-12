@@ -251,11 +251,10 @@ class VNode {
      * @param  {...any} args  additional args
      */
     invokeHook (name, msg, ...args) {
+        msg = msg || new HookMessage(this);
+
         var hooks = this._hooks[name];
-
         if (hooks && hooks.length > 0) {
-            msg = msg || new HookMessage(this);
-
             for (var i = 0; i < hooks.length; i++) {
                 var hook = hooks[i];
                 try {
@@ -270,6 +269,11 @@ class VNode {
                     i--;
                 }
             }
+        }
+
+        // broadcast message to child nodes if necessary
+        if ((msg instanceof HookMessage) && msg.broadcast) {
+            this.children.forEach(c => c.invokeHook(name, msg, ...args));
         }
     }
 }

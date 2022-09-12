@@ -20,6 +20,12 @@ class HookMessage {
          * @type {any}
          */
         this.data = null;
+
+        /**
+         * whether this message should be broadcasted to child nodes
+         * @type {Boolean}
+         */
+        this.broadcast = false;
     }
 }
 
