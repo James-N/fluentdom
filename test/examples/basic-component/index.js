@@ -13,7 +13,7 @@ fluent.addDirective('dynDisable', function (node, callback) {
 
 class CardComponent extends fluent.core.VComponent {
     constructor (title, content) {
-        super();
+        super('my-card');
 
         this.title = title;
         this.content = content;
@@ -51,10 +51,10 @@ var CardBuilder = fluent.newComponent({
     context: {},
     nodeClass: CardComponent,
     props: {
-        state: 'normal'
+        state: { defaultValue: 'normal' }
     },
     options: {
-        class: vn => 'state-' + vn.dep.state
+        class: vn => 'state-' + vn.state
     }
 });
 
@@ -103,7 +103,7 @@ var tree = fluent.new({
                 }),
 
                 {
-                    nodeProps: {
+                    props: {
                         state: vn => ctx.$value.hasAction ? 'normal' : 'mute'
                     }
                 }

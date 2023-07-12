@@ -368,7 +368,7 @@ export function buildSlot (...args) {
 /* -------------------- --- -------------------- */
 
 /**
- * create builder function of component
+ * create builder function for component
  *
  * @param {Object} componentDef  component definition
  * @returns {function(...any):VComponentTemplate}

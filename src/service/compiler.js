@@ -305,14 +305,7 @@ export class Compiler {
                 child.children.forEach(c => children.unshift(c));
             } else {
                 var childNode = this._compileTemplate(child, ctx);
-                if (node instanceof VComponent) {
-                    // direct child of VComponent must be treated differently
-                    // since its `addChild` is overwritten
-                    node.children.push(childNode);
-                    childNode.parent = node;
-                } else {
-                    node.addChild(childNode);
-                }
+                node.addChild(childNode);
             }
         }
 
@@ -327,6 +320,26 @@ export class Compiler {
     }
 
     _compileElement (tpl, ctx) {
+        var options = tpl.options;
+        var domNode = getFromNodeOptions(options, 'domNode');
+
+        var elmNode;
+        if (domNode && utility.isElementNode(domNode)) {
+            // bind velement with the given dom element node, should be used with care
+            elmNode = new VElement(domNode.tagName);
+            elmNode.domNode = domNode;
+        } else {
+            elmNode = new VElement(tpl.initValue);
+        }
+
+        this._setupVElement(elmNode, options);
+        this._attachNodeContext(elmNode, options, ctx);
+        this._compileChildren(tpl.children, elmNode, ctx);
+
+        return elmNode;
+    }
+
+    _setupVElement (node, options) {
         function setElementNodeOptions (elmNode, options) {
             if (options) {
                 var attrs = options.attrs;
@@ -372,25 +385,9 @@ export class Compiler {
             }
         }
 
-        var options = tpl.options;
-        var domNode = getFromNodeOptions(options, 'domNode');
+        node.static = getFromNodeOptions(options, 'static', false);
 
-        var elmNode;
-        if (domNode && utility.isElementNode(domNode)) {
-            // bind velement with the given dom element node, should be used with care
-            elmNode = new VElement(domNode.tagName);
-            elmNode.domNode = domNode;
-        } else {
-            elmNode = new VElement(tpl.initValue);
-        }
-
-        elmNode.static = getFromNodeOptions(options, 'static', false);
-
-        this._attachNodeContext(elmNode, options, ctx);
-        setElementNodeOptions(elmNode, options);
-        this._compileChildren(tpl.children, elmNode, ctx);
-
-        return elmNode;
+        setElementNodeOptions(node, options);
     }
 
     _compileEmpty (tpl, ctx) {
@@ -452,17 +449,19 @@ export class Compiler {
         var options = !!cdef.options ? mergeOptions(cdef.options, tpl.options) : tpl.options;
 
         // prepare component template
-        var rootTpl = new VTemplate(NodeType.ELEMENT, tpl.name, options);
+        var children;
         if (cdef.template) {
             if (Array.isArray(cdef.template)) {
-                rootTpl.children = cdef.template;
+                children = cdef.template;
             } else {
-                rootTpl.children.push(cdef.template);
+                children = [cdef.template];
             }
         } else {
             // when component has no builtin templates, take template children as its children
             if (cdef.acceptChildren && tpl.children.length > 0) {
-                rootTpl.children = tpl.children;
+                children = tpl.children;
+            } else {
+                children = [];
             }
         }
 
@@ -472,11 +471,11 @@ export class Compiler {
             if (utility.isSubclass(cdef.nodeClass, VComponent)) {
                 componentNode = new cdef.nodeClass(...tpl.initValue);
             } else {
-                componentNode = new VComponent();
+                componentNode = new VComponent(tpl.name);
                 postInitializer = cdef.nodeClass;
             }
         } else {
-            componentNode = new VComponent();
+            componentNode = new VComponent(tpl.name);
         }
 
         // set component name
@@ -489,7 +488,7 @@ export class Compiler {
 
         // init context
         if (cdef.context || optionsCtx) {
-            var topCtx = cdef.context == CONTEXT_TYPE.INHERIT ? ctx.getNodeContext() : null;
+            var topCtx = cdef.contextType == CONTEXT_TYPE.INHERIT ? ctx.getNodeContext() : null;
             componentNode.ctx = this._createNodeContext(topCtx, cdef.context);
 
             if (optionsCtx) {
@@ -498,45 +497,35 @@ export class Compiler {
         }
 
         // compile children
-        if (optionsCtx) {
-            options.context = null;     // prevent root template from creating new context
-        }
-
         if (transformSlot) {
             // slot transforming at compile phase
             slotChildren = cdef.$templateSlot.children;
             cdef.$templateSlot.children = tpl.children;
         }
 
-        this._compileChildren([rootTpl], componentNode, ctx);
-
-        if (optionsCtx) {
-            options.context = optionsCtx;
-        }
+        this._compileChildren(children, componentNode, ctx);
 
         if (transformSlot) {
             cdef.$templateSlot.children = slotChildren;
         }
 
-        // set component root node
-        componentNode.node = componentNode.children[0];
-
-        // set dynamic properties
-        var props = getFromNodeOptions(options, 'nodeProps', null);
-
+        // register component dynamic props
         utility.entries(cdef.props)
             .forEach(([prop, val]) => {
-                if (props.hasOwnProperty(prop)) {
-                    var nodePropVal = props[prop];
-                    if (utility.isFunc(nodePropVal)) {
-                        componentNode.setProp(prop, nodePropVal, val);
-                    } else {
-                        componentNode.setProp(prop, null, nodePropVal);
-                    }
+                var propVal, getter;
+                if (utility.isFunc(val)) {
+                    propVal = null;
+                    getter = val;
                 } else {
-                    componentNode.setProp(prop, null, val);
+                    propVal = val.defaultValue === undefined ? null : val.defaultValue;
+                    getter = utility.isFunc(val.getter) ? val.getter : null;
                 }
+
+                componentNode.defProp(prop, propVal, getter);
             });
+
+        // setup VElement related options
+        this._setupVElement(componentNode, options);
 
         // schedule initialization
         componentNode.hook('nodeInit', () => {

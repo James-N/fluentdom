@@ -149,15 +149,6 @@ export class VComponentTemplate extends VAbstractElementTemplate {
          */
         this.$definition = null;
     }
-
-    /**
-     * set `nodeProps` option
-     * @returns {this}
-     */
-    nodeProp (nameOrSet, value) {
-        updateTplKVOption(this, 'nodeProps', nameOrSet, value);
-        return this;
-    }
 }
 
 /**

@@ -52,7 +52,7 @@ class VNode {
          * list of child virtual nodes
          * @type {VNode[]}
          */
-        this.children = [];
+        this.children = []; 
         /**
          * the component or bound container this node belongs to
          * @type {VNode}
@@ -67,7 +67,7 @@ class VNode {
 
         /**
          * hook registration
-         * @type {Map<String, Function[]>}
+         * @type {Record<String, Function[]>}
          */
         this._hooks = {};
     }

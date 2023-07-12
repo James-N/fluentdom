@@ -1,5 +1,5 @@
 import NodeType from './NodeType';
-import VNode from './VNode';
+import VElement from './VElement';
 import utility from '../service/utility';
 
 import * as NODE from '../service/node';
@@ -8,21 +8,20 @@ import * as NODE from '../service/node';
 /**
  * virtual node for generic component
  */
-class VComponent extends VNode {
-    constructor () {
-        super(NodeType.COMPONENT);
+class VComponent extends VElement {
+    /**
+     * @param {String} tagName  component element tag name
+     */
+    constructor (tagName) {
+        super(tagName);
+
+        this.nodeType = NodeType.COMPONENT;
 
         /**
          * name of the component
          * @type {String}
          */
         this.name = '';
-
-        /**
-         * reference to the component root node
-         * @type {VNode}
-         */
-        this.node = null;
 
         /**
          * dynamic property definitions
@@ -38,29 +37,13 @@ class VComponent extends VNode {
     }
 
     /**
-     * @param {VNode} child  child node
-     * @param {Number=} pos  child position index
-     */
-    addChild (child, pos) {
-        this.node.addChild(child, pos);
-    }
-
-    /**
-     * @param {VNode} node  child node
-     * @returns {Boolean}
-     */
-    removeChild (node) {
-        return this.node.removeChild(node);
-    }
-
-    /**
-     * add a dynamic property
+     * define a component dynamic property
      *
      * @param {String} prop  property name
-     * @param {function(VNode):Any=} getter  getter functions
      * @param {Any=} defaultValue  default property value
+     * @param {function(VNode):Any=} getter  getter functions
      */
-    setProp (prop, getter, defaultValue) {
+    defProp (prop, defaultValue, getter) {
         utility.ensureValidString(prop, 'prop');
 
         this[prop] = defaultValue;
@@ -71,7 +54,27 @@ class VComponent extends VNode {
         };
     }
 
-    _updateProps () {
+    setProp (prop, value) {
+        if (this._propDefs.hasOwnProperty(prop)) {
+            if (utility.isFunc(value)) {
+                this._propDefs[prop].getter = value;
+            } else {
+                this[prop] = value;
+            }
+        } else {
+            super.setProp(prop, value);
+        }
+    }
+
+    removeProp (prop) {
+        if (this._propDefs.hasOwnProperty(prop)) {
+            throw new Error('cannot remove defined component prop');
+        } else {
+            super.removeProp(prop);
+        }
+    }
+
+    _updateSelfProps () {
         utility.entries(this._propDefs)
             .forEach(([prop, def]) => {
                 if (def.getter) {
@@ -82,11 +85,10 @@ class VComponent extends VNode {
 
     render () {
         if (NODE.needCompute(this)) {
-            this._updateProps();
+            this._updateSelfProps();
         }
 
         super.render();
-        this.domNode = NODE.collectChildDOMNodes(this);
     }
 }
 
