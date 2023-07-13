@@ -17,7 +17,9 @@ class VIf extends VNode {
      * @param {VTemplate[]?} templates  child node template
      */
     constructor (condition, templates) {
-        super(NodeType.IF);
+        super();
+
+        this.nodeType = NodeType.IF;
 
         if (!utility.isFunc(condition)) {
             LOG.warn("condition input of VIf node must be function");

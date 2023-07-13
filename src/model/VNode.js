@@ -9,15 +9,12 @@ import utility from '../service/utility';
  * base class of all virtual node
  */
 class VNode {
-    /**
-     * @param {String} nodeType  type of node
-     */
-    constructor (nodeType) {
+    constructor () {
         /**
          * type of node
          * @type {String}
          */
-        this.nodeType = nodeType;
+        this.nodeType = '';
         /**
          * the actual dom node(s)
          * @type {Node|Node[]}
@@ -39,7 +36,7 @@ class VNode {
         /**
          * node state table
          */
-        this.states = {
+        this.flags = {
             dirty: false
         };
 
@@ -160,7 +157,7 @@ class VNode {
         });
 
         // reset `dirty` state
-        this.states.dirty = false;
+        this.flags.dirty = false;
     }
 
     /**

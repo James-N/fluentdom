@@ -13,7 +13,9 @@ class VFragment extends VNode {
      * @param {String|function(VFragment):String} contentOrProvider  fragment content or content provider
      */
     constructor (contentOrProvider) {
-        super(NodeType.FRAGMENT);
+        super();
+
+        this.nodeType = NodeType.FRAGMENT;
 
         /**
          * @type {String}

@@ -14,7 +14,9 @@ class VDynamic extends VNode {
      * @param {function(VNode):VTemplate|VTemplate[]} provider  template provider
      */
     constructor (provider) {
-        super(NodeType.DYNAMIC);
+        super();
+
+        this.nodeType = NodeType.DYNAMIC;
 
         /**
          * whther to compile template only once

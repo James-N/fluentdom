@@ -9,7 +9,9 @@ import * as NODE from '../service/node';
  */
 class VEmpty extends VNode {
     constructor () {
-        super(NodeType.EMPTY);
+        super();
+
+        this.nodeType = NodeType.EMPTY;
     }
 
     render () {

@@ -268,5 +268,5 @@ export function destroyNodes (nodes) {
  * @returns {Boolean}
  */
 export function needCompute (node) {
-    return !node.lazy || node.states.dirty;
+    return !node.lazy || node.flags.dirty;
 }

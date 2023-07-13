@@ -13,7 +13,9 @@ class VText extends VNode {
      * @param {String|function(VText):String} textOrProvider  text content or text provider
      */
     constructor (textOrProvider) {
-        super(NodeType.TEXT);
+        super();
+
+        this.nodeType = NodeType.TEXT;
 
         /**
          * text content

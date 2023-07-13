@@ -32,7 +32,9 @@ class VRepeat extends VNode {
      * @param {VTemplate[]} templates  children templates
      */
     constructor (dataOrProvider, key, templates) {
-        super(NodeType.REPEAT);
+        super();
+
+        this.nodeType = NodeType.REPEAT;
 
         if (utility.isFunc(dataOrProvider)) {
             this._provider = dataOrProvider;

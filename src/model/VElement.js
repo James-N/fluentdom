@@ -59,7 +59,9 @@ class VElement extends VNode {
      * @param {String} tagName  element tag name
      */
     constructor (tagName) {
-        super(NodeType.ELEMENT);
+        super();
+
+        this.nodeType = NodeType.ELEMENT;
 
         /**
          * tag name of the element
