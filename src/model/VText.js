@@ -34,8 +34,8 @@ class VText extends VNode {
     /**
      * @returns {Text}
      */
-    _initNode () {
-        if (this.domNode === null) {
+    _prepareTextNode () {
+        if (!this.domNode) {
             this.domNode = document.createTextNode('');
 
             this.invokeHook('domNodeCreated');
@@ -70,7 +70,7 @@ class VText extends VNode {
             }
         }
 
-        var node = this._initNode();
+        var node = this._prepareTextNode();
         if (node.textContent != this.text) {
             node.textContent = this.text;
         }

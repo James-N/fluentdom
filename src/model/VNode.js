@@ -49,7 +49,7 @@ class VNode {
          * list of child virtual nodes
          * @type {VNode[]}
          */
-        this.children = []; 
+        this.children = [];
         /**
          * the component or bound container this node belongs to
          * @type {VNode}

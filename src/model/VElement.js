@@ -99,13 +99,13 @@ class VElement extends VNode {
     /**
      * @returns {Element}
      */
-    _initElm () {
-        if (this.domNode === null) {
+    _prepareElm () {
+        if (!this.domNode) {
             var elm = document.createElement(this.tagName);
             this.domNode = elm;
 
             if (!this.static) {
-                this._initElmEvents(elm);
+                this._bindElmEvents(elm);
             }
 
             this.invokeHook('domNodeCreated');
@@ -116,7 +116,7 @@ class VElement extends VNode {
         }
     }
 
-    _initElmEvents (elm) {
+    _bindElmEvents (elm) {
         utility.entries(this._eventHandles)
             .forEach(([evt, evtSet]) => {
                 elm.addEventListener(evt, evtSet.callback);
@@ -218,7 +218,7 @@ class VElement extends VNode {
         super.render();
 
         // make sure the bound element is initiated
-        var elm = this._initElm();
+        var elm = this._prepareElm();
 
         // sync dom nodes of child virtual nodes
         NODE.rearrangeElementChildNodes(elm, this.children);
