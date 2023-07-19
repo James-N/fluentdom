@@ -196,7 +196,7 @@ export class Compiler {
         if (compileFunc) {
             // invoke `BeforeNoeCompile` handle
             if (this.onBeforeNodeCompile) {
-                this.onBeforeNodeCompile(null, tpl);
+                this.onBeforeNodeCompile.call(null, tpl);
             }
 
             // compile the input template into vnode
@@ -561,7 +561,7 @@ const COMPILER_EXTENSIONS = [];
  * @param {VNode?} caller  the object which requires a new compiler
  * @returns {Compiler}
  */
-export function getCompiler (caller) {
+export function loadCompiler (caller) {
     var compiler = new Compiler();
 
     for (let ext of COMPILER_EXTENSIONS) {
@@ -595,6 +595,6 @@ export function useCompilerExtension (extension) {
  * @returns {VNode}
  */
 export function compile (template) {
-    var compiler = getCompiler(null);
+    var compiler = loadCompiler(null);
     return compiler.compile(template);
 }

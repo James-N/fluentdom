@@ -5,7 +5,7 @@ import { VTemplate } from './VTemplate';
 import LOG from '../service/log';
 import utility from '../service/utility';
 import * as NODE from '../service/node';
-import { getCompiler } from '../service/compiler';
+import { loadCompiler } from '../service/compiler';
 
 
 /**
@@ -46,7 +46,7 @@ class VIf extends VNode {
             this._condValue = this._cond.call(null, this);
             if (this._condValue) {
                 if (this.children.length === 0 && this._tpls.length > 0) {
-                    var compiler = getCompiler(this);
+                    var compiler = loadCompiler(this);
 
                     this._tpls.forEach(t => {
                         this.addChild(compiler.compile(t));
