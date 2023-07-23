@@ -458,7 +458,7 @@ export class Compiler {
             }
         } else {
             // when component has no builtin templates, take template children as its children
-            if (cdef.acceptChildren && tpl.children.length > 0) {
+            if (cdef.children && tpl.children.length > 0) {
                 children = tpl.children;
             } else {
                 children = [];
@@ -483,7 +483,7 @@ export class Compiler {
 
         // prepare component compile information
         var optionsCtx = getFromNodeOptions(options, 'context', null);
-        var transformSlot = cdef.acceptChildren && cdef.$templateSlot && tpl.children.length > 0;
+        var transformSlot = cdef.children && cdef.$templateSlot && tpl.children.length > 0;
         var slotChildren = null;
 
         // init context

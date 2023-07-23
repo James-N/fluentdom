@@ -80,18 +80,19 @@ export default {
      * @param {String[]} keyPath
      * @param {any} value
      * @param {Boolean=} whenAbsent
+     * @param {Boolean=} appendArray
      *
      * @returns {Object}
      */
-    setOptionValue: function (options, keyPath, value, whenAbsent) {
+    setOptionValue: function (options, keyPath, value, whenAbsent, appendArray) {
         if (isNullOrUndef(options)) {
             options = {};
         }
 
         var valueSet = options;
         for (var i = 0; i < keyPath.length; i++) {
+            var key = keyPath[i];
             if (i < (keyPath.length - 1)) {
-                var key = keyPath[i];
                 var newSet = valueSet[key];
                 if (!newSet) {
                     newSet = {};
@@ -99,8 +100,28 @@ export default {
                 }
                 valueSet = newSet;
             } else {
-                if (!whenAbsent || !valueSet.hasOwnProperty(keyPath[i])) {
-                    valueSet[keyPath[i]] = value;
+                var hasOld = valueSet.hasOwnProperty(key);
+
+                if (!whenAbsent || !hasOld) {
+                    if (appendArray) {
+                        var oldVal;
+                        if (hasOld) {
+                            oldVal = valueSet[key];
+                            oldVal = Array.isArray(oldVal) ? oldVal : [oldVal];
+                        } else {
+                            oldVal = [];
+                        }
+
+                        if (Array.isArray(value)) {
+                            oldVal = oldVal.concat(value);
+                        } else {
+                            oldVal.push(value);
+                        }
+
+                        valueSet[key] = oldVal;
+                    } else {
+                        valueSet[key] = value;
+                    }
                 }
             }
         }

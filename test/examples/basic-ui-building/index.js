@@ -92,15 +92,14 @@ window.addEventListener('DOMContentLoaded', evt => {
                             </tbody>
                         </table>
                     </div>`
-                ),
-
-                {
-                    class: 'test-container',
-                    styles: {
-                        'padding': '10px'
-                    }
-                }
+                )
             )
+            .withOptions({
+                class: 'test-container',
+                styles: {
+                    'padding': '10px'
+                }
+            })
     });
 
     tree.render();

@@ -31,7 +31,7 @@ function getDefaultDefinition () {
         nodeClass: null,
         props: {},
         options: null,
-        acceptChildren: true,
+        children: true,
         isolate: false
     };
 }
@@ -98,7 +98,7 @@ export function defineComponent (options) {
     }
 
     // find and save slot template item, so that no scanning is necessary during compile phase
-    cdef.$templateSlot = (cdef.acceptChildren && cdef.template) ? findTemplateSlot(cdef.template) : null;
+    cdef.$templateSlot = (cdef.children && cdef.template) ? findTemplateSlot(cdef.template) : null;
 
     // create builder function
     var builder = template_builder.getComponentBuilder(cdef);

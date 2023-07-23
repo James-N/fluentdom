@@ -120,7 +120,10 @@ export function buildVoidElement (tagName, options) {
         ensuerNotTemplate(options, `${tagName} element cannot contain any child nodes`);
     }
 
-    return createElementTemplate(tagName, null, options);
+    var tpl = createElementTemplate(tagName, null, options);
+    tpl.$allowChildren = false;
+
+    return tpl;
 }
 
 /**
@@ -178,7 +181,10 @@ export function buildImage (src, options) {
 
     options = utility.setOptionValue(options, ['attrs', 'src'], src);
 
-    return createElementTemplate('img', null, options);
+    var tpl = createElementTemplate('img', null, options);
+    tpl.$allowChildren = false;
+
+    return tpl;
 }
 
 /**
@@ -223,7 +229,10 @@ export function buildInput (type, options) {
 
     options = utility.setOptionValue(options, ['attrs', 'type'], type);
 
-    return createElementTemplate('input', null, options);
+    var tpl = createElementTemplate('input', null, options);
+    tpl.$allowChildren = false;
+
+    return tpl;
 }
 
 /**
@@ -389,13 +398,15 @@ export function getComponentBuilder (componentDef) {
         var nodeArgs = argCount > 0 ? args.slice(0, argCount) : [];
         var [children, options] = readTemplateCreateArgs(args, argCount);
 
-        if (!componentDef.acceptChildren && children.length > 0) {
+        if (!componentDef.children && children.length > 0) {
             throw new Error(`component [${componentDef.name}] does not accept any children`);
         }
 
         var tpl = new VComponentTemplate(componentDef.name, nodeArgs, options);
-        if (componentDef.acceptChildren) {
+        if (componentDef.children) {
             tpl.children = children;
+        } else {
+            tpl.$allowChildren = false;
         }
 
         if (componentDef.isolate) {
