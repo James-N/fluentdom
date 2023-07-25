@@ -81,15 +81,13 @@ window.addEventListener('DOMContentLoaded', evt => {
     var tree = fluent.new({
         elm: '#container',
         template:
-            FN.Div(
-                FC.Dynamic(vn => treeNodeTpl),
-            )
-            .withOptions({
-                class: 'tree',
-                context: {
-                    _node: treeData
-                }
-            })
+            FN.Div(treeNodeTpl)
+                .withOptions({
+                    class: 'tree',
+                    context: {
+                        _node: treeData
+                    }
+                })
     });
 
     tree.render();

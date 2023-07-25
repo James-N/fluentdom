@@ -3,6 +3,7 @@ import VNode from './VNode';
 
 import utility from '../service/utility';
 import * as NODE from '../service/node';
+import { str2DOM } from '../service/dom';
 
 
 /**
@@ -58,17 +59,13 @@ class VFragment extends VNode {
                 return false;
             }
         } else {
-            return false;
+            return !this._updated;
         }
     }
 
     render () {
-        if (NODE.needCompute(this) && (this._tryUpdateContent() || !this._updated)) {
-            var wrapper = document.createElement('div');
-            wrapper.innerHTML = this.content;
-
-            this.domNode = Array.prototype.slice.call(wrapper.childNodes, 0);
-
+        if (NODE.needCompute(this) && this._tryUpdateContent()) {
+            this.domNode = str2DOM(this.content);
             this._updated = true;
         }
     }
