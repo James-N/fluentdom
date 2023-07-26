@@ -11,7 +11,7 @@ import { str2DOM } from '../service/dom';
  */
 class VFragment extends VNode {
     /**
-     * @param {String|function(VFragment):String} contentOrProvider  fragment content or content provider
+     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} contentOrProvider  fragment content or content provider
      */
     constructor (contentOrProvider) {
         super();
@@ -19,9 +19,9 @@ class VFragment extends VNode {
         this.nodeType = NodeType.FRAGMENT;
 
         /**
-         * @type {String}
+         * @type {String|Node|Node[]}
          */
-        this.content = '';
+        this.content = null;
 
         this._contentProvider = null;
         this._updated = false;
@@ -33,17 +33,15 @@ class VFragment extends VNode {
     /**
      * set fragment content
      *
-     * @param {String|function(VFragment):String} content  fragment content or provider
+     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} content  fragment content or provider
      */
     setContent (content) {
         this._contentProvider = null;
 
-        if (utility.isNullOrUndef(content)) {
-            this.content = '';
-        } else if (utility.isFunc(content)) {
+        if (utility.isFunc(content)) {
             this._contentProvider = content;
         } else {
-            this.content = String(content);
+            this.content = content;
         }
 
         this._updated = false;
@@ -52,7 +50,7 @@ class VFragment extends VNode {
     _tryUpdateContent () {
         if (this._contentProvider) {
             var content = this._contentProvider.call(null, this);
-            if (this.content != content) {
+            if (this.content !== content) {
                 this.content = content;
                 return true;
             } else {
@@ -64,8 +62,18 @@ class VFragment extends VNode {
     }
 
     render () {
+        function convertContent (content) {
+            if (utility.isDOMNode(content)) {
+                return content;
+            } else if (Array.isArray(content)) {
+                return content.map(convertContent);
+            } else {
+                return str2DOM(String(content));
+            }
+        }
+
         if (NODE.needCompute(this) && this._tryUpdateContent()) {
-            this.domNode = str2DOM(this.content);
+            this.domNode = !!this.content ? convertContent(this.content) : null;
             this._updated = true;
         }
     }
