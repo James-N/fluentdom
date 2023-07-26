@@ -6,10 +6,10 @@
  *
  * @returns {Node[]}
  */
-export function str2DOM (s, unsafe) {
+export function str2DOM (s, unsafe = false) {
     function convertUnsafe (s) {
         var wrapper = document.createElement('div');
-        wrapper.innerHTML = this.content;
+        wrapper.innerHTML = s;
 
         return Array.prototype.slice.call(wrapper.childNodes, 0);
     }
@@ -21,12 +21,19 @@ export function str2DOM (s, unsafe) {
             var recursive = true;
             switch (node.tagName) {
                 case 'SCRIPT':
+                case 'IFRAME':
+                case 'FORM':
                     node.remove();
                     recursive = false;
                     break;
-                case 'IMG':
-                    node.removeAttribute('onerror');
-                    node.removeAttribute('onload');
+                default:
+                    // inline event purification
+                    var attrPattern = /^on\w/i;
+                    for (let attr of node.attributes) {
+                        if (attrPattern.exec(attr.name) && (attr.name in node)) {
+                            node.removeAttribute(attr.name);
+                        }
+                    }
                     break;
             }
 
@@ -38,7 +45,7 @@ export function str2DOM (s, unsafe) {
         }
     }
 
-    function convertSafe (s) {
+    function convertWithSanitize (s) {
         var parser = new DOMParser();
         var doc = parser.parseFromString(s, 'text/html');
 
@@ -47,5 +54,5 @@ export function str2DOM (s, unsafe) {
         return Array.prototype.slice.call(doc.body.childNodes, 0);
     }
 
-    return !!unsafe ? convertUnsafe(s) : convertSafe(s);
+    return !!unsafe ? convertUnsafe(s) : convertWithSanitize(s);
 }

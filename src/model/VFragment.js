@@ -23,6 +23,13 @@ class VFragment extends VNode {
          */
         this.content = null;
 
+        /**
+         * whether sanitize the generated HTML
+         *
+         * @type {Boolean}
+         */
+        this.sanitize = true;
+
         this._contentProvider = null;
         this._updated = false;
 
@@ -62,18 +69,18 @@ class VFragment extends VNode {
     }
 
     render () {
-        function convertContent (content) {
+        function convertContent (content, sanitize) {
             if (utility.isDOMNode(content)) {
                 return content;
             } else if (Array.isArray(content)) {
                 return content.map(convertContent);
             } else {
-                return str2DOM(String(content));
+                return str2DOM(String(content), !sanitize);
             }
         }
 
         if (NODE.needCompute(this) && this._tryUpdateContent()) {
-            this.domNode = !!this.content ? convertContent(this.content) : null;
+            this.domNode = !!this.content ? convertContent(this.content, this.sanitize) : null;
             this._updated = true;
         }
     }

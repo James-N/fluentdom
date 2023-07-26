@@ -421,7 +421,10 @@ export class Compiler {
     }
 
     _compileFragment (tpl, ctx) {
-        return new VFragment(tpl.initValue);
+        var fragNode = new VFragment(tpl.initValue);
+        fragNode.sanitize = getFromNodeOptions(tpl.options, 'sanitize', true);
+
+        return fragNode;
     }
 
     _compileComponent (tpl, ctx) {

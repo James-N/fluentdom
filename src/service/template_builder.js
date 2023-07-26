@@ -349,11 +349,13 @@ export function buildDynamic (provider, once = true) {
 /**
  * create template for fragment node
  *
- * @param {String|function(VFragment):String} content
+ * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} content  fragment content or provider
+ * @param {Object=} options  fragment options
+ *
  * @returns {VTemplate}
  */
-export function buildFragment (content) {
-    return new VTemplate(NodeType.FRAGMENT, content);
+export function buildFragment (content, options) {
+    return new VTemplate(NodeType.FRAGMENT, content, options);
 }
 
 /**
