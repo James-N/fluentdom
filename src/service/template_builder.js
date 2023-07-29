@@ -382,21 +382,13 @@ export function buildSlot (...args) {
  * create builder function for component
  *
  * @param {Object} componentDef  component definition
+ * @param {Boolean=} bindToTpl  bind component definition onto template
+ *
  * @returns {function(...any):VComponentTemplate}
  */
-export function getComponentBuilder (componentDef) {
-    var argCount;
-    if (utility.isFunc(componentDef.nodeClass)) {
-        if (utility.isSubclass(componentDef.nodeClass, VComponent)) {
-            argCount = componentDef.nodeClass.length;
-        } else {
-            argCount = Math.max(0, componentDef.nodeClass.length - 1);
-        }
-    } else {
-        argCount = 0;
-    }
-
+export function getComponentBuilder (componentDef, bindToTpl = false) {
     return function (...args) {
+        var argCount = componentDef.builderArgs.length;
         var nodeArgs = argCount > 0 ? args.slice(0, argCount) : [];
         var [children, options] = readTemplateCreateArgs(args, argCount);
 
@@ -404,14 +396,29 @@ export function getComponentBuilder (componentDef) {
             throw new Error(`component [${componentDef.name}] does not accept any children`);
         }
 
-        var tpl = new VComponentTemplate(componentDef.name, nodeArgs, options);
+        // update options using arguments
+        for (var a = 0; a < componentDef.builderArgs.length; a++) {
+            options = utility.setOptionValue(options, componentDef.builderArgs[a], nodeArgs[a]);
+        }
+
+        // create component tempalte instance
+        var tpl;
+        if (!!componentDef.templateClass &&
+            utility.isSubclass(componentDef.templateClass, VComponentTemplate)) {
+            tpl = new componentDef.templateClass(componentDef.name, null, options);
+        } else {
+            tpl = new VComponentTemplate(componentDef.name, null, options);
+        }
+
+        // set template children
         if (componentDef.children) {
             tpl.children = children;
         } else {
             tpl.$allowChildren = false;
         }
 
-        if (componentDef.isolate) {
+        // bind definition if necessary
+        if (bindToTpl) {
             tpl.$definition = componentDef;
         }
 

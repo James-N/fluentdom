@@ -77,7 +77,7 @@ export default {
 
     /**
      * @param {Object?} options
-     * @param {String[]} keyPath
+     * @param {String[]|String} keyPath
      * @param {any} value
      * @param {Boolean=} whenAbsent
      * @param {Boolean=} appendArray
@@ -87,6 +87,10 @@ export default {
     setOptionValue: function (options, keyPath, value, whenAbsent, appendArray) {
         if (isNullOrUndef(options)) {
             options = {};
+        }
+
+        if (isStr(keyPath)) {
+            keyPath = keyPath.split('.').map(k => k.trim());
         }
 
         var valueSet = options;

@@ -5,18 +5,18 @@
 var FN = fluent.node;
 var FC = fluent.control;
 
-fluent.addDirective('dynDisable', function (node, callback) {
+fluent.addDirective('autoDisable', function (node, callback) {
     if (node instanceof fluent.core.VElement && node.tagName == 'BUTTON') {
         node.setAttr('disabled', vn => callback(vn));
     }
 });
 
 class CardComponent extends fluent.core.VComponent {
-    constructor (title, content) {
+    constructor (options) {
         super('my-card');
 
-        this.title = title;
-        this.content = content;
+        this.title = options.title;
+        this.content = options.content;
 
         this.state = '';
     }
@@ -30,26 +30,19 @@ var CardBuilder = fluent.newComponent({
     name: 'my-card',
     template:
         FN.Div(
+            FN.Div(FN.TEXT(vn => vn.dep.title)),
             FN.Div(
-                FN.TEXT(vn => vn.dep.title),
-            ),
-            FN.Div(
-                FN.Div(
-                    FN.TEXT(vn => vn.dep.content),
-                    { class: 'card-content' }
-                ),
-                { class: 'card-body' }
-            ),
-            FN.Div(
-                FC.Slot('no actions'),
-
-                { class: 'card-actions' }
-            ),
-
-            { class: 'card-wrapper' }
-        ),
+                FN.Div(FN.TEXT(vn => vn.dep.content))
+                    .class('card-content')
+            )
+            .class('card-body'),
+            FN.Div(FC.Slot('no actions'))
+                .class('card-actions')
+        )
+        .class('card-wrapper'),
     context: {},
     nodeClass: CardComponent,
+    builderArgs: ['title', 'content'],
     props: {
         state: { defaultValue: 'normal' }
     },
@@ -94,20 +87,16 @@ var tree = fluent.new({
         // )
         FC.Repeat(
             cards,
-            FC.Dynamic(({ctx}) => CardBuilder(
-                ctx.$value.title,
-                ctx.$value.content,
-                FN.Button(`action ${ctx.$index+1}`, {
-                    events: { click: (evt, vn) => vn.dep.execAction(ctx.$value.data) },
-                    dynDisable: vn => !ctx.$value.hasAction
-                }),
-
-                {
-                    props: {
-                        state: vn => ctx.$value.hasAction ? 'normal' : 'mute'
-                    }
-                }
-            ))
+            FC.Dynamic(({ctx}) =>
+                CardBuilder(
+                    ctx.$value.title,
+                    ctx.$value.content,
+                    FN.Button(`action ${ctx.$index+1}`, {
+                        events: { click: (evt, vn) => vn.dep.execAction(ctx.$value.data) },
+                        autoDisable: vn => !ctx.$value.hasAction
+                    })
+                )
+                .prop('state', vn => ctx.$value.hasAction ? 'normal' : 'mute'))
         )
 });
 

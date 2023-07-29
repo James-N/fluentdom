@@ -18,7 +18,7 @@ class VComponent extends VElement {
         this.nodeType = NodeType.COMPONENT;
 
         /**
-         * name of the component
+         * component type name
          * @type {String}
          */
         this.name = '';

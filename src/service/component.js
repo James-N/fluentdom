@@ -29,10 +29,12 @@ function getDefaultDefinition () {
         context: null,
         contextType: CONTEXT_TYPE.ISOLATE,
         nodeClass: null,
+        templateClass: null,
+        builderArgs: [],
+        init: null,
         props: {},
         options: null,
-        children: true,
-        isolate: false
+        children: true
     };
 }
 
@@ -85,9 +87,11 @@ function findTemplateSlot (template) {
  * define component and get the component builder function
  *
  * @param {Object} options  component definition options
+ * @param {Boolean=} local  do not register the component to global storage
+ *
  * @returns {function(...any):VComponentTemplate}
  */
-export function defineComponent (options) {
+export function defineComponent (options, local = false) {
     var cdef = getDefaultDefinition();
     utility.extend(cdef, options);
 
@@ -101,10 +105,10 @@ export function defineComponent (options) {
     cdef.$templateSlot = (cdef.children && cdef.template) ? findTemplateSlot(cdef.template) : null;
 
     // create builder function
-    var builder = template_builder.getComponentBuilder(cdef);
+    var builder = template_builder.getComponentBuilder(cdef, local);
 
     // register template option and builder function
-    if (!cdef.isolate) {
+    if (!local) {
         COMPONENT_REGISTRATION[cdef.name] = cdef;
         COMPONENT_BUILDER[convertComponentBuilderName(cdef.name)] = builder;
     }

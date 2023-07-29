@@ -469,16 +469,18 @@ export class Compiler {
         }
 
         // create component node
-        var componentNode, postInitializer = null;
+        var componentNode;
         if (utility.isFunc(cdef.nodeClass)) {
             if (utility.isSubclass(cdef.nodeClass, VComponent)) {
-                componentNode = new cdef.nodeClass(...tpl.initValue);
+                componentNode = new cdef.nodeClass(options);
             } else {
-                componentNode = new VComponent(tpl.name);
-                postInitializer = cdef.nodeClass;
+                componentNode = cdef.nodeClass.call(null, cdef.name, options);
+                if (!(componentNode instanceof VComponent)) {
+                    throw new TypeError(`invalid node created by ${cdef.name} component`);
+                }
             }
         } else {
-            componentNode = new VComponent(tpl.name);
+            componentNode = new VComponent(cdef.name, options);
         }
 
         // set component name
@@ -532,16 +534,17 @@ export class Compiler {
 
         // schedule initialization
         componentNode.hook('nodeInit', () => {
-            // invoke component init method and post initializer if exists
+            // invoke component init method
             try {
                 componentNode.init();
             } catch (err) {
                 LOG.error(`error inside \`init\` method of component [${componentNode.name}]`, err);
             }
 
-            if (postInitializer) {
+            // invoke post initializer of component definition
+            if (cdef.init) {
                 try {
-                    postInitializer(componentNode, ...tpl.initValue);
+                    cdef.init.call(null, componentNode);
                 } catch (err) {
                     LOG.error(`error inside initializer function of component [${componentNode.name}]`, err);
                 }
