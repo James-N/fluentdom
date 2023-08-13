@@ -20,6 +20,14 @@ function normalizeCssPropName (name) {
                .join('');
 }
 
+/**
+ * @param {String} cls
+ * @returns {String[]}
+ */
+function splitClassList (cls) {
+    return cls.split(' ').map(c => c.trim()).filter(c => c.length > 0);
+}
+
 function createEventSet (evtName, vnode) {
     var evtSet = {
         name: evtName,
@@ -47,7 +55,7 @@ class ClassDecl {
     }
 
     isEnable (vn) {
-        return !!this._getter.call(null, vn);
+        return this._getter ? !!this._getter.call(null, vn) : true;
     }
 }
 
@@ -77,6 +85,7 @@ class VElement extends VNode {
 
         /**
          * whether the element can be updated later
+         * @type {Boolean}
          */
         this._frozen = false;
 
@@ -151,21 +160,19 @@ class VElement extends VNode {
     _getClassList () {
         return this._getters.class
             .map(c => {
-                if (utility.isStr(c)) {
-                    return c;
-                } else if (utility.isFunc(c)) {
-                    var cls = c(this);
-                    return Array.isArray(cls) ? cls.join(' ') : cls;
-                } else if (c instanceof ClassDecl) {
-                    return c.isEnable(this) ? c.cls : '';
+                var cls;
+                if (utility.isFunc(c)) {
+                    cls = c(this);
                 } else {
-                    return '';
+                    cls = c.isEnable(this) ? c.cls : '';
                 }
+
+                return Array.isArray(cls) ? cls.join(' ') : cls;
             })
             .filter(c => !!c);
     }
 
-    _updateElementStates (elm) {
+    _updateElementNode (elm) {
         utility.entries(this.attrs)
             .forEach(([attr, value]) => {
                 if (value === undefined || value === false) {
@@ -225,7 +232,7 @@ class VElement extends VNode {
 
         if (needUpdateElm) {
             // update element states
-            this._updateElementStates(elm);
+            this._updateElementNode(elm);
 
             // set `frozen` state
             if (this.static) {
@@ -330,23 +337,23 @@ class VElement extends VNode {
      * add a class
      *
      * @param {String|Function} cls  class name or getter
-     * @param {function(VNode):Boolean=} value  class state getter
+     * @param {function(VNode):Boolean?=} value  class state getter
      */
     addClass (cls, value) {
         this._ensureNotStatic("cannot add class to static node");
 
-        if (!utility.isFunc(cls)) {
-            utility.ensureValidString(cls, 'cls');
-        }
-
-        if (utility.isFunc(value)) {
-            if (utility.isStr(cls)) {
-                this._getters.class.push(new ClassDecl(cls, value));
-            } else {
-                throw new TypeError("cls must be string when getter function is provided");
-            }
-        } else {
+        if (utility.isFunc(cls)) {
             this._getters.class.push(cls);
+        } else {
+            utility.ensureValidString(cls, 'cls');
+
+            if (!!value && !utility.isFunc(value)) {
+                throw new TypeError("value must be function");
+            }
+
+            splitClassList(cls).forEach(c => {
+                this._getters.class.push(new ClassDecl(c, value || null));
+            });
         }
     }
 
