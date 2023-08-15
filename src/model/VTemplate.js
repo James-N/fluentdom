@@ -123,8 +123,14 @@ class VAbstractElementTemplate extends VTemplate {
      * set `class` option
      * @returns {this}
      */
-    class (cls) {
-        this.options = utility.setOptionValue(this.options, ['class'], cls);
+    class (clsOrSet, value) {
+        if (utility.isStrictObj(clsOrSet)) {
+            clsOrSet = utility.extend({}, clsOrSet);
+        } else if (utility.isStr(clsOrSet) && utility.isFunc(value)) {
+            clsOrSet = { [clsOrSet]: value };
+        }
+
+        this.options = utility.setOptionValue(this.options, ['class'], clsOrSet, false, true);
         return this;
     }
 

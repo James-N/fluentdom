@@ -55,7 +55,7 @@ class ClassDecl {
     }
 
     isEnable (vn) {
-        return this._getter ? !!this._getter.call(null, vn) : true;
+        return utility.isFunc(this._getter) ? !!this._getter.call(null, vn) : !!this._getter;
     }
 }
 
@@ -347,12 +347,8 @@ class VElement extends VNode {
         } else {
             utility.ensureValidString(cls, 'cls');
 
-            if (!!value && !utility.isFunc(value)) {
-                throw new TypeError("value must be function");
-            }
-
             splitClassList(cls).forEach(c => {
-                this._getters.class.push(new ClassDecl(c, value || null));
+                this._getters.class.push(new ClassDecl(c, utility.isNullOrUndef(value) ? true : value));
             });
         }
     }
@@ -366,13 +362,15 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove class from static node");
 
         var clsList = this._getters.class;
-        for (var i = 0; i < clsList.length; i++) {
-            if ((clsList[i] instanceof ClassDecl && clsList[i].cls == cls) ||
-                clsList[i] === cls) {
-                clsList.splice(i, 1);
-                return;
+        splitClassList(cls).forEach(c => {
+            for (var i = 0; i < clsList.length; i++) {
+                if (clsList[i] === c ||
+                    (clsList[i] instanceof ClassDecl && clsList[i].cls == c)) {
+                    clsList.splice(i, 1);
+                    return;
+                }
             }
-        }
+        });
     }
 
     on (evt, callback) {

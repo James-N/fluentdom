@@ -363,13 +363,17 @@ export class Compiler {
 
                 var classes = options.class;
                 if (classes) {
-                    if (Array.isArray(classes)) {
-                        classes.forEach(cls => elmNode.addClass(cls));
-                    } else if (utility.isObject(classes)) {
-                        utility.entries(classes).forEach(e => elmNode.addClass(e[0], e[1]));
-                    } else if (utility.isStr(classes) || utility.isFunc(classes)) {
-                        elmNode.addClass(classes);
+                    if (!Array.isArray(classes)) {
+                        classes = [classes];
                     }
+
+                    classes.forEach(cls => {
+                        if (utility.isObject(cls)) {
+                            utility.entries(cls).forEach(e => elmNode.addClass(e[0], e[1]));
+                        } else if (utility.isStr(cls) || utility.isFunc(cls)) {
+                            elmNode.addClass(cls);
+                        }
+                    });
                 }
 
                 var events = options.events;

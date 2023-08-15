@@ -8,6 +8,7 @@ const isNum = n => typeof n == 'number';
 const isValidNum = n => typeof n == 'number' && !isNaN(n) && n !== Infinity;
 const isFunc = f => typeof f == 'function';
 const isObject = o => typeof o == 'object';
+const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
 const isDOMNode = n => n instanceof window.Node;
 const isElementNode = n => n instanceof window.Element;
 
@@ -22,6 +23,7 @@ export default {
     isValidNum: isValidNum,
     isFunc: isFunc,
     isObject: isObject,
+    isStrictObj: isStrictObj,
     isDOMNode: isDOMNode,
     isElementNode: isElementNode,
 
