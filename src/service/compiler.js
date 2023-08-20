@@ -81,6 +81,9 @@ function isDepContextNode (node) {
     return node instanceof VComponent;
 }
 
+/**
+ * store context information drution compilation
+ */
 class CompileContext {
     constructor () {
         this.stack = [];
@@ -126,20 +129,41 @@ class CompileContext {
 }
 
 /**
+ * compile extension base class
+ */
+export class CompilerExtension {
+    /**
+     * reset extension internal states
+     *
+     * @param {VNode?} node  the node to reset the extension from
+     */
+    reset (node) { return; }
+
+    /**
+     * pre-compilation callback used to transform template
+     *
+     * @param {VTemplate} tpl  template to be compiled
+     * @returns {VTemplate?}
+     */
+    onBeforeNodeCompile (tpl) { return tpl; }
+
+    /**
+     * post-compilation callback used to post-process nodes being compiled
+     *
+     * @param {VNode} node  the compiled node
+     * @param {VTemplate} tpl  the template used to compile the node
+     *
+     * @returns {VNode?}
+     */
+    onNodeCompiled (node, tpl) { return node; }
+}
+
+/**
  * default compiler
  */
 export class Compiler {
     constructor () {
         this.ctx = new CompileContext();
-
-        /**
-         * node pre-compilation handle
-         */
-        this.onBeforeNodeCompile = null;
-        /**
-         * node compilation finish handle
-         */
-        this.onNodeCompiled = null;
 
         /**
          * @type {[x: (tpl: any, ctx: any) => VNode]}
@@ -154,6 +178,11 @@ export class Compiler {
             [NodeType.FRAGMENT]: this._compileFragment,
             [NodeType.COMPONENT]: this._compileComponent
         };
+
+        /**
+         * @type {CompilerExtension[]}
+         */
+        this.extensions = [];
     }
 
     /**
@@ -194,10 +223,10 @@ export class Compiler {
     _compileTemplate (tpl, ctx) {
         var compileFunc = this._compileFuncs[tpl.nodeType];
         if (compileFunc) {
-            // invoke `BeforeNoeCompile` handle
-            if (this.onBeforeNodeCompile) {
-                this.onBeforeNodeCompile.call(null, tpl);
-            }
+            // invoke pre-compilation callbacks
+            this.extensions.forEach(ext => {
+                tpl = ext.onBeforeNodeCompile(tpl) || tpl;
+            });
 
             // compile the input template into vnode
             var node = compileFunc.call(this, tpl, ctx);
@@ -214,10 +243,10 @@ export class Compiler {
             // load and run directives
             this._loadPostCompileDirectives(node, tpl.options);
 
-            // invoke `NodeCompiled` handle
-            if (this.onNodeCompiled) {
-                this.onNodeCompiled.call(null, node, tpl);
-            }
+            // invoke post-compilation callbacks
+            this.extensions.forEach(ext => {
+                node = ext.onNodeCompiled(node, tpl) || node;
+            });
 
             // invoke node init hook
             node.invokeHook('nodeInit');
@@ -561,7 +590,7 @@ export class Compiler {
 
 
 /**
- * @type {Array<function(Compiler):void>}
+ * @type {CompilerExtension[]}
  */
 const COMPILER_EXTENSIONS = [];
 
@@ -574,8 +603,9 @@ const COMPILER_EXTENSIONS = [];
 export function loadCompiler (caller) {
     var compiler = new Compiler();
 
-    for (let ext of COMPILER_EXTENSIONS) {
-        ext(compiler);
+    for (let extension of COMPILER_EXTENSIONS) {
+        extension.reset(caller);
+        compiler.extensions.push(extension);
     }
 
     if (caller) {
@@ -588,10 +618,10 @@ export function loadCompiler (caller) {
 /**
  * register compiler extension
  *
- * @param {function(Compiler):void} extension  the extension callback
+ * @param {CompilerExtension} extension  the extension
  */
 export function useCompilerExtension (extension) {
-    if (!utility.isFunc(extension)) {
+    if (!(extension instanceof CompilerExtension)) {
         throw new TypeError("invalid compiler extension");
     }
 

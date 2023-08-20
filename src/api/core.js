@@ -11,6 +11,7 @@ import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
 import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 import FluentTree from '../model/FluentTree';
+import { CompilerExtension } from '../service/compiler';
 
 
 var API = {
@@ -28,7 +29,8 @@ var API = {
     VTemplate: VTemplate,
     VElementTemplate: VElementTemplate,
     VComponentTemplate: VComponentTemplate,
-    FluentTree: FluentTree
+    FluentTree: FluentTree,
+    CompilerExtension: CompilerExtension
 };
 
 export default API;
