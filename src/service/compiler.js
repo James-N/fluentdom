@@ -133,11 +133,11 @@ class CompileContext {
  */
 export class CompilerExtension {
     /**
-     * reset extension internal states
+     * initiate extension internal states
      *
-     * @param {VNode?} node  the node to reset the extension from
+     * @param {VNode?} node  the node that launch compilation
      */
-    reset (node) { return; }
+    init (node) { return; }
 
     /**
      * pre-compilation callback used to transform template
@@ -603,8 +603,9 @@ const COMPILER_EXTENSIONS = [];
 export function loadCompiler (caller) {
     var compiler = new Compiler();
 
-    for (let extension of COMPILER_EXTENSIONS) {
-        extension.reset(caller);
+    for (let factory of COMPILER_EXTENSIONS) {
+        var extension = utility.isSubclass(CompilerExtension) ? new factory() : factory();
+        extension.init(caller);
         compiler.extensions.push(extension);
     }
 
@@ -618,14 +619,14 @@ export function loadCompiler (caller) {
 /**
  * register compiler extension
  *
- * @param {CompilerExtension} extension  the extension
+ * @param {Function} factory  the extension factory
  */
-export function useCompilerExtension (extension) {
-    if (!(extension instanceof CompilerExtension)) {
-        throw new TypeError("invalid compiler extension");
+export function useCompilerExtension (factory) {
+    if (!utility.isFunc(factory)) {
+        throw new TypeError("invalid compiler extension factory");
     }
 
-    COMPILER_EXTENSIONS.push(extension);
+    COMPILER_EXTENSIONS.push(factory);
 }
 
 /**
