@@ -16,34 +16,7 @@ import { CONTEXT_TYPE, getComponent, getComponentBuilder } from './component';
 import { getDirective } from './directive';
 
 
-function getFromNodeOptions (options, opt, defaultValue) {
-    if (arguments.length < 3) {
-        defaultValue = null;
-    }
-
-    if (options !== null && options.hasOwnProperty(opt)) {
-        return options[opt];
-    } else {
-        return defaultValue;
-    }
-}
-
-function mergeOptions (opt1, opt2) {
-    function convertClassOpt (opt) {
-        if (Array.isArray(opt)) {
-            return opt.reduce((pv, cv) => {
-                pv[cv] = true;
-                return pv;
-            }, {});
-        } else if (utility.isObject(opt)) {
-            return opt;
-        } else if (utility.isStr(opt)) {
-            return { [opt]: true };
-        } else {
-            return {};
-        }
-    }
-
+function mergeNodeOptions (opt1, opt2) {
     if (opt1 && opt2) {
         var opt = utility.extend({}, opt1);
 
@@ -55,10 +28,7 @@ function mergeOptions (opt1, opt2) {
                     key == 'events') {
                     utility.extend(opt[key], val);
                 } else if (key == 'class') {
-                    opt.class = utility.extend(
-                        convertClassOpt(opt.class),
-                        convertClassOpt(val)
-                    );
+                    utility.setOptionValue(opt, [key], val, false, true);
                 } else {
                     opt[key] = val;
                 }
@@ -257,7 +227,7 @@ export class Compiler {
         }
     }
 
-    _createNodeContext (topCtx, ctxValues) {
+    _createNodeContext (topCtx, ...ctxValueList) {
         var newCtx;
         if (topCtx) {
             newCtx = Object.create(topCtx);
@@ -265,13 +235,17 @@ export class Compiler {
             newCtx = {};
         }
 
-        utility.extend(newCtx, ctxValues);
+        for (let ctxValues of ctxValueList) {
+            if (ctxValues) {
+                utility.extend(newCtx, ctxValues);
+            }
+        }
 
         return newCtx;
     }
 
     _attachNodeContext (node, options, compileCtx) {
-        var context = getFromNodeOptions(options, 'context', null);
+        var context = utility.getOptionValue(options, 'context', null);
         if (context) {
             node.ctx = this._createNodeContext(compileCtx.getNodeContext(), options.context);
         } else {
@@ -281,13 +255,13 @@ export class Compiler {
 
     _setNodeBasicProps (node, options) {
         // set alias
-        var alias = getFromNodeOptions(options, 'alias', '');
+        var alias = utility.getOptionValue(options, 'alias', '');
         if (alias) {
             node.alias = alias;
         }
 
         // set lazy
-        var lazy = getFromNodeOptions(options, 'lazy', false);
+        var lazy = utility.getOptionValue(options, 'lazy', false);
         if (lazy) {
             node.lazy = true;
             node.states.dirty = true;       // initial value of `dirty` state should be true
@@ -295,7 +269,7 @@ export class Compiler {
     }
 
     _attachNodeHooks (node, options) {
-        var hooks = getFromNodeOptions(options, 'hooks', null);
+        var hooks = utility.getOptionValue(options, 'hooks', null);
         if (hooks !== null) {
             utility.entries(hooks).forEach(([name, hook]) => {
                 if (Array.isArray(hook)) {
@@ -350,7 +324,7 @@ export class Compiler {
 
     _compileElement (tpl, ctx) {
         var options = tpl.options;
-        var domNode = getFromNodeOptions(options, 'domNode');
+        var domNode = utility.getOptionValue(options, 'domNode');
 
         var elmNode;
         if (domNode && utility.isElementNode(domNode)) {
@@ -418,7 +392,7 @@ export class Compiler {
             }
         }
 
-        node.static = getFromNodeOptions(options, 'static', false);
+        node.static = utility.getOptionValue(options, 'static', false);
 
         setElementNodeOptions(node, options);
     }
@@ -434,13 +408,13 @@ export class Compiler {
 
     _compileIf (tpl, ctx) {
         var ifNode = new VIf(tpl.initValue, tpl.children);
-        ifNode.cacheNode = getFromNodeOptions(tpl.options, 'cache', true);
+        ifNode.cacheNode = utility.getOptionValue(tpl.options, 'cache', true);
         ifNode.ctx = ctx.getNodeContext();
         return ifNode;
     }
 
     _compileRepeat (tpl, ctx) {
-        var repeatNode = new VRepeat(tpl.initValue, getFromNodeOptions(tpl.options, 'key', null), tpl.children);
+        var repeatNode = new VRepeat(tpl.initValue, utility.getOptionValue(tpl.options, 'key', null), tpl.children);
         this._attachNodeContext(repeatNode, tpl.options, ctx);
 
         return repeatNode;
@@ -448,14 +422,14 @@ export class Compiler {
 
     _compileDynamic (tpl, ctx) {
         var dynamicNode = new VDynamic(tpl.initValue);
-        dynamicNode.once = getFromNodeOptions(tpl.options, 'once', true);
+        dynamicNode.once = utility.getOptionValue(tpl.options, 'once', true);
         dynamicNode.ctx = ctx.getNodeContext();
         return dynamicNode;
     }
 
     _compileFragment (tpl, ctx) {
         var fragNode = new VFragment(tpl.initValue);
-        fragNode.sanitize = getFromNodeOptions(tpl.options, 'sanitize', true);
+        fragNode.sanitize = utility.getOptionValue(tpl.options, 'sanitize', true);
 
         return fragNode;
     }
@@ -482,7 +456,7 @@ export class Compiler {
             }
         }
 
-        var options = !!cdef.options ? mergeOptions(cdef.options, tpl.options) : tpl.options;
+        var options = !!cdef.options ? mergeNodeOptions(cdef.options, tpl.options) : tpl.options;
 
         // prepare component template
         var children;
@@ -520,18 +494,14 @@ export class Compiler {
         componentNode.name = cdef.name;
 
         // prepare component compile information
-        var optionsCtx = getFromNodeOptions(options, 'context', null);
+        var optionsCtx = utility.getOptionValue(options, 'context', null);
         var transformSlot = cdef.children && cdef.$templateSlot && tpl.children.length > 0;
         var slotChildren = null;
 
         // init context
         if (cdef.context || optionsCtx) {
             var topCtx = cdef.contextType == CONTEXT_TYPE.INHERIT ? ctx.getNodeContext() : null;
-            componentNode.ctx = this._createNodeContext(topCtx, cdef.context);
-
-            if (optionsCtx) {
-                utility.extend(componentNode.ctx, optionsCtx);
-            }
+            componentNode.ctx = this._createNodeContext(topCtx, cdef.context, optionsCtx);
         }
 
         // compile children

@@ -78,6 +78,8 @@ export default {
     },
 
     /**
+     * set value into option set
+     *
      * @param {Object?} options
      * @param {String[]|String} keyPath
      * @param {any} value
@@ -133,5 +135,26 @@ export default {
         }
 
         return options;
+    },
+
+    /**
+     * retrive value from option set
+     *
+     * @param {Object?} options
+     * @param {String} key  key name
+     * @param {Any=} defaultValue  default value to return when key is not found
+     *
+     * @returns {Any}
+     */
+    getOptionValue: function (options, key, defaultValue) {
+        if (arguments.length < 3) {
+            defaultValue = null;
+        }
+
+        if (options && options.hasOwnProperty(key)) {
+            return options[key];
+        } else {
+            return defaultValue;
+        }
     }
 };
