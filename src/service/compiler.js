@@ -12,6 +12,7 @@ import { VTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';
 import LOG from './log';
+import * as NODE from './node';
 import { CONTEXT_TYPE, getComponent, getComponentBuilder } from './component';
 import { getDirective } from './directive';
 
@@ -44,14 +45,6 @@ function mergeNodeOptions (opt1, opt2) {
 }
 
 /**
- * @param {VNode} node
- * @returns {Boolean}
- */
-function isDepContextNode (node) {
-    return node instanceof VComponent;
-}
-
-/**
  * store context information drution compilation
  */
 class CompileContext {
@@ -59,12 +52,25 @@ class CompileContext {
         this.stack = [];
     }
 
-    pushState () {
-        var state = {
-            node: null,
-            context: null,
-            depNode: this.getDepNode()
-        };
+    /**
+     * @param {VNode?} node
+     */
+    pushState (node) {
+        var state;
+        if (node) {
+            state = {
+                node: node,
+                context: node.ctx,
+                depNode: NODE.isDepNode(node) ? node : (node.dep || this.getDepNode())
+            };
+        } else {
+            state = {
+                node: null,
+                context: null,
+                depNode: this.getDepNode()
+            };
+        }
+
         this.stack.push(state);
 
         return state;
@@ -161,15 +167,7 @@ export class Compiler {
      * @param {VNode} node
      */
     initFrom (node) {
-        var state = this.ctx.pushState();
-        state.node = node;
-        state.context = node.ctx;
-
-        if (isDepContextNode(node)) {
-            state.depNode = node;
-        } else {
-            state.depNode = node.dep;
-        }
+        this.ctx.pushState(node);
     }
 
     /**
@@ -293,13 +291,7 @@ export class Compiler {
     }
 
     _compileChildren (children, node, ctx) {
-        var state = ctx.pushState();
-        state.node = node;
-        state.context = node.ctx;
-
-        if (isDepContextNode(node)) {
-            state.depNode = node;
-        }
+        ctx.pushState(node);
 
         children = children.slice(0);
         while (children.length > 0) {
@@ -308,7 +300,9 @@ export class Compiler {
                 child.children.forEach(c => children.unshift(c));
             } else {
                 var childNode = this._compileTemplate(child, ctx);
-                node.addChild(childNode);
+                // append child node manually to skip automatic reference updating
+                node.children.push(childNode);
+                childNode.parent = node;
             }
         }
 

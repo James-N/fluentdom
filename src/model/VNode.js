@@ -70,7 +70,7 @@ class VNode {
     }
 
     /**
-     * add a child node
+     * add a child node and update its reference attributes
      *
      * @param {VNode} node  the child node to add
      * @param {Number=} index  child position index
@@ -91,6 +91,7 @@ class VNode {
         }
 
         node.parent = this;
+        NODE.updateNodeDep(node, this);
     }
 
     /**

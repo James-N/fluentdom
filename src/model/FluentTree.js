@@ -126,7 +126,7 @@ class FluentTree {
     }
 
     /**
-     * append child nodes to the given parent
+     * append child nodes to the parent dom node
      *
      * @param {Element|DocumentFragment|String|null} parent  the parent node
      */
