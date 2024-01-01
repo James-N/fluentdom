@@ -17,7 +17,7 @@ export const COMPONENT_BUILDER = {};
 /**
  * component context type constants
  */
-export const CONTEXT_TYPE = {
+export const CONTEXT_MODE = {
     ISOLATE: 'isolate',
     INHERIT: 'inherit'
 };
@@ -27,7 +27,7 @@ function getDefaultDefinition () {
         name: '',
         template: null,
         context: null,
-        contextType: CONTEXT_TYPE.ISOLATE,
+        contextMode: CONTEXT_MODE.ISOLATE,
         nodeClass: null,
         templateClass: null,
         builderArgs: [],

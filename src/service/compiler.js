@@ -13,7 +13,7 @@ import { VTemplate, VSlotTemplate } from '../model/VTemplate';
 import utility from './utility';
 import LOG from './log';
 import * as NODE from './node';
-import { CONTEXT_TYPE, getComponent, getComponentBuilder } from './component';
+import { CONTEXT_MODE, getComponent, getComponentBuilder } from './component';
 import { getDirective } from './directive';
 
 
@@ -209,7 +209,7 @@ export class Compiler {
             this._attachNodeHooks(node, tpl.options);
 
             // load and run directives
-            this._loadPostCompileDirectives(node, tpl.options);
+            this._loadNodeDirectives(node, tpl.options);
 
             // invoke post-compilation callbacks
             this.extensions.forEach(ext => {
@@ -262,7 +262,7 @@ export class Compiler {
         var lazy = utility.getOptionValue(options, 'lazy', false);
         if (lazy) {
             node.lazy = true;
-            node.states.dirty = true;       // initial value of `dirty` state should be true
+            node.flags.dirty = true;       // initial value of `dirty` flag should be true
         }
     }
 
@@ -279,7 +279,7 @@ export class Compiler {
         }
     }
 
-    _loadPostCompileDirectives (node, options) {
+    _loadNodeDirectives (node, options) {
         if (options) {
             utility.entries(options).forEach(([name, value]) => {
                 var directive = getDirective(name);
@@ -402,7 +402,7 @@ export class Compiler {
 
     _compileIf (tpl, ctx) {
         var ifNode = new VIf(tpl.initValue, tpl.children);
-        ifNode.cacheNode = utility.getOptionValue(tpl.options, 'cache', true);
+        ifNode.cacheNode = utility.getOptionValue(tpl.options, 'cache', false);
         ifNode.ctx = ctx.getNodeContext();
         return ifNode;
     }
@@ -494,7 +494,7 @@ export class Compiler {
 
         // init context
         if (cdef.context || optionsCtx) {
-            var topCtx = cdef.contextType == CONTEXT_TYPE.INHERIT ? ctx.getNodeContext() : null;
+            var topCtx = cdef.contextMode == CONTEXT_MODE.INHERIT ? ctx.getNodeContext() : null;
             componentNode.ctx = this._createNodeContext(topCtx, cdef.context, optionsCtx);
         }
 
