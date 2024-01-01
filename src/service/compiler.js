@@ -568,7 +568,7 @@ export function loadCompiler (caller) {
     var compiler = new Compiler();
 
     for (let factory of COMPILER_EXTENSIONS) {
-        var extension = utility.isSubclass(CompilerExtension) ? new factory() : factory();
+        var extension = utility.isSubclass(factory, CompilerExtension) ? new factory() : factory();
         extension.init(caller);
         compiler.extensions.push(extension);
     }
