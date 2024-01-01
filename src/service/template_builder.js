@@ -2,7 +2,6 @@ import NodeType from '../model/NodeType';
 import VNode from '../model/VNode';
 import VText from '../model/VText';
 import VFragment from '../model/VFragment';
-import VComponent from '../model/VComponent';
 import { VTemplate, VElementTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';

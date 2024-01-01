@@ -1,4 +1,4 @@
-import { VTemplate, VSlotTemplate } from '../model/VTemplate';
+import { VTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';
 import * as template_builder from './template_builder';

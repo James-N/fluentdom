@@ -1,4 +1,5 @@
 import NodeType from './NodeType';
+import VNode from './VNode';
 import VElement from './VElement';
 import utility from '../service/utility';
 

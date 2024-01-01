@@ -8,12 +8,15 @@
         "ecmaVersion": 6,
         "sourceType": "module"
     },
+    "plugins": [
+        "jsdoc"
+    ],
     "globals": {
         "__VERSION__": "readonly"
     },
     "rules": {
         "indent": [
-            "error",
+            "warn",
             4,
             { "ignoredNodes": ["CallExpression", "MemberExpression"], "SwitchCase": 1 }
         ],
@@ -26,17 +29,24 @@
             "single"
         ],
         "semi": [
-            "error",
+            "warn",
             "always"
         ],
         "no-extra-boolean-cast": "off",
         "no-prototype-builtins": "off",
         "no-unused-vars": "warn",
+        "no-undef": "error",
         "no-dupe-args": "error",
         "no-dupe-keys": "error",
         "no-unreachable": "warn",
         "curly": "error",
         "no-redeclare": "error",
-        "no-useless-escape": "warn"
+        "no-useless-escape": "warn",
+        "jsdoc/no-undefined-types": [
+            "warn",
+            {
+                "definedTypes": ["Any", "Promise", "Map", "Set"]
+            }
+        ]
     }
 }

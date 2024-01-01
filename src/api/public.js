@@ -2,7 +2,7 @@ import FluentTree from '../model/FluentTree';
 import VEmpty from '../model/VEmpty';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
-import { VTemplate } from '../model/VTemplate';
+import { VTemplate, VComponentTemplate } from '../model/VTemplate';
 
 import utility from '../service/utility';
 import * as compiler from '../service/compiler';
