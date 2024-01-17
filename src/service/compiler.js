@@ -233,9 +233,17 @@ export class Compiler {
             newCtx = {};
         }
 
-        for (let ctxValues of ctxValueList) {
+        for (let ctxValues of ctxValueList.reverse()) {
             if (ctxValues) {
-                utility.extend(newCtx, ctxValues);
+                for (let [ctxKey, ctxVal] of utility.entries(ctxValues)) {
+                    if (!newCtx.hasOwnProperty(ctxKey)) {
+                        if (utility.isFunc(ctxVal)) {
+                            newCtx[ctxKey] = ctxVal();
+                        } else {
+                            newCtx[ctxKey] = ctxVal;
+                        }
+                    }
+                }
             }
         }
 
