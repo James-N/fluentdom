@@ -55,7 +55,7 @@ function readTemplateCreateArgs (args, start) {
                     throw new TypeError("invalid item inside template list");
                 }
             }
-        } else if (utility.isObject(arg) || arg === undefined) {
+        } else if (utility.isObj(arg) || arg === undefined) {
             if (arg instanceof VTemplate) {
                 children.push(arg);
             } else {
@@ -143,7 +143,7 @@ function readParametrizedTemplateArgs (args, start, paramCount) {
     for (var i = start; i < endIndex; i++) {
         var arg = args[i];
         if (i == optionIndex) {
-            if (!Array.isArray(arg) && (utility.isObject(arg) || arg === undefined)) {
+            if (!Array.isArray(arg) && (utility.isObj(arg) || arg === undefined)) {
                 options = arg || null;
             } else {
                 throw new TypeError(`invalid argument[${i}] for template creation: ${arg}`);

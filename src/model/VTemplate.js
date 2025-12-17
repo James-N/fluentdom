@@ -15,7 +15,7 @@ import { buildText } from '../service/template_builder';
 function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
     if (utility.isStr(nameOrSet)) {
         tpl.options = utility.setOptionValue(tpl.options, [option, nameOrSet], value);
-    } else if (utility.isObject(nameOrSet)) {
+    } else if (utility.isObj(nameOrSet)) {
         tpl.options = utility.setOptionValue(tpl.options, [option], {}, true);
 
         var optionSet = tpl.options[option];

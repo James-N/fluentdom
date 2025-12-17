@@ -373,7 +373,7 @@ export class Compiler {
                     }
 
                     classes.forEach(cls => {
-                        if (utility.isObject(cls)) {
+                        if (utility.isObj(cls)) {
                             utility.entries(cls).forEach(e => elmNode.addClass(e[0], e[1]));
                         } else if (utility.isStr(cls) || utility.isFunc(cls)) {
                             elmNode.addClass(cls);
