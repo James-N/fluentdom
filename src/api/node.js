@@ -1,4 +1,4 @@
-import * as template_builder from '../service/template_builder';
+import * as TEMPLATE from '../service/template';
 
 
 /**
@@ -7,7 +7,7 @@ import * as template_builder from '../service/template_builder';
  */
 function makeStandardElementBuilder (tagName) {
     return function (...args) {
-        return template_builder.buildElement(tagName, ...args);
+        return TEMPLATE.buildElement(tagName, ...args);
     };
 }
 
@@ -17,7 +17,7 @@ function makeStandardElementBuilder (tagName) {
  */
 function makeVoidElementBuilder (tagName) {
     return function (options) {
-        return template_builder.buildVoidElement(tagName, options);
+        return TEMPLATE.buildVoidElement(tagName, options);
     };
 }
 
@@ -27,7 +27,7 @@ function makeVoidElementBuilder (tagName) {
  */
 function makeMediaElementBuilder (tagName) {
     return function (...args) {
-        return template_builder.buildMediaElement(tagName, ...args);
+        return TEMPLATE.buildMediaElement(tagName, ...args);
     };
 }
 
@@ -44,12 +44,12 @@ function makeElementKey (tagName) {
 }
 
 var API = {
-    TEXT: template_builder.buildText,
-    ELEMENT: template_builder.buildElement,
-    COMPONENT: template_builder.buildDeferredComponent,
-    Img: template_builder.buildImage,
-    Input: template_builder.buildInput,
-    A: template_builder.buildHLink
+    TEXT: TEMPLATE.buildText,
+    ELEMENT: TEMPLATE.buildElement,
+    COMPONENT: TEMPLATE.buildDeferredComponent,
+    Img: TEMPLATE.buildImage,
+    Input: TEMPLATE.buildInput,
+    A: TEMPLATE.buildHLink
 };
 
 var STANDARD_ELMS = ['div', 'span', 'p', 'section', 'blockquote', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td',

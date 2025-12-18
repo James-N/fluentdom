@@ -1,13 +1,13 @@
-import * as template_builder from '../service/template_builder';
+import * as TEMPLATE from '../service/template';
 
 
 var API = {
-    Empty: template_builder.buildEmpty,
-    If: template_builder.buildIf,
-    Repeat: template_builder.buildRepeat,
-    Dynamic: template_builder.buildDynamic,
-    Fragment: template_builder.buildFragment,
-    Slot: template_builder.buildSlot
+    Empty: TEMPLATE.buildEmpty,
+    If: TEMPLATE.buildIf,
+    Repeat: TEMPLATE.buildRepeat,
+    Dynamic: TEMPLATE.buildDynamic,
+    Fragment: TEMPLATE.buildFragment,
+    Slot: TEMPLATE.buildSlot
 };
 
 export default API;

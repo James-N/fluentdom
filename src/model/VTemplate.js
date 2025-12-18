@@ -1,6 +1,6 @@
 import NodeType from './NodeType';
 import utility from '../service/utility';
-import { buildText } from '../service/template_builder';
+import { buildText } from '../service/template';
 
 
 /**

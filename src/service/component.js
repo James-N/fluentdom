@@ -1,7 +1,7 @@
 import { VTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';
-import * as template_builder from './template_builder';
+import * as TEMPLATE from './template';
 
 
 /**
@@ -105,7 +105,7 @@ export function defineComponent (options, local = false) {
     cdef.$templateSlot = (cdef.children && cdef.template) ? findTemplateSlot(cdef.template) : null;
 
     // create builder function
-    var builder = template_builder.getComponentBuilder(cdef, local);
+    var builder = TEMPLATE.getComponentBuilder(cdef, local);
 
     // register template option and builder function
     if (!local) {
