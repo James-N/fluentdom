@@ -8,7 +8,7 @@ import { buildText } from '../service/template_builder';
  *
  * @param {VTemplate} tpl
  * @param {String} option
- * @param {String|Object} nameOrSet
+ * @param {String|Record<String, Any>} nameOrSet
  * @param {any} value
  * @param {Boolean=} arrayValue
  */
@@ -33,10 +33,25 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
  * template holds VNodes initiation data
  */
 export class VTemplate {
+    /**
+     * @param {String} nodeType  node type
+     * @param {Any} initValue  init argument value
+     * @param {Record<String, Any>} options  template options
+     */
     constructor (nodeType, initValue, options) {
+        /**
+         * @type {String}
+         */
         this.nodeType = nodeType;
 
+        /**
+         * @type {Any}
+         */
         this.initValue = initValue || null;
+
+        /**
+         * @type {Record<String, Any>}
+         */
         this.options = options || null;
 
         /**
@@ -78,7 +93,7 @@ export class VTemplate {
     /**
      * override node options
      *
-     * @param {Object} options
+     * @param {Record<String, Object>} options
      * @returns {this}
      */
     withOptions (options) {
@@ -109,9 +124,43 @@ export class VTemplate {
 
         return this;
     }
+
+    /**
+     * clone properties from another template
+     *
+     * @param {VTemplate} src
+     */
+    _cloneFrom (src) {
+        this.initValue = src.initValue;
+        this.children = src.children.map(c => c.clone());
+        this.$allowChildren = src.$allowChildren;
+
+        // clone options
+        if (src.options) {
+            var clonedOptions = utility.extend({}, src.options);
+
+            if (src.options.hooks) {
+                clonedOptions.hooks = utility.simpleDeepClone(src.options.hooks);
+            }
+
+            this.options = clonedOptions;
+        }
+    }
+
+    /**
+     * create clone of this template
+     */
+    clone () {
+        var cloned = new VTemplate(this.nodeType);
+        cloned._cloneFrom(this);
+
+        return cloned;
+    }
 }
 
 /**
+ * @abstract
+ *
  * abstract class for element-like node templates
  */
 class VAbstractElementTemplate extends VTemplate {
@@ -178,6 +227,25 @@ class VAbstractElementTemplate extends VTemplate {
         updateTplKVOption(this, 'events', nameOrSet, handle, true);
         return this;
     }
+
+    /**
+     * @param {VAbstractElementTemplate} src
+     */
+    _cloneFrom (src) {
+        super._cloneFrom(src);
+
+        if (src.options) {
+            if (src.options.id) {
+                this.options.id = src.options.id;
+            }
+
+            ['styles', 'attrs', 'props', 'class', 'events'].forEach(opt => {
+                if (src.options[opt]) {
+                    this.options[opt] = utility.simpleDeepClone(src.options[opt]);
+                }
+            });
+        }
+    }
 }
 
 /**
@@ -186,6 +254,13 @@ class VAbstractElementTemplate extends VTemplate {
 export class VElementTemplate extends VAbstractElementTemplate {
     constructor (tagName, options) {
         super(NodeType.ELEMENT, tagName, options);
+    }
+
+    clone () {
+        var cloned = new VElementTemplate();
+        cloned._cloneFrom(this);
+
+        return cloned;
     }
 }
 
@@ -197,12 +272,16 @@ export class VComponentTemplate extends VAbstractElementTemplate {
         super(NodeType.COMPONENT, initValue, options);
 
         /**
-         * @type {String} type name of the component
+         * type name of the component
+         *
+         * @type {String}
          */
         this.name = name;
 
         /**
          * template arguments for deferred component creation
+         *
+         * @type {Array?}
          */
         this.$args = null;
 
@@ -210,6 +289,24 @@ export class VComponentTemplate extends VAbstractElementTemplate {
          * component definition for isolate components
          */
         this.$definition = null;
+    }
+
+    /**
+     * @param {VElementTemplate} src
+     */
+    _cloneFrom (src) {
+        super._cloneFrom(src);
+
+        this.name = src.name;
+        this.$args = src.$args;
+        this.$definition = src.$definition;
+    }
+
+    clone () {
+        var cloned = new VComponentTemplate();
+        cloned._cloneFrom(this);
+
+        return cloned;
     }
 }
 
@@ -219,5 +316,12 @@ export class VComponentTemplate extends VAbstractElementTemplate {
 export class VSlotTemplate extends VTemplate {
     constructor (options) {
         super('', null, options);
+    }
+
+    clone () {
+        var cloned = new VSlotTemplate();
+        cloned._cloneFrom(this);
+
+        return cloned;
     }
 }

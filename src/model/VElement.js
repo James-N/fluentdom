@@ -28,6 +28,10 @@ function splitClassList (cls) {
     return cls.split(' ').map(c => c.trim()).filter(c => c.length > 0);
 }
 
+/**
+ * @param {String} evtName
+ * @param {VElement} vnode
+ */
 function createEventSet (evtName, vnode) {
     var evtSet = {
         name: evtName,

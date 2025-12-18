@@ -35,6 +35,7 @@ class VNode {
 
         /**
          * node state table
+         * @type {Record<String, Any>}
          */
         this.flags = {
             dirty: false
@@ -42,7 +43,7 @@ class VNode {
 
         /**
          * reference to the parent virtual node
-         * @type {VNode}
+         * @type {VNode?}
          */
         this.parent = null;
         /**
@@ -52,7 +53,7 @@ class VNode {
         this.children = [];
         /**
          * the component or bound container this node belongs to
-         * @type {VNode}
+         * @type {VNode?}
          */
         this.dep = null;
 
@@ -145,7 +146,7 @@ class VNode {
     }
 
     /**
-     * generate or update corresponding dom node
+     * generate or update managed DOM nodes
      */
     render () {
         // invoke render of all children
@@ -181,7 +182,7 @@ class VNode {
      *
      * @param {String} name  hook name
      * @param {Function} hook  the hook function
-     * @param {Object=} flags  hook flags
+     * @param {Record<String, Boolean>=} flags  hook flags
      */
     hook (name, hook, flags) {
         utility.ensureValidString(name, 'hook name');

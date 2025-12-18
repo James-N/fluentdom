@@ -17,33 +17,6 @@ import { CONTEXT_MODE, getComponent, getComponentBuilder } from './component';
 import { getDirective } from './directive';
 
 
-function mergeNodeOptions (opt1, opt2) {
-    if (opt1 && opt2) {
-        var opt = utility.extend({}, opt1);
-
-        utility.entries(opt2).forEach(([key, val]) => {
-            if (opt.hasOwnProperty(key)) {
-                if (key == 'attrs' ||
-                    key == 'props' ||
-                    key == 'styles' ||
-                    key == 'events') {
-                    utility.extend(opt[key], val);
-                } else if (key == 'class') {
-                    utility.setOptionValue(opt, [key], val, false, true);
-                } else {
-                    opt[key] = val;
-                }
-            } else {
-                opt[key] = val;
-            }
-        });
-
-        return opt;
-    } else {
-        return opt1 || opt2 || null;
-    }
-}
-
 /**
  * store context information drution compilation
  */
@@ -185,7 +158,7 @@ export class Compiler {
             throw new TypeError("template must be VTemplate");
         }
 
-        return this._compileTemplate(template, this.ctx);
+        return this._compileTemplate(template.clone(), this.ctx);
     }
 
     _compileTemplate (tpl, ctx) {
@@ -437,6 +410,38 @@ export class Compiler {
     }
 
     _compileComponent (tpl, ctx) {
+        function mergeNodeOptions (opt1, opt2) {
+            if (opt1 && opt2) {
+                utility.entries(opt2).forEach(([key, val]) => {
+                    if (opt1.hasOwnProperty(key)) {
+                        if (key == 'attrs' || key == 'props' || key == 'styles') {
+                            utility.extend(opt1[key], val);
+                        } else if (key == 'class') {
+                            utility.setOptionValue(opt1, [key], val, false, true);
+                        } else if (key == 'events' || key == 'hooks') {
+                            var val1 = opt1[key];
+                            val1 = Array.isArray(val1) ? val1 : [val1];
+                            if (Array.isArray(val)) {
+                                val1 = val1.concat(val);
+                            } else {
+                                val1.push(val);
+                            }
+
+                            opt1[key] = val1;
+                        } else {
+                            opt1[key] = val;
+                        }
+                    } else {
+                        opt1[key] = val;
+                    }
+                });
+
+                return opt1;
+            } else {
+                return opt1 || opt2 || null;
+            }
+        }
+
         // create actual component template when deferred arguments present
         if (tpl.$args) {
             var builder = getComponentBuilder(tpl.name);
@@ -458,7 +463,7 @@ export class Compiler {
             }
         }
 
-        var options = !!cdef.options ? mergeNodeOptions(cdef.options, tpl.options) : tpl.options;
+        var options = !!cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
 
         // prepare component template
         var children;
@@ -498,7 +503,6 @@ export class Compiler {
         // prepare component compile information
         var optionsCtx = utility.getOptionValue(options, 'context', null);
         var transformSlot = cdef.children && cdef.$templateSlot && tpl.children.length > 0;
-        var slotChildren = null;
 
         // init context
         if (cdef.context || optionsCtx) {
@@ -509,15 +513,10 @@ export class Compiler {
         // compile children
         if (transformSlot) {
             // slot transforming at compile phase
-            slotChildren = cdef.$templateSlot.children;
             cdef.$templateSlot.children = tpl.children;
         }
 
         this._compileChildren(children, componentNode, ctx);
-
-        if (transformSlot) {
-            cdef.$templateSlot.children = slotChildren;
-        }
 
         // register component dynamic props
         utility.entries(cdef.props)

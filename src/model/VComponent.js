@@ -1,5 +1,4 @@
 import NodeType from './NodeType';
-import VNode from './VNode';
 import VElement from './VElement';
 import utility from '../service/utility';
 
@@ -31,10 +30,10 @@ class VComponent extends VElement {
     }
 
     /**
-     * component post initiation method, implemented by derived class
+     * component post initialization method, implemented by derived class
      */
     init () {
-        // component initiation
+        // component initialization
     }
 
     /**

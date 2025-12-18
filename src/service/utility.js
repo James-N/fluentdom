@@ -51,16 +51,18 @@ function validString (value, identiry) {
 // object manipulation utilities
 /* -------------------- --- -------------------- */
 
-const extendObject = Object.assign || function (target, source) {
+const extendObject = Object.assign || function (target, ...sources) {
     if (isNullOrUndef(target)) {
         throw new TypeError("cannot extend null or undefined");
     }
 
-    if (source !== null && source !== undefined) {
-        Object.keys(source).forEach(a => {
-            target[a] = source[a];
-        });
-    }
+    sources.forEach(source => {
+        if (!isNullOrUndef(source)) {
+            Object.keys(source).forEach(a => {
+                target[a] = source[a];
+            });
+        }
+    });
 
     return target;
 };
@@ -150,6 +152,28 @@ function getOptionValue (options, key, defaultValue) {
     }
 }
 
+/**
+ * do naive deep-cloning for given object, plain objects and arrays are cloned recursively while primitive
+ * types, functions and values of complex types will be kept as-is
+ *
+ * @param {Any} obj
+ * @returns {Any}
+ */
+function simpleDeepClone (obj) {
+    if (isStrictObj(obj)) {
+        var cloned = {};
+        objectEntries(obj).forEach(entry => {
+            cloned[entry[0]] = simpleDeepClone(entry[1]);
+        });
+
+        return cloned;
+    } else if (Array.isArray(obj)) {
+        return obj.map(e => simpleDeepClone(e));
+    } else {
+        return obj;
+    }
+}
+
 /* -------------------- --- -------------------- */
 // utility namespace
 /* -------------------- --- -------------------- */
@@ -170,5 +194,6 @@ export default {
     extend: extendObject,
     entries: objectEntries,
     setOptionValue: setOptionValue,
-    getOptionValue: getOptionValue
+    getOptionValue: getOptionValue,
+    simpleDeepClone: simpleDeepClone
 };
