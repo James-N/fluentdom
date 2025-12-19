@@ -1,7 +1,7 @@
 const path = require('path');
+const fs = require('fs');
 
 const webpack = require('webpack');
-const del = require('del');
 
 
 function getVersion() {
@@ -100,7 +100,7 @@ module.exports = (env, args) => {
         }
     });
 
-    del.sync(distPath);
+    fs.rmdirSync(distPath, { recursive: true });
 
     return configs;
 };
