@@ -56,10 +56,12 @@ function convertComponentBuilderName (name) {
 }
 
 /**
+ * find slot from given tempalte(s)
+ *
  * @param {VTemplate|VTemplate[]} template
  * @returns {VSlotTemplate?}
  */
-function findTemplateSlot (template) {
+export function findTemplateSlot (template) {
     function doFind (tpls) {
         for (var i = 0; i < tpls.length; i++) {
             var tpl = tpls[i];
@@ -86,7 +88,7 @@ function findTemplateSlot (template) {
 /**
  * define component and get the component builder function
  *
- * @param {Object} options  component definition options
+ * @param {ReturnType<getDefaultDefinition>} options  component definition options
  * @param {Boolean=} local  do not register the component to global storage
  *
  * @returns {function(...any):VComponentTemplate}
@@ -100,9 +102,6 @@ export function defineComponent (options, local = false) {
     if (!cdef.name) {
         throw new Error("missing component name");
     }
-
-    // find and save slot template item, so that no scanning is necessary during compile phase
-    cdef.$templateSlot = (cdef.children && cdef.template) ? findTemplateSlot(cdef.template) : null;
 
     // create builder function
     var builder = TEMPLATE.getComponentBuilder(cdef, local);
@@ -120,7 +119,7 @@ export function defineComponent (options, local = false) {
  * get registered component options by name
  *
  * @param {String} name  name of the component
- * @returns {Object}
+ * @returns {ReturnType<getDefaultDefinition>?}
  */
 export function getComponent (name) {
     return COMPONENT_REGISTRATION[name] || null;
@@ -130,7 +129,7 @@ export function getComponent (name) {
  * get registered component builder function
  *
  * @param {String} name  name of the component
- * @returns {Function}
+ * @returns {function(...any):VComponentTemplate?}
  */
 export function getComponentBuilder (name) {
     return COMPONENT_BUILDER[convertComponentBuilderName(name)] || null;

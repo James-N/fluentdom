@@ -13,7 +13,7 @@ import { VTemplate, VSlotTemplate } from '../model/VTemplate';
 import utility from './utility';
 import LOG from './log';
 import * as NODE from './node';
-import { CONTEXT_MODE, getComponent, getComponentBuilder } from './component';
+import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlot } from './component';
 import { getDirective } from './directive';
 
 
@@ -473,8 +473,19 @@ export class Compiler {
             } else {
                 children = [cdef.template];
             }
+
+            // clone component's builtin template for late compilation
+            children = children.map(c => c.clone());
+
+            // attach child template to slot if necessary
+            if (cdef.children && tpl.children.length > 0) {
+                var slot = findTemplateSlot(children);
+                if (slot) {
+                    slot.children = tpl.children;
+                }
+            }
         } else {
-            // when component has no builtin templates, take template children as its children
+            // when component has no builtin template, take template children as its children
             if (cdef.children && tpl.children.length > 0) {
                 children = tpl.children;
             } else {
@@ -502,7 +513,6 @@ export class Compiler {
 
         // prepare component compile information
         var optionsCtx = utility.getOptionValue(options, 'context', null);
-        var transformSlot = cdef.children && cdef.$templateSlot && tpl.children.length > 0;
 
         // init context
         if (cdef.context || optionsCtx) {
@@ -511,11 +521,6 @@ export class Compiler {
         }
 
         // compile children
-        if (transformSlot) {
-            // slot transforming at compile phase
-            cdef.$templateSlot.children = tpl.children;
-        }
-
         this._compileChildren(children, componentNode, ctx);
 
         // register component dynamic props
