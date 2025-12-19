@@ -71,6 +71,10 @@ const objectEntries = Object.entries || function (obj) {
     return Object.keys(obj).map(a => [a, obj[a]]);
 };
 
+const hasOwn = Object.hasOwn || function (obj, prop) {
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+};
+
 /**
  * set value into option set
  *
@@ -102,7 +106,7 @@ function setOptionValue (options, keyPath, value, whenAbsent, appendArray) {
             }
             valueSet = newSet;
         } else {
-            var hasOld = valueSet.hasOwnProperty(key);
+            var hasOld = hasOwn(valueSet, key);
 
             if (!whenAbsent || !hasOld) {
                 if (appendArray) {
@@ -145,7 +149,7 @@ function getOptionValue (options, key, defaultValue) {
         defaultValue = null;
     }
 
-    if (options && options.hasOwnProperty(key)) {
+    if (options && hasOwn(options, key)) {
         return options[key];
     } else {
         return defaultValue;
@@ -193,6 +197,7 @@ export default {
 
     extend: extendObject,
     entries: objectEntries,
+    hasOwn: hasOwn,
     setOptionValue: setOptionValue,
     getOptionValue: getOptionValue,
     simpleDeepClone: simpleDeepClone

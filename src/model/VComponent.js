@@ -41,7 +41,7 @@ class VComponent extends VElement {
      *
      * @param {String} prop  property name
      * @param {Any=} defaultValue  default property value
-     * @param {function(VNode):Any=} getter  getter functions
+     * @param {function(import('./VNode').default):Any=} getter  getter functions
      */
     defProp (prop, defaultValue, getter) {
         utility.ensureValidString(prop, 'prop');
@@ -55,7 +55,7 @@ class VComponent extends VElement {
     }
 
     setProp (prop, value) {
-        if (this._propDefs.hasOwnProperty(prop)) {
+        if (utility.hasOwn(this._propDefs, prop)) {
             if (utility.isFunc(value)) {
                 this._propDefs[prop].getter = value;
             } else {
@@ -67,7 +67,7 @@ class VComponent extends VElement {
     }
 
     removeProp (prop) {
-        if (this._propDefs.hasOwnProperty(prop)) {
+        if (utility.hasOwn(this._propDefs, prop)) {
             throw new Error('cannot remove defined component prop');
         } else {
             super.removeProp(prop);

@@ -88,7 +88,7 @@ class VRepeat extends VNode {
         arr.forEach((e, i) => {
             var id = this._key.call(null, e);
             newMap[id] = i;
-            if (oldMap.hasOwnProperty(id)) {
+            if (utility.hasOwn(oldMap, id)) {
                 var oldIdx = oldMap[id];
                 var oldNode = oldChildren[oldIdx];
                 oldNode.ctx.$index = i;

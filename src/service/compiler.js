@@ -209,7 +209,7 @@ export class Compiler {
         for (let ctxValues of ctxValueList.reverse()) {
             if (ctxValues) {
                 for (let [ctxKey, ctxVal] of utility.entries(ctxValues)) {
-                    if (!newCtx.hasOwnProperty(ctxKey)) {
+                    if (!utility.hasOwn(newCtx, ctxKey)) {
                         if (utility.isFunc(ctxVal)) {
                             newCtx[ctxKey] = ctxVal();
                         } else {
@@ -413,7 +413,7 @@ export class Compiler {
         function mergeNodeOptions (opt1, opt2) {
             if (opt1 && opt2) {
                 utility.entries(opt2).forEach(([key, val]) => {
-                    if (opt1.hasOwnProperty(key)) {
+                    if (utility.hasOwn(opt1, key)) {
                         if (key == 'attrs' || key == 'props' || key == 'styles') {
                             utility.extend(opt1[key], val);
                         } else if (key == 'class') {

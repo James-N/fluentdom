@@ -275,7 +275,7 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove attribute from static node");
         utility.ensureValidString(attr, 'attr');
 
-        if (this.attrs.hasOwnProperty(attr)) {
+        if (utility.hasOwn(this.attrs, attr)) {
             delete this._getters.attr[attr];
             this.attrs[attr] = undefined;
         }
@@ -303,7 +303,7 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove property from static node");
         utility.ensureValidString(prop, 'prop');
 
-        if (this.props.hasOwnProperty(prop)) {
+        if (utility.hasOwn(this.props, prop)) {
             delete this.props[prop];
             delete this._getters.prop[prop];
         }
@@ -331,7 +331,7 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove style from static node");
         utility.ensureValidString(cssProp, 'cssProp');
 
-        if (this.styles.hasOwnProperty(cssProp)) {
+        if (utility.hasOwn(this.styles, cssProp)) {
             delete this._getters.style[cssProp];
             this.styles[cssProp] = undefined;
         }
