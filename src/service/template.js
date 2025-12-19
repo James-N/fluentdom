@@ -35,7 +35,7 @@ export function buildText (text, options) {
  * @param {any[]} args  argument list
  * @param {Number} start  start index
  *
- * @returns {[VTemplate[], Object]}
+ * @returns {[VTemplate[], Object?]}
  */
 function readTemplateCreateArgs (args, start) {
     var children = [];
@@ -85,7 +85,7 @@ function readTemplateCreateArgs (args, start) {
 function createElementTemplate (tagName, children, options) {
     var template = new VElementTemplate(tagName, options);
 
-    if (children !== null) {
+    if (children) {
         template.children = children;
     }
 
@@ -364,10 +364,27 @@ export function buildFragment (content, options) {
  * @returns {VSlotTemplate}
  */
 export function buildSlot (...args) {
-    var [children, options] = readTemplateCreateArgs(args, 0);
+    var name = '';
+    var children = null;
+    var options = null;
 
-    var template = new VSlotTemplate(options);
-    template.children = children;
+    if (args.length > 0) {
+        if (utility.isStr(args[0])) {
+            name = args[0];
+            [children, options] = readTemplateCreateArgs(args, 1);
+        } else {
+            [children, options] = readTemplateCreateArgs(args, 0);
+        }
+    }
+
+    if (options) {
+        throw new Error("slot template does not accept options");
+    }
+
+    var template = new VSlotTemplate(name);
+    if (children) {
+        template.children = children;
+    }
 
     return template;
 }

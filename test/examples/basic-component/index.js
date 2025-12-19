@@ -36,7 +36,7 @@ var CardBuilder = fluent.newComponent({
                     .class('card-content')
             )
             .class('card-body'),
-            FN.Div(FC.Slot('no actions'))
+            FN.Div(FC.Slot('', 'no actions'))
                 .class('card-actions')
         )
         .class('card-wrapper'),

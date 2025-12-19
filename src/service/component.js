@@ -56,33 +56,33 @@ function convertComponentBuilderName (name) {
 }
 
 /**
- * find slot from given tempalte(s)
+ * find all slots from given template(s)
  *
  * @param {VTemplate|VTemplate[]} template
- * @returns {VSlotTemplate?}
+ * @returns {Record<String, VSlotTemplate>?} mapping of slot name to slot template and null if no slot found
  */
-export function findTemplateSlot (template) {
-    function doFind (tpls) {
+export function findTemplateSlots (template) {
+    function collect (tpls, result) {
+        var found = false;
+
         for (var i = 0; i < tpls.length; i++) {
             var tpl = tpls[i];
             if (tpl instanceof VSlotTemplate) {
-                return tpl;
-            } else {
-                tpl = doFind(tpl.children);
-                if (tpl) {
-                    return tpl;
-                }
+                result[tpl.name] = tpl;
+                found = true;
+            }
+
+            if (tpl.children.length > 0) {
+                found = found || collect(tpl.children, result);
             }
         }
 
-        return null;
+        return found;
     }
 
-    if (Array.isArray(template)) {
-        return doFind(template);
-    } else {
-        return doFind([template]);
-    }
+    var result = {};
+    template = Array.isArray(template) ? template : [template];
+    return collect(template, result) ? result : null;
 }
 
 /**

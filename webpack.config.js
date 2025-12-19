@@ -10,6 +10,24 @@ function getVersion() {
     return package.version;
 }
 
+/*function addES2018Option (config) {
+    config.module = {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /(node_modules|dist)/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        targets: { esmodules: true },
+                        presets: ['@babel/preset-env']
+                    }
+                }
+            }
+        ]
+    };
+}*/
+
 function addES5Option (config) {
     config.module = {
         rules: [
@@ -100,7 +118,7 @@ module.exports = (env, args) => {
         }
     });
 
-    fs.rmdirSync(distPath, { recursive: true });
+    fs.rmSync(distPath, { recursive: true, force: true });
 
     return configs;
 };

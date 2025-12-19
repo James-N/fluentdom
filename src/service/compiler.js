@@ -13,7 +13,7 @@ import { VTemplate, VSlotTemplate } from '../model/VTemplate';
 import utility from './utility';
 import LOG from './log';
 import * as NODE from './node';
-import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlot } from './component';
+import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlots } from './component';
 import { getDirective } from './directive';
 
 
@@ -278,7 +278,7 @@ export class Compiler {
         while (children.length > 0) {
             var child = children.shift();
             if (child instanceof VSlotTemplate) {
-                child.children.forEach(c => children.unshift(c));
+                children.unshift(...child.children);
             } else {
                 var childNode = this._compileTemplate(child, ctx);
                 // append child node manually to skip automatic reference updating
@@ -479,9 +479,20 @@ export class Compiler {
 
             // attach child template to slot if necessary
             if (cdef.children && tpl.children.length > 0) {
-                var slot = findTemplateSlot(children);
-                if (slot) {
-                    slot.children = tpl.children;
+                var slotMap = findTemplateSlots(children);
+                if (slotMap) {
+                    for (let tChild of tpl.children) {
+                        let slotKey = (tChild.options && tChild.options.slot) || VSlotTemplate.DEFAULT_SLOT_NAME;
+                        let slot = slotMap[slotKey];
+                        if (slot) {
+                            if (!slot.$replaced) {
+                                slot.children.length = 0;
+                                slot.$replaced = true;
+                            }
+
+                            slot.append(tChild);
+                        }
+                    }
                 }
             }
         } else {

@@ -8,7 +8,7 @@ import { buildText } from '../service/template';
  *
  * @param {VTemplate} tpl
  * @param {String} option
- * @param {String|Record<String, Any>} nameOrSet
+ * @param {String|Record<String, any>} nameOrSet
  * @param {any} value
  * @param {Boolean=} arrayValue
  */
@@ -35,8 +35,8 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
 export class VTemplate {
     /**
      * @param {String} nodeType  node type
-     * @param {Any} initValue  init argument value
-     * @param {Record<String, Any>} options  template options
+     * @param {any} initValue  init argument value
+     * @param {Record<String, any>} options  template options
      */
     constructor (nodeType, initValue, options) {
         /**
@@ -45,12 +45,12 @@ export class VTemplate {
         this.nodeType = nodeType;
 
         /**
-         * @type {Any}
+         * @type {any}
          */
         this.initValue = initValue || null;
 
         /**
-         * @type {Record<String, Any>}
+         * @type {Record<String, any>}
          */
         this.options = options || null;
 
@@ -314,14 +314,28 @@ export class VComponentTemplate extends VAbstractElementTemplate {
  * special placeholder template that is used to insert custom templates into template tree at compile time
  */
 export class VSlotTemplate extends VTemplate {
-    constructor (options) {
-        super('', null, options);
+    /**
+     * @param {String=} name  slot name
+     */
+    constructor (name) {
+        super('', null, null);
+
+        /**
+         * slot name
+         * @type {String}
+         */
+        this.name = name || VSlotTemplate.DEFAULT_SLOT_NAME;
     }
 
     clone () {
-        var cloned = new VSlotTemplate();
+        var cloned = new VSlotTemplate(this.name);
         cloned._cloneFrom(this);
 
         return cloned;
     }
 }
+
+/**
+ * the default slot name
+ */
+VSlotTemplate.DEFAULT_SLOT_NAME = 'default';
