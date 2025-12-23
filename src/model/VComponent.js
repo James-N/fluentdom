@@ -2,8 +2,6 @@ import NodeType from './NodeType';
 import VElement from './VElement';
 import utility from '../service/utility';
 
-import * as NODE from '../service/node';
-
 
 /**
  * virtual node for generic component
@@ -83,12 +81,9 @@ class VComponent extends VElement {
             });
     }
 
-    render () {
-        if (NODE.needCompute(this)) {
-            this._updateSelfProps();
-        }
-
-        super.render();
+    compute () {
+        this._updateSelfProps();
+        super.compute();
     }
 }
 

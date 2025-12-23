@@ -3,10 +3,14 @@ import HookMessage from './HookMessage';
 import * as NODE from '../service/node';
 import LOG from '../service/log';
 import utility from '../service/utility';
+import NodeType from './NodeType';
+import { renderNodeTree } from '../service/renderer';
 
 
 /**
- * base class of all virtual node
+ * base class of all virtual node types, this class shall not be instantiated directly
+ *
+ * @abstract
  */
 class VNode {
     constructor () {
@@ -15,42 +19,31 @@ class VNode {
          * @type {String}
          */
         this.nodeType = '';
+
         /**
          * the actual dom node(s)
-         * @type {Node|Node[]}
+         * @type {Node|Node[]?}
          */
         this.domNode = null;
 
         /**
          * context bound with virtual node
-         * @type {Object}
+         * @type {Record<String, any>?}
          */
         this.ctx = null;
-
-        /**
-         * lazy rendering mode switcher
-         * @type {Boolean}
-         */
-        this.lazy = false;
-
-        /**
-         * node state table
-         * @type {Record<String, Any>}
-         */
-        this.flags = {
-            dirty: false
-        };
 
         /**
          * reference to the parent virtual node
          * @type {VNode?}
          */
         this.parent = null;
+
         /**
          * list of child virtual nodes
          * @type {VNode[]}
          */
         this.children = [];
+
         /**
          * the component or bound container this node belongs to
          * @type {VNode?}
@@ -68,6 +61,21 @@ class VNode {
          * @type {Record<String, Function[]>}
          */
         this._hooks = {};
+
+        /**
+         * node flag table, this attribute shall only be accessed by internal functions
+         */
+        this.$flags = {
+            /**
+             * DOM structure related to this node need to be re-synced
+             */
+            reflow: false,
+
+            /**
+             * mark this node should always be a leaf node in node tree
+             */
+            endpoint: false,
+        };
     }
 
     /**
@@ -75,8 +83,13 @@ class VNode {
      *
      * @param {VNode} node  the child node to add
      * @param {Number=} index  child position index
+     * @param {Boolean=} safe  perform additional safety checking & operation before addind child
      */
-    addChild (node, index) {
+    addChild (node, index, safe) {
+        if (this.$flags.endpoint) {
+            throw new Error("cannot add child to an endpoint node");
+        }
+
         if (utility.isNullOrUndef(node)) {
             throw new Error("child node is null");
         }
@@ -85,14 +98,33 @@ class VNode {
             throw new TypeError("child node must be VNode");
         }
 
+        if (node.nodeType == NodeType.TREE) {
+            throw new Error(`cannot add node of type ${NodeType.TREE} as child`);
+        }
+
+        if (safe) {
+            if (NODE.isDescendent(this, node)) {
+                throw new Error("cannot add an ancestor node as child");
+            }
+
+            if (node.parent) {
+                node.remove();
+            }
+        }
+
+        // insert child node
         if (index >= 0) {
             this.children.splice(index, 0, node);
         } else {
             this.children.push(node);
         }
 
+        // update parent & dep reference
         node.parent = this;
         NODE.updateNodeDep(node, this);
+
+        // set reflow flag
+        this.$flags.reflow = true;
     }
 
     /**
@@ -104,8 +136,15 @@ class VNode {
     removeChild (node) {
         var idx = this.children.indexOf(node);
         if (idx >= 0) {
+            // remove child node
             this.children.splice(idx, 1);
+
+            // clear parent reference
             node.parent = null;
+
+            // set reflow flag
+            this.$flags.reflow = true;
+
             return true;
         } else {
             return false;
@@ -120,9 +159,15 @@ class VNode {
      */
     removeChildAt (index) {
         if (index >= 0 && index < this.children.length) {
+            // remove child node
             var child = this.children[index];
             this.children.splice(index, 1);
+
+            // clear parent reference
             child.parent = null;
+
+            // set reflow flag
+            this.$flags.reflow = true;
 
             return child;
         } else {
@@ -146,20 +191,50 @@ class VNode {
     }
 
     /**
-     * generate or update managed DOM nodes
+     * evaluate and update node properties, children, DOM nodes, etc., should be overrided by derived types
+     *
+     * @virtual
+     */
+    compute () {
+        return;
+    }
+
+    /**
+     * recursively compute all nodes within the subtree rooted by current node, and update the affected part of DOM tree
      */
     render () {
-        // invoke render of all children
-        this.children.forEach(c => {
-            try {
-                c.render();
-            } catch (err) {
-                LOG.error('error when rendering child node', err);
-            }
-        });
+        renderNodeTree(this);
+    }
 
-        // reset `dirty` state
-        this.flags.dirty = false;
+    /**
+     * locate and render specified node(s) within the subtree rooted by current node by aliias
+     *
+     * @param {String} alias  alias name to identify nodes
+     * @param {Boolean=} batch  whether render all matched nodes
+     */
+    renderNode (alias, batch) {
+        if (!alias) {
+            throw new Error('alias is empty');
+        }
+
+        var iter, node;
+        if (batch) {
+            iter = NODE.getNodeIter(this, { dfs: false }, node => node.alias == alias ? [true, false] : [false, true]);
+            while (!iter.isEnd()) {
+                node = iter.next();
+                if (node) {
+                    renderNodeTree(node);
+                }
+            }
+        } else {
+            iter = NODE.getNodeIter(this, { dfs: false });
+            while (!iter.isEnd() && iter.next().alias != alias) { }
+
+            node = iter.current();
+            if (node) {
+                renderNodeTree(node);
+            }
+        }
     }
 
     /**

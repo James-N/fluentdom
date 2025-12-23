@@ -102,8 +102,6 @@ window.addEventListener('DOMContentLoaded', evt => {
             })
     });
 
-    tree.render();
-
     setTimeout(() => {
         data.btnText = 'Click Again';
         data.clickable = true;

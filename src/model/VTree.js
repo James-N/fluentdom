@@ -1,91 +1,25 @@
+import NodeType from './NodeType';
 import VNode from './VNode';
 import utility from '../service/utility';
-import * as NODE from '../service/node';
+import { emptyNode } from '../service/dom';
 
 
 /**
- * container for virtual node tree
+ * bridge between virtual node tree and DOM tree
  */
-class FluentTree {
-    /**
-     * @param {VNode} rootNode  the root node
-     */
-    constructor (rootNode) {
-        /**
-         * the root node
-         * @type {VNode}
-         */
-        this.root = rootNode;
+class VTree extends VNode {
+    constructor () {
+        super();
 
-        /**
-         * parent element
-         * @type {Element}
-         */
-        this.parentEl = null;
-
-        /**
-         * whether dom nodes yielded by the root node will never changed after rendering
-         * @type {Boolean}
-         */
-        this.fixedRoot = false;
+        this.nodeType = NodeType.TREE;
     }
 
-    /**
-     * render the tree nodes and update parent dom element
-     */
     render () {
-        if (this.root) {
-            this.root.render();
-
-            if (this.parentEl && !this.fixedRoot) {
-                NODE.rearrangeElementChildNodes(this.parentEl, [this.root]);
-            }
-        }
-
-        return this;
+        super.render();
     }
 
-    /**
-     * locate and render specified node(s) by aliias
-     *
-     * @param {String} alias  alias name to identify nodes
-     * @param {Boolean=} batch  whether render all matched nodes
-     */
-    renderNode (alias, batch) {
-        if (!!alias && !!this.root) {
-            var iter, node;
-            if (batch) {
-                iter = NODE.getNodeIter(this.root, false, node => node.alias == alias ? [true, false] : [false, true]);
-                while (!iter.isEnd()) {
-                    node = iter.next();
-                    if (node !== null) {
-                        node.render();
-                    }
-                }
-            } else {
-                iter = NODE.getNodeIter(this.root, false);
-                var found = false;
-                while (!found && !iter.isEnd()) {
-                    node = iter.next();
-                    if (node !== null && node.alias == alias) {
-                        node.render();
-                        found = true;
-                    }
-                }
-            }
-
-            if (this.parentEl && !this.fixedRoot) {
-                NODE.rearrangeElementChildNodes(this.parentEl, [this.root]);
-            }
-        }
-
-        return this;
-    }
-
-    _getElement (el, errMsg) {
-        if (utility.isNullOrUndef(el)) {
-            return null;
-        } else if (utility.isStr(el)) {
+    _getElement (el) {
+        if (utility.isStr(el)) {
             var elm = document.querySelector(el);
 
             if (elm) {
@@ -96,76 +30,59 @@ class FluentTree {
         } else if (el instanceof Element || el instanceof DocumentFragment) {
             return el;
         } else {
-            throw new TypeError("invalid element input for " + errMsg);
+            throw new TypeError("invalid mounting element input for VTree");
         }
     }
 
     /**
-     * set parent node of fluent tree, the old children of the parent node will be cleaned no matter what
+     * attach virtual node tree into DOM tree through specified element,
+     * the old children of the element will be cleaned no matter what
      *
-     * @param {Element|DocumentFragment|String|null} parent  parent node
+     * @param {Element|DocumentFragment|String} el  the element to mount
+     * @param {Boolean=} render  whether to trigger rendering after mount
      */
-    setParent (parent) {
-        var parentEl = this._getElement(parent, 'fluent tree parent');
-
-        if (!!parentEl) {
-            // clean old children
-            while (parentEl.childNodes.length > 0) {
-                parentEl.removeChild(parentEl.childNodes[0]);
-            }
+    mount (el, render = true) {
+        if (utility.isNullOrUndef(el)) {
+            throw new Error("el is null");
         }
 
-        this.parentEl = parentEl;
+        // get mounting element
+        var mountEl = this._getElement(el);
+        // clean old children
+        emptyNode(mountEl);
+        // save mount element to `domNode` property
+        this.domNode = mountEl;
 
-        return this;
-    }
+        // trigger rendering if necessary
+        if (render) {
+            this.render();
+        }
 
-    _getDomNodeList () {
-        var dnodes = this.root.domNode;
-        return Array.isArray(dnodes) ? dnodes : [dnodes];
+        // invoke mount hook
+        this.invokeHook('mounted');
     }
 
     /**
-     * append child nodes to the parent dom node
+     * check whether this tree is mounted
      *
-     * @param {Element|DocumentFragment|String|null} parent  the parent node
+     * @returns {Boolean}
      */
-    appendTo (parent) {
-        var parentEl = this._getElement(parent, 'append operation');
-        if (!parentEl) {
-            throw new Error("invalid parent to append");
-        }
-
-        var fargment = new DocumentFragment();
-
-        for (let node of this._getDomNodeList()) {
-            if (node) {
-                fargment.appendChild(node);
-            }
-        }
-
-        parentEl.appendChild(fargment);
-        this.parentEl = parentEl;
-
-        return this;
+    isMounted () {
+        return !!this.domNode;
     }
 
     /**
-     * remove child nodes from current parent
+     * remove virtual node tree from DOM tree
      */
-    remove () {
-        if (this.parentEl) {
-            for (let node of this._getDomNodeList()) {
-                if (node) {
-                    node.remove();
-                }
-            }
+    unmount () {
+        if (this.domNode) {
+            emptyNode(this.domNode);
+            this.domNode = null;
 
-            this.parentEl = null;
+            // invoke unmount hook
+            this.invokeHook('unmounted');
         }
-
-        return this;
     }
 }
 
-export default FluentTree;
+export default VTree;

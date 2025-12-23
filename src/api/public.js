@@ -1,5 +1,4 @@
-import FluentTree from '../model/FluentTree';
-import VEmpty from '../model/VEmpty';
+import VTree from '../model/VTree';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
 import { VTemplate, VComponentTemplate } from '../model/VTemplate';
@@ -15,23 +14,19 @@ import * as directive from '../service/directive';
  * compile template into VNode
  *
  * @param {VTemplate|VTemplate[]} template  the input template
- * @returns {VNode}
+ * @returns {VNode|VNode[]}
  */
 export function compileTemplate (template) {
     if (template instanceof VTemplate) {
         return compiler.compile(template);
     } else if (Array.isArray(template)) {
-        var rootNode = new VEmpty();
-
-        template.forEach(t => {
+        return template.map(t => {
             if (t instanceof VTemplate) {
-                rootNode.addChild(compiler.compile(t));
+                return compiler.compile(t);
             } else {
                 throw new TypeError("template input contains invalid item");
             }
         });
-
-        return rootNode;
     } else {
         throw new TypeError("invalid template input");
     }
@@ -40,8 +35,8 @@ export function compileTemplate (template) {
 /**
  * create a new instance of fluent tree
  *
- * @param {Object} options  config options
- * @returns {FluentTree}
+ * @param {Record<String, any>} options  config options
+ * @returns {VTree}
  */
 export function createFluentTree (options) {
     if (!options) {
@@ -52,14 +47,24 @@ export function createFluentTree (options) {
         throw new Error("missing template option");
     }
 
-    // build VNode tree
-    var rootNode = compileTemplate(options.template);
+    // compile content nodes
+    var node = compileTemplate(options.template);
 
-    // construct fluent tree
-    var tree = new FluentTree(rootNode);
-    tree.setParent(options.elm);
+    // construct tree
+    var tree = new VTree();
+    if (Array.isArray(node)) {
+        for (let n of node) {
+            tree.addChild(n);
+        }
+    } else {
+        tree.addChild(node);
+    }
 
-    tree.fixedRoot = !!options.fixedRoot;
+    // mount tree
+    if (options.elm) {
+        var doRender = utility.hasOwn(options, 'render') ? !!options.render : true;
+        tree.mount(options.elm, doRender);
+    }
 
     return tree;
 }
@@ -82,7 +87,7 @@ function getDOMNode (input) {
  * convert existing dom node tree into vtemplate tree
  *
  * @param {Node} domNode  the root dom node
- * @param {Object=} options
+ * @param {Record<String, any>=} options
  *
  * @returns {VTemplate}
  */
@@ -184,16 +189,16 @@ export function templateFromDOM (domNode, options) {
  * convert existing dom node tree into fluent tree
  *
  * @param {Node} domNode  the root dom node
- * @param {Object=} options
+ * @param {Record<String, any>=} options
  *
- * @returns {VNode}
+ * @returns {VTree}
  */
 export function fluentTreeFromDOM (domNode, options) {
     // create template
     var tpl = templateFromDOM(domNode, options);
 
     // prepare fluent tree options
-    options = options || { fixedRoot: true };
+    options = options || {};
     options.elm = domNode.parentNode;
     options.template = tpl;
 
@@ -204,7 +209,7 @@ export function fluentTreeFromDOM (domNode, options) {
 /**
  * define a new component
  *
- * @param {Object} componentOpt  component options
+ * @param {Record<String, any>} componentOpt  component options
  * @returns {function(...any):VComponentTemplate}
  */
 export const defineComponent = component.defineComponent;
@@ -213,7 +218,7 @@ export const defineComponent = component.defineComponent;
  * register directive
  *
  * @param {String} name  name of the directive
- * @param {Object|Function} directive  directive implementation
+ * @param {Record<String, any>|Function} directive  directive implementation
  */
 export const registerdirective = directive.registerDirective;
 

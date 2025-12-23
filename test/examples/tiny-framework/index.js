@@ -193,8 +193,7 @@ headerTree.render();
 
 var contentTree = fluent.fromDOM('.content', {
     convertText: convertTextNode,
-    convertElement: convertElementNode,
-    fixedRoot: true
+    convertElement: convertElementNode
 });
 
 contentTree.render();
@@ -219,7 +218,6 @@ fluent.new({
             contentTree.render();
         } } })
     ]
-})
-.render();
+});
 
 }(window.fluent));

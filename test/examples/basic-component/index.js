@@ -68,7 +68,7 @@ var cards = [{
     hasAction: true
 }];
 
-var tree = fluent.new({
+fluent.new({
     elm: '#container',
     template:
         // FC.Repeat(
@@ -99,7 +99,5 @@ var tree = fluent.new({
                 .prop('state', vn => ctx.$value.hasAction ? 'normal' : 'mute'))
         )
 });
-
-tree.render();
 
 }(window.fluent));

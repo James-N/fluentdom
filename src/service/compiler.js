@@ -238,13 +238,6 @@ export class Compiler {
         if (alias) {
             node.alias = alias;
         }
-
-        // set lazy
-        var lazy = utility.getOptionValue(options, 'lazy', false);
-        if (lazy) {
-            node.lazy = true;
-            node.flags.dirty = true;       // initial value of `dirty` flag should be true
-        }
     }
 
     _attachNodeHooks (node, options) {

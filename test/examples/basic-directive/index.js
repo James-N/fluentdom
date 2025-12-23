@@ -94,6 +94,4 @@ var tree = fluent.new({
     ]
 });
 
-tree.render();
-
 }(window.fluent));

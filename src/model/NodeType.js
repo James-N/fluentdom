@@ -1,5 +1,7 @@
 /**
  * node type constants
+ *
+ * @readonly
  */
 export default {
     ELEMENT: 'ELEMENT',
@@ -9,5 +11,6 @@ export default {
     EMPTY: 'EMPTY',
     DYNAMIC: 'DYNAMIC',
     FRAGMENT: 'FRAGMENT',
-    COMPONENT: 'COMPONENT'
+    COMPONENT: 'COMPONENT',
+    TREE: 'TREE'
 };

@@ -1,7 +1,6 @@
 import VNode from './VNode';
 import NodeType from './NodeType';
 
-import * as NODE from '../service/node';
 import utility from '../service/utility';
 import LOG from '../service/log';
 
@@ -114,13 +113,17 @@ class VElement extends VNode {
      */
     _prepareElm () {
         if (!this.domNode) {
+            // create element node
             var elm = document.createElement(this.tagName);
             this.domNode = elm;
-
+            // bind event handles if necessary
             if (!this.static) {
                 this._bindElmEvents(elm);
             }
 
+            // update reflow flag
+            this.$flags.reflow = true;
+            // trigger `domNodeCreated` hook
             this.invokeHook('domNodeCreated');
 
             return elm;
@@ -176,6 +179,9 @@ class VElement extends VNode {
             .filter(c => !!c);
     }
 
+    /**
+     * @param {Element} elm
+     */
     _updateElementNode (elm) {
         utility.entries(this.attrs)
             .forEach(([attr, value]) => {
@@ -215,26 +221,18 @@ class VElement extends VNode {
         }
     }
 
-    render () {
-        var needUpdateElm = NODE.needCompute(this) && (!this.static || !this._frozen);
-        if (needUpdateElm) {
+    compute () {
+        // make sure the bound element is initiated
+        var elm = this._prepareElm();
+
+        var needRecompute = !this.static || !this._frozen;
+        if (needRecompute) {
             // update states of this virtual node
             this._updateValueSet(this.attrs, this._getters.attr);
             this._updateValueSet(this.props, this._getters.prop);
             this._updateValueSet(this.styles, this._getters.style);
             this.classes = this._getClassList();
-        }
 
-        // render children
-        super.render();
-
-        // make sure the bound element is initiated
-        var elm = this._prepareElm();
-
-        // sync dom nodes of child virtual nodes
-        NODE.rearrangeElementChildNodes(elm, this.children);
-
-        if (needUpdateElm) {
             // update element states
             this._updateElementNode(elm);
 

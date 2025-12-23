@@ -78,7 +78,7 @@ window.addEventListener('DOMContentLoaded', evt => {
             }
         );
 
-    var tree = fluent.new({
+    fluent.new({
         elm: '#container',
         template:
             FN.Div(treeNodeTpl)
@@ -89,8 +89,6 @@ window.addEventListener('DOMContentLoaded', evt => {
                     }
                 })
     });
-
-    tree.render();
 });
 
 }(window.fluent));

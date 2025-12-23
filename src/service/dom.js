@@ -56,3 +56,25 @@ export function str2DOM (s, unsafe = false) {
 
     return !!unsafe ? convertUnsafe(s) : convertWithSanitize(s);
 }
+
+/**
+ * remove all child nodes from an element node
+ */
+const emptyElement = Element.prototype.replaceChildren ?
+    e => e.replaceChildren() :
+    e => e.innerHTML = '';
+
+/**
+ * remove all child nodes from a DOM node
+ *
+ * @param {Node} node
+ */
+export function emptyNode (node) {
+    if (node instanceof Element) {
+        emptyElement(node);
+    } else {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
+    }
+}

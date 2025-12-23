@@ -2,7 +2,6 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
-import * as NODE from '../service/node';
 
 
 /**
@@ -16,6 +15,7 @@ class VText extends VNode {
         super();
 
         this.nodeType = NodeType.TEXT;
+        this.$flags.endpoint = true;
 
         /**
          * text content
@@ -36,8 +36,11 @@ class VText extends VNode {
      */
     _prepareTextNode () {
         if (!this.domNode) {
+            // create text node
             this.domNode = document.createTextNode('');
-
+            // update reflow flag
+            this.$flags.reflow = true;
+            // trigger `domNodeCreated` hook
             this.invokeHook('domNodeCreated');
 
             return this.domNode;
@@ -63,11 +66,9 @@ class VText extends VNode {
         }
     }
 
-    render () {
-        if (NODE.needCompute(this)) {
-            if (this._textProvider) {
-                this.text = String(this._textProvider.call(null, this));
-            }
+    compute () {
+        if (this._textProvider) {
+            this.text = String(this._textProvider.call(null, this));
         }
 
         var node = this._prepareTextNode();

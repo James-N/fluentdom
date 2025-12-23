@@ -140,7 +140,6 @@ export function collectChildDOMNodes(vnode) {
     }
 }
 
-
 /**
  * tree walk methods
  */
@@ -154,12 +153,12 @@ const WALK_METHOD = {
  */
 class NodeTreeWalker {
     /**
-     * @param {VNode} node      the node to start traversal
+     * @param {VNode|VNode[]} node   the node(s) to start traversal
      * @param {Number} method   the traverse method
      * @param {(function(VNode):Boolean|Boolean[])=} filter    custom filter
      */
     constructor (node, method, filter) {
-        this._queue = [node];
+        this._queue = Array.isArray(node) ? node.slice(0) : [node];
         this._method = method;
         this._filter = filter;
 
@@ -212,6 +211,9 @@ class NodeTreeWalker {
         return null;
     }
 
+    /**
+     * @returns {VNode?}
+     */
     current () {
         return this._currentNode;
     }
@@ -227,15 +229,31 @@ class NodeTreeWalker {
 NodeTreeWalker.WALK_METHOD = WALK_METHOD;
 
 /**
+ * default node iter creation params
+ */
+function createNodeIterParams () {
+    return {
+        /**
+         * whether traverse the tree by depth first order
+         */
+        dfs: true,
+        /**
+         * whether exclude the root node from iteration
+         */
+        excludeRoot: false
+    };
+}
+
+/**
  * get an iterator that traverse the given node and its children
  *
  * @param {VNode} node  node on which to start iteration
- * @param {Boolean=} dfs  whether traverse the tree by depth first order
+ * @param {ReturnType<createNodeIterParams>=} params  iterator creation params
  * @param {(function(VNode):Boolean|Boolean[])=} filter    custom filter
  *
  * @returns {NodeTreeWalker}
  */
-export function getNodeIter (node, dfs = false, filter = null) {
+export function getNodeIter (node, params = null, filter = null) {
     if (utility.isNullOrUndef(node)) {
         throw new Error("node is null");
     }
@@ -244,7 +262,13 @@ export function getNodeIter (node, dfs = false, filter = null) {
         throw new TypeError("node must be instance of VNode");
     }
 
-    return new NodeTreeWalker(node, dfs ? WALK_METHOD.DFS : WALK_METHOD.BFS, filter);
+    params = utility.extend(createNodeIterParams(), params);
+
+    // create iterator
+    var startNode = params.excludeRoot ? node.children : node;
+    var iter = new NodeTreeWalker(startNode, params.dfs ? WALK_METHOD.DFS : WALK_METHOD.BFS, filter);
+
+    return iter;
 }
 
 /**
@@ -253,23 +277,13 @@ export function getNodeIter (node, dfs = false, filter = null) {
  * @param {VNode[]} nodes
  */
 export function destroyNodes (nodes) {
-    nodes.forEach(n => {
+    for (let node of nodes) {
         try {
-            n.destroy();
+            node.destroy();
         } catch (err) {
             LOG.error("error when destroying node", err);
         }
-    });
-}
-
-/**
- * check whether the node needs to be recomputed
- *
- * @param {VNode} node
- * @returns {Boolean}
- */
-export function needCompute (node) {
-    return !node.lazy || node.flags.dirty;
+    }
 }
 
 /**
@@ -297,4 +311,28 @@ export function updateNodeDep (node, parent) {
             updateNodeDep(child, node);
         }
     }
+}
+
+/**
+ * check whether child node is a descendent node fo the parent node
+ *
+ * @param {VNode} node  the node to check
+ * @param {VNode} parent  the possible parent node
+ *
+ * @returns {Boolean}
+ */
+export function isDescendent (node, parent) {
+    if (node === parent) {
+        return false;
+    }
+
+    while (node) {
+        if (node.parent === parent) {
+            return true;
+        } else {
+            node = node.parent;
+        }
+    }
+
+    return false;
 }

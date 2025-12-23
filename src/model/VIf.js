@@ -26,49 +26,87 @@ class VIf extends VNode {
             condition = null;
         }
 
+        /**
+         * condition function
+         *
+         * @type {function(VNode):Boolean}
+         */
         this._cond = condition;
+        /**
+         * the last compute result of condition function
+         *
+         * @type {Boolean}
+         */
         this._condValue = false;
+
+        /**
+         * children template
+         *
+         * @type {VTemplate[]}
+         */
         this._tpls = templates || [];
 
         /**
-         * whether generated nodes can be cached when the condition is false
+         * whether generated nodes can be cached for later reuse when the condition becomes false
+         *
          * @type {Boolean}
          */
         this.cacheNode = true;
+
+        /**
+         * @type {VNode[]?}
+         */
+        this._childNodeCache = null;
     }
 
-    render () {
+    compute () {
         if (!this._cond) {
             return;
         }
 
-        if (NODE.needCompute(this)) {
-            this._condValue = this._cond.call(null, this);
+        if (this._tpls.length === 0) {
+            return;
+        }
+
+        var condValueOld = this._condValue;
+        this._condValue = !!this._cond.call(null, this);
+        if (condValueOld != this._condValue) {
             if (this._condValue) {
-                if (this.children.length === 0 && this._tpls.length > 0) {
+                if (this.cacheNode && this._childNodeCache) {
+                    for (let cache of this._childNodeCache) {
+                        this.children.push(cache);
+                    }
+                } else {
                     var compiler = loadCompiler(this);
 
-                    this._tpls.forEach(t => {
-                        this.addChild(compiler.compile(t));
-                    });
+                    for (let tpl of this._tpls) {
+                        this.addChild(compiler.compile(tpl));
+                    }
                 }
-
-                super.render();
-                this.domNode = NODE.collectChildDOMNodes(this);
             } else {
-                if (this.children.length > 0 && !this.cacheNode) {
+                if (this.cacheNode) {
+                    if (!this._childNodeCache) {
+                        this._childNodeCache = this.children.slice(0);
+                    }
+                } else {
                     NODE.destroyNodes(this.children);
-                    this.children.length = 0;
                 }
 
-                this.domNode = null;
+                // clear child list
+                this.children.length = 0;
             }
-        } else {
-            if (this._condValue) {
-                super.render();
-                this.domNode = NODE.collectChildDOMNodes(this);
-            }
+
+            // update reflow flag
+            this.$flags.reflow = true;
         }
+    }
+
+    destroy () {
+        if (this._childNodeCache) {
+            NODE.destroyNodes(this._childNodeCache);
+        }
+
+        super.destroy();
     }
 }
 

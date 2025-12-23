@@ -2,7 +2,6 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
-import * as NODE from '../service/node';
 import { str2DOM } from '../service/dom';
 
 
@@ -11,12 +10,13 @@ import { str2DOM } from '../service/dom';
  */
 class VFragment extends VNode {
     /**
-     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} contentOrProvider  fragment content or content provider
+     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} contentOrProvider  fragment content or content generator function
      */
     constructor (contentOrProvider) {
         super();
 
         this.nodeType = NodeType.FRAGMENT;
+        this.$flags.endpoint = true;
 
         /**
          * @type {String|Node|Node[]}
@@ -30,11 +30,24 @@ class VFragment extends VNode {
          */
         this.sanitize = true;
 
+        /**
+         * fragment content or content generator function
+         *
+         * @type {String|Node|Node[]|function(VFragment):String|Node|Node[]}
+         */
         this._contentProvider = null;
+
+        /**
+         * node udpate flag
+         *
+         * @type {Boolean}
+         */
         this._updated = false;
 
         // init content if necessray
-        this.setContent(contentOrProvider);
+        if (contentOrProvider) {
+            this.setContent(contentOrProvider);
+        }
     }
 
     /**
@@ -68,7 +81,7 @@ class VFragment extends VNode {
         }
     }
 
-    render () {
+    compute () {
         function convertContent (content, sanitize) {
             if (utility.isDOMNode(content)) {
                 return content;
@@ -79,8 +92,9 @@ class VFragment extends VNode {
             }
         }
 
-        if (NODE.needCompute(this) && this._tryUpdateContent()) {
+        if (this._tryUpdateContent()) {
             this.domNode = !!this.content ? convertContent(this.content, this.sanitize) : null;
+            this.$flags.reflow = true;
             this._updated = true;
         }
     }

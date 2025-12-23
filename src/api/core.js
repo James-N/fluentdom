@@ -10,7 +10,7 @@ import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
 import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
-import FluentTree from '../model/FluentTree';
+import VTree from '../model/VTree';
 import { CompilerExtension } from '../service/compiler';
 
 
@@ -29,7 +29,7 @@ var API = {
     VTemplate: VTemplate,
     VElementTemplate: VElementTemplate,
     VComponentTemplate: VComponentTemplate,
-    FluentTree: FluentTree,
+    VTree: VTree,
     CompilerExtension: CompilerExtension
 };
 
