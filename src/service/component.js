@@ -1,4 +1,5 @@
 import { VTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
+import VComponent from '../model/VComponent';
 
 import utility from './utility';
 import * as TEMPLATE from './template';
@@ -24,16 +25,71 @@ export const CONTEXT_MODE = {
 
 function getDefaultDefinition () {
     return {
+        /**
+         * component name, will be used as registration key and element tag name
+         *
+         * @type {String}
+         */
         name: '',
+        /**
+         * component template
+         *
+         * @type {VTemplate|VTemplate[]?}
+         */
         template: null,
-        context: null,
-        contextMode: CONTEXT_MODE.ISOLATE,
-        nodeClass: null,
+        /**
+         * custom component template class type
+         *
+         * @type {(new function(String, any, Record<String, any>):VComponentTemplate)?}
+         */
         templateClass: null,
+        /**
+         * default context object
+         *
+         * @type {Record<String, any>?}
+         */
+        context: null,
+        /**
+         * context mode
+         *
+         * @type {String}
+         */
+        contextMode: CONTEXT_MODE.ISOLATE,
+        /**
+         * custom component node factory
+         *
+         * @type {(function(String, Record<String, any>):VComponent)|(new function(String, Record<String, any>):VComponent)?}
+         */
+        nodeClass: null,
+        /**
+         * list of additional arguments for the auto-generated component builder function
+         *
+         * @type {String[]}
+         */
         builderArgs: [],
+        /**
+         * additional custom component post initializer
+         *
+         * @type {Function}
+         */
         init: null,
+        /**
+         * component dynamic property table
+         *
+         * @type {Record<String, any>}
+         */
         props: {},
+        /**
+         * default options for component node, will be merged with user provided options
+         *
+         * @type {Record<String, any>}
+         */
         options: null,
+        /**
+         * whether component accepts children
+         *
+         * @type {Boolean}
+         */
         children: true
     };
 }
