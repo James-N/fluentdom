@@ -2,8 +2,7 @@
 {
 'use strict';
 
-var FN = fluent.node;
-var FC = fluent.control;
+var FB = fluent.builder;
 
 fluent.addDirective('model', function (vn, callback, options) {
     var modelObj = {
@@ -42,8 +41,8 @@ var data = {
 var tree = fluent.new({
     elm: '#container',
     template: [
-        FN.Div(
-            FN.Input('text', {
+        FB.Div(
+            FB.Input('text', {
                 attrs: { placeholder: 'type something...' },
                 model: (vn, model) => {
                     model.onChange = function (value) {
@@ -53,7 +52,7 @@ var tree = fluent.new({
                     data.input = model;
                 }
             }),
-            FN.Button('Add', {
+            FB.Button('Add', {
                 attrs: { title: 'add new item', disabled: vn => !data.input || !data.input.get() },
                 events: {
                     click: evt => {
@@ -66,13 +65,13 @@ var tree = fluent.new({
 
             { class: 'input-line' }
         ),
-        FN.Div(
-            FC.Repeat(
+        FB.Div(
+            FB.Repeat(
                 vn => data.items,
-                FN.Div(
-                    FN.Span(FN.TEXT(vn => vn.ctx.$index + 1), { class: 'item-index' }),
-                    FN.Span(FN.TEXT(vn => vn.ctx.$value), { class: 'item-text' }),
-                    FN.Button('×', {
+                FB.Div(
+                    FB.Span(FB.TEXT(vn => vn.ctx.$index + 1), { class: 'item-index' }),
+                    FB.Span(FB.TEXT(vn => vn.ctx.$value), { class: 'item-text' }),
+                    FB.Button('×', {
                         class: 'remove-btn',
                         attrs: {
                             title: 'remove item'

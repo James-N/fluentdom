@@ -1,13 +1,11 @@
 import Core from './api/core';
-import Node from './api/node';
-import Control from './api/control';
+import Builder from './api/builder';
 import Component from './api/component';
 import * as pub from './api/public';
 
 export default {
     core: Core,
-    node: Node,
-    control: Control,
+    builder: Builder,
     component: Component,
     version: __VERSION__,
 

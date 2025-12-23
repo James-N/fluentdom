@@ -1,1 +1,1 @@
-This library is still under developing, but you can check out files inside *test/examples* to get a rough idea of how it works.
+This library is still under development, but you can check out files inside *test/examples* to get a rough idea of how it works.

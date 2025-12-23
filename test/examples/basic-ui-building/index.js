@@ -1,8 +1,7 @@
 (function (fluent) {
 'use strict';
 
-var FN = fluent.node;
-var FC = fluent.control;
+var FB = fluent.builder;
 
 window.addEventListener('DOMContentLoaded', evt => {
     var data = {
@@ -17,9 +16,9 @@ window.addEventListener('DOMContentLoaded', evt => {
     var tree = fluent.new({
         elm: '#container',
         template:
-            FN.Div(
-                FN.Button(
-                    FN.TEXT(vn => data.btnText),
+            FB.Div(
+                FB.Button(
+                    FB.TEXT(vn => data.btnText),
                     {
                         class: 'click-btn',
                         attrs: { title: 'click please', disabled: vn => !data.clickable },
@@ -30,20 +29,20 @@ window.addEventListener('DOMContentLoaded', evt => {
                         }
                     }
                 ),
-                FC.If(
+                FB.If(
                     vn => data.showColor1 || data.showColor2,
-                    FC.If(
+                    FB.If(
                         vn => data.showColor1,
-                        FN.Div({
+                        FB.Div({
                             styles: {
                                 'height': '30px',
                                 'background-color': 'yellow'
                             }
                         })
                     ),
-                    FC.If(
+                    FB.If(
                         vn => data.showColor2,
-                        FN.Div({
+                        FB.Div({
                             styles: {
                                 'height': '30px',
                                 'background-color': 'blue'
@@ -51,12 +50,12 @@ window.addEventListener('DOMContentLoaded', evt => {
                         })
                     )
                 ),
-                FC.Repeat(
+                FB.Repeat(
                     vn => data.dataArr,
                     // vn => data.arrCount,
-                    FN.Div(
-                        FN.Span(FN.TEXT(vn => `${vn.ctx.$index + 1} - title`)),
-                        FN.Div(FN.TEXT(vn => `the content is : ${vn.ctx.$value}`))
+                    FB.Div(
+                        FB.Span(FB.TEXT(vn => `${vn.ctx.$index + 1} - title`)),
+                        FB.Div(FB.TEXT(vn => `the content is : ${vn.ctx.$value}`))
                             .class('card-body')
                     )
                     .class('card')
@@ -68,7 +67,7 @@ window.addEventListener('DOMContentLoaded', evt => {
                         'min-height': '130px'
                     })
                 ),
-                FC.Fragment(
+                FB.Fragment(
                     `<div class="fragment">
                         <table>
                             <thead>

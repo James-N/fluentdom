@@ -2,8 +2,7 @@
 {
 'use strict';
 
-var FN = fluent.node;
-var FC = fluent.control;
+var FB = fluent.builder;
 
 fluent.addDirective('autoDisable', function (node, callback) {
     if (node instanceof fluent.core.VElement && node.tagName == 'BUTTON') {
@@ -29,14 +28,14 @@ class CardComponent extends fluent.core.VComponent {
 var CardBuilder = fluent.newComponent({
     name: 'my-card',
     template:
-        FN.Div(
-            FN.Div(FN.TEXT(vn => vn.dep.title)),
-            FN.Div(
-                FN.Div(FN.TEXT(vn => vn.dep.content))
+        FB.Div(
+            FB.Div(FB.TEXT(vn => vn.dep.title)),
+            FB.Div(
+                FB.Div(FB.TEXT(vn => vn.dep.content))
                     .class('card-content')
             )
             .class('card-body'),
-            FN.Div(FC.Slot('', 'no actions'))
+            FB.Div(FB.Slot('', 'no actions'))
                 .class('card-actions')
         )
         .class('card-wrapper'),
@@ -71,7 +70,7 @@ var cards = [{
 fluent.new({
     elm: '#container',
     template:
-        // FC.Repeat(
+        // FB.Repeat(
         //     cards,
         //     CardBuilder('', ''),
 
@@ -85,13 +84,13 @@ fluent.new({
         //         }
         //     }
         // )
-        FC.Repeat(
+        FB.Repeat(
             cards,
-            FC.Dynamic(({ctx}) =>
+            FB.Dynamic(({ctx}) =>
                 CardBuilder(
                     ctx.$value.title,
                     ctx.$value.content,
-                    FN.Button(`action ${ctx.$index+1}`, {
+                    FB.Button(`action ${ctx.$index+1}`, {
                         events: { click: (evt, vn) => vn.dep.execAction(ctx.$value.data) },
                         autoDisable: vn => !ctx.$value.hasAction
                     })

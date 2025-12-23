@@ -3,8 +3,7 @@
 'use strict';
 
 var core = fluent.core;
-var FN = fluent.node;
-var FC = fluent.control;
+var builder = fluent.builder;
 
 var model = {
     pageIndex: 1,
@@ -201,19 +200,19 @@ contentTree.render();
 fluent.new({
     elm: '.controller',
     template: [
-        FN.Button('change title', { events: { click: (vn, evt) => {
+        builder.Button('change title', { events: { click: (vn, evt) => {
             model.pageIndex++;
             headerTree.render();
         } } }),
-        FN.Button('toggle article', { events: { click: (vn, evt) => {
+        builder.Button('toggle article', { events: { click: (vn, evt) => {
             model.showArticle = !model.showArticle;
             contentTree.render();
         } } }),
-        FN.Button('toggle highlight', { events: { click: (vn, evt) => {
+        builder.Button('toggle highlight', { events: { click: (vn, evt) => {
             model.highlightArticle = !model.highlightArticle;
             contentTree.render();
         } } }),
-        FN.Button('add tag', { events: { click: (vn, evt) => {
+        builder.Button('add tag', { events: { click: (vn, evt) => {
             model.tags.push(`tag ${model.tags.length + 1}`);
             contentTree.render();
         } } })

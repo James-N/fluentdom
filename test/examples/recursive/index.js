@@ -1,8 +1,7 @@
 (function (fluent) {
 'use strict';
 
-var FN = fluent.node;
-var FC = fluent.control;
+var FB = fluent.builder;
 
 window.addEventListener('DOMContentLoaded', evt => {
     var treeData = {
@@ -32,9 +31,9 @@ window.addEventListener('DOMContentLoaded', evt => {
     };
 
     var treeNodeTpl =
-        FN.Div(
-            FN.Div(
-                FN.TEXT(vn => vn.ctx._node.name),
+        FB.Div(
+            FB.Div(
+                FB.TEXT(vn => vn.ctx._node.name),
 
                 {
                     class: 'tree-name',
@@ -51,10 +50,10 @@ window.addEventListener('DOMContentLoaded', evt => {
                     }
                 }
             ),
-            FN.Div(
-                FC.Repeat(
+            FB.Div(
+                FB.Repeat(
                     vn => vn.ctx._node.children,
-                    FC.Dynamic(vn => treeNodeTpl),
+                    FB.Dynamic(vn => treeNodeTpl),
 
                     {
                         hooks: {
@@ -81,7 +80,7 @@ window.addEventListener('DOMContentLoaded', evt => {
     fluent.new({
         elm: '#container',
         template:
-            FN.Div(treeNodeTpl)
+            FB.Div(treeNodeTpl)
                 .withOptions({
                     class: 'tree',
                     context: {
