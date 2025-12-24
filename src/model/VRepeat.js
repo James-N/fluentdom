@@ -186,6 +186,10 @@ class VRepeat extends VNode {
     }
 
     compute () {
+        if (this._tpls.length === 0) {
+            return;
+        }
+
         // prepare repeat data
         var arr = this._static ?
                   this._data :

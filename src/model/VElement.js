@@ -14,9 +14,7 @@ function normalizeCssPropName (name) {
         name = name.substring(1);
     }
 
-    return name.split('-')
-               .map((s, i) => i > 0 ? s.charAt(0).toUpperCase() + s.substring(1) : s)
-               .join('');
+    return utility.kebab2CamelCase(name);
 }
 
 /**

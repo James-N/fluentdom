@@ -115,7 +115,7 @@ export class Compiler {
         this.ctx = new CompileContext();
 
         /**
-         * @type {[x: (tpl: any, ctx: any) => VNode]}
+         * @type {[x: (tpl: VTemplate, ctx: Record<String, any>?) => VNode]}
          */
         this._compileFuncs = {
             [NodeType.TEXT]: this._compileText,
@@ -509,7 +509,8 @@ export class Compiler {
                 }
             }
         } else {
-            componentNode = new VComponent(cdef.name, options);
+            var tagName = utility.camel2KebabCase(cdef.name);
+            componentNode = new VComponent(tagName, options);
         }
 
         // set component name

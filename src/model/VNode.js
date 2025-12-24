@@ -1,9 +1,9 @@
+import NodeType from './NodeType';
 import HookMessage from './HookMessage';
 
 import * as NODE from '../service/node';
 import LOG from '../service/log';
 import utility from '../service/utility';
-import NodeType from './NodeType';
 import { renderNodeTree } from '../service/renderer';
 
 
@@ -16,7 +16,7 @@ class VNode {
     constructor () {
         /**
          * type of node
-         * @type {String}
+         * @type {NodeType}
          */
         this.nodeType = '';
 
@@ -213,9 +213,7 @@ class VNode {
      * @param {Boolean=} batch  whether render all matched nodes
      */
     renderNode (alias, batch) {
-        if (!alias) {
-            throw new Error('alias is empty');
-        }
+        utility.ensureValidString(alias, 'alias');
 
         var iter, node;
         if (batch) {
@@ -325,6 +323,10 @@ class VNode {
      * @param  {...any} args  additional args
      */
     invokeHook (name, msg, ...args) {
+        if (msg && !(msg instanceof HookMessage)) {
+            throw new TypeError("invalid hook msg type");
+        }
+
         msg = msg || new HookMessage(this);
 
         var hooks = this._hooks[name];
@@ -346,7 +348,7 @@ class VNode {
         }
 
         // broadcast message to child nodes if necessary
-        if ((msg instanceof HookMessage) && msg.broadcast) {
+        if (msg.broadcast) {
             this.children.forEach(c => c.invokeHook(name, msg, ...args));
         }
     }

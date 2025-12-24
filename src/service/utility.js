@@ -178,6 +178,26 @@ function simpleDeepClone (obj) {
     }
 }
 
+/**
+ * convert kebab-case string to camelCase
+ *
+ * @param {String} str
+ * @returns {String}
+ */
+function kebab2CamelCase (str) {
+    return str.toLowerCase().replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+/**
+ * convert camelCase string to kebab-case
+ *
+ * @param {String} str
+ * @returns {String}
+ */
+function camel2KebabCase (str) {
+    return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
 /* -------------------- --- -------------------- */
 // utility namespace
 /* -------------------- --- -------------------- */
@@ -200,5 +220,8 @@ export default {
     hasOwn: hasOwn,
     setOptionValue: setOptionValue,
     getOptionValue: getOptionValue,
-    simpleDeepClone: simpleDeepClone
+    simpleDeepClone: simpleDeepClone,
+
+    kebab2CamelCase: kebab2CamelCase,
+    camel2KebabCase: camel2KebabCase
 };

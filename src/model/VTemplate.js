@@ -1,4 +1,5 @@
 import NodeType from './NodeType';
+
 import utility from '../service/utility';
 import { buildText } from '../service/template';
 
@@ -34,7 +35,7 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
  */
 export class VTemplate {
     /**
-     * @param {String} nodeType  node type
+     * @param {NodeType} nodeType  node type
      * @param {any} initValue  init argument value
      * @param {Record<String, any>} options  template options
      */
@@ -164,6 +165,11 @@ export class VTemplate {
  * abstract class for element-like node templates
  */
 class VAbstractElementTemplate extends VTemplate {
+    /**
+     * @param {NodeType} nodeType  node type
+     * @param {any} initValue  arbitrary init value
+     * @param {Record<String, any>?} options  template options
+     */
     constructor (nodeType, initValue, options) {
         super(nodeType, initValue, options);
     }
@@ -252,6 +258,10 @@ class VAbstractElementTemplate extends VTemplate {
  * template holds element initiation data
  */
 export class VElementTemplate extends VAbstractElementTemplate {
+    /**
+     * @param {String} tagName  element tag name
+     * @param {Record<String, any>} options  template options
+     */
     constructor (tagName, options) {
         super(NodeType.ELEMENT, tagName, options);
     }
@@ -268,6 +278,11 @@ export class VElementTemplate extends VAbstractElementTemplate {
  * template holds component initiation data
  */
 export class VComponentTemplate extends VAbstractElementTemplate {
+    /**
+     * @param {String} name  component name
+     * @param {any} initValue  arbitrary init value
+     * @param {Record<String, any>?} options   template options
+     */
     constructor (name, initValue, options) {
         super(NodeType.COMPONENT, initValue, options);
 

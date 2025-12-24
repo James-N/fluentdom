@@ -2,8 +2,9 @@
  * node type constants
  *
  * @readonly
+ * @enum {String}
  */
-export default {
+const NodeType = {
     ELEMENT: 'ELEMENT',
     TEXT: 'TEXT',
     IF: 'IF',
@@ -14,3 +15,5 @@ export default {
     COMPONENT: 'COMPONENT',
     TREE: 'TREE'
 };
+
+export default NodeType;

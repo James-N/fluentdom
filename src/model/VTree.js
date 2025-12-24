@@ -1,5 +1,6 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
+
 import utility from '../service/utility';
 import { emptyNode } from '../service/dom';
 

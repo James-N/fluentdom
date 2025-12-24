@@ -21,7 +21,7 @@ function ensuerNotTemplate (obj, msg) {
  * create template for text node
  *
  * @param {String|function(VText):String} text
- * @param {Object?=} options
+ * @param {Record<String, any>=} options
  *
  * @returns {VTemplate}
  */
@@ -35,7 +35,7 @@ export function buildText (text, options) {
  * @param {any[]} args  argument list
  * @param {Number} start  start index
  *
- * @returns {[VTemplate[], Object?]}
+ * @returns {[VTemplate[], Record<String, any>?]}
  */
 function readTemplateCreateArgs (args, start) {
     var children = [];
@@ -77,8 +77,8 @@ function readTemplateCreateArgs (args, start) {
  * core function to create element template
  *
  * @param {String} tagName  element tag name
- * @param {VTemplate[]?} children  list of child templates
- * @param {Object?} options
+ * @param {VTemplate[]=} children  list of child templates
+ * @param {Record<String, any>=} options
  *
  * @returns {VTemplate}
  */
@@ -110,7 +110,7 @@ export function buildElement (tagName, ...args) {
  * create template for element should not contain children
  *
  * @param {String}  tagName
- * @param {Object?=}  options
+ * @param {Record<String, any>=}  options
  *
  * @returns {VTemplate}
  */
@@ -132,7 +132,7 @@ export function buildVoidElement (tagName, options) {
  * @param {Number} start  start index
  * @param {Number} paramCount  parametrized
  *
- * @returns {[any[], Object]}
+ * @returns {[any[], Record<String, any>]}
  */
 function readParametrizedTemplateArgs (args, start, paramCount) {
     var elmArgs = [];
@@ -164,7 +164,7 @@ function readParametrizedTemplateArgs (args, start, paramCount) {
  * create template for img node
  *
  * @param {String} src  image source
- * @param {Object?=} options
+ * @param {Record<String, any>=} options
  * @returns {VTemplate}
  */
 export function buildImage (src, options) {
@@ -212,7 +212,7 @@ export function buildMediaElement (tagName, src, ...args) {
  * create template for input node
  *
  * @param {String} type  input type
- * @param {Object?=} options
+ * @param {Record<String, any>=} options
  * @returns {VTemplate}
  */
 export function buildInput (type, options) {
@@ -349,7 +349,7 @@ export function buildDynamic (provider, once = true) {
  * create template for fragment node
  *
  * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} content  fragment content or provider
- * @param {Object=} options  fragment options
+ * @param {Record<String, any>=} options  fragment options
  *
  * @returns {VTemplate}
  */
@@ -397,7 +397,7 @@ export function buildSlot (...args) {
 /**
  * create builder function for component
  *
- * @param {Object} componentDef  component definition
+ * @param {Record<String, any>} componentDef  component definition
  * @param {Boolean=} bindToTpl  bind component definition onto template
  *
  * @returns {function(...any):VComponentTemplate}

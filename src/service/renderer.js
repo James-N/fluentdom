@@ -14,7 +14,7 @@ export function renderNodeTree (node) {
     /**
      * @param {VNode} node
      */
-    function computeNode (node) {
+    function computeNodeTree (node) {
         try {
             node.compute();
         } catch (err) {
@@ -24,7 +24,7 @@ export function renderNodeTree (node) {
 
         if (!node.$flags.endpoint) {
             for (let child of node.children) {
-                computeNode(child);
+                computeNodeTree(child);
             }
         }
     }
@@ -131,7 +131,7 @@ export function renderNodeTree (node) {
     }
 
     // compute node tree
-    computeNode(node);
+    computeNodeTree(node);
     // sync DOM tree
     syncDom(findAnsestorNodeWithDOM(node) || node);
     // reset states
