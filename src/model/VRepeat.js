@@ -175,6 +175,7 @@ class VRepeat extends VNode {
             }
 
             children.length = arr.length;
+            reflow = true;
         }
 
         if (abandonedNodes.length > 0) {
