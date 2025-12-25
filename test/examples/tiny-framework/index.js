@@ -44,7 +44,7 @@ function convertTextNode (node, parentTpl, state) {
         }
 
         var textGetter = vn => frags.map(f => typeof f == 'function' ? f(vn) : f).join('');
-        return new core.VTemplate(core.NodeType.TEXT, textGetter);
+        return new core.VTemplate(core.NodeType.TEXT, [textGetter]);
     } else {
         return null;
     }
@@ -109,7 +109,7 @@ function convertElementNode (node, parentTpl, state) {
     for (let attr of node.attributes) {
         switch (attr.name) {
             case 'v:if':
-                let vIfTpl = new core.VTemplate(core.NodeType.IF, (key => () => !!model[key])(attr.value));
+                let vIfTpl = new core.VTemplate(core.NodeType.IF, [(key => () => !!model[key])(attr.value)]);
                 if (vnext) {
                     vnext.children.push(vIfTpl);
                 } else {
@@ -135,7 +135,7 @@ function convertElementNode (node, parentTpl, state) {
 
                     let repeatTpl = new core.VTemplate(
                         core.NodeType.REPEAT,
-                        vn => model[repeatInfo[1]],
+                        [vn => model[repeatInfo[1]]],
                         {
                             hooks: {
                                 repeatInit: (vn, cvn, value, index) => {
@@ -168,7 +168,7 @@ function convertElementNode (node, parentTpl, state) {
         tplOpt.class[cls] = true;
     }
 
-    var vElmTpl = new core.VTemplate(core.NodeType.ELEMENT, node.tagName, tplOpt);
+    var vElmTpl = new core.VTemplate(core.NodeType.ELEMENT, [node.tagName], tplOpt);
     if (vnext) {
         vnext.children.push(vElmTpl);
     } else {

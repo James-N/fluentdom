@@ -1,7 +1,7 @@
 import VTree from '../model/VTree';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
-import { VTemplate } from '../model/VTemplate';
+import { VTemplate, VElementTemplate } from '../model/VTemplate';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
@@ -97,12 +97,12 @@ export function templateFromDOM (domNode, options) {
         if (domNode.textContent.trim() == '') {
             return null;
         } else {
-            return new VTemplate(NodeType.TEXT, domNode.textContent);
+            return new VTemplate(NodeType.TEXT, [domNode.textContent]);
         }
     }
 
     function convertElmDefault (domNode, parentTpl, state) {
-        return new VTemplate(NodeType.ELEMENT, domNode.tagName, { static: true, domNode: domNode });
+        return new VElementTemplate(domNode.tagName, { static: true, domNode: domNode });
     }
 
     function convert (node, parentTpl, state) {

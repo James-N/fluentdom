@@ -36,22 +36,22 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
 export class VTemplate {
     /**
      * @param {NodeType} nodeType  node type
-     * @param {any} initValue  init argument value
-     * @param {Record<String, any>} options  template options
+     * @param {any[]?} args  init arguments
+     * @param {Record<String, any>?} options  template options
      */
-    constructor (nodeType, initValue, options) {
+    constructor (nodeType, args, options) {
         /**
          * @type {String}
          */
         this.nodeType = nodeType;
 
         /**
-         * @type {any}
+         * @type {any[]}
          */
-        this.initValue = initValue || null;
+        this.args = args || [];
 
         /**
-         * @type {Record<String, any>}
+         * @type {Record<String, any>?}
          */
         this.options = options || null;
 
@@ -67,6 +67,18 @@ export class VTemplate {
          * @type {Boolean}
          */
         this.$allowChildren = true;
+    }
+
+    /**
+     * get argument at index
+     *
+     * @param {Number} i  arg index
+     * @param {any=} defaultValue  default value
+     *
+     * @returns {any}
+     */
+    arg (i, defaultValue = null) {
+        return i < this.args.length ? this.args[i] : defaultValue;
     }
 
     /**
@@ -132,7 +144,7 @@ export class VTemplate {
      * @param {VTemplate} src
      */
     _cloneFrom (src) {
-        this.initValue = src.initValue;
+        this.args = src.args.slice(0);
         this.children = src.children.map(c => c.clone());
         this.$allowChildren = src.$allowChildren;
 
@@ -165,15 +177,6 @@ export class VTemplate {
  * abstract class for element-like node templates
  */
 class VAbstractElementTemplate extends VTemplate {
-    /**
-     * @param {NodeType} nodeType  node type
-     * @param {any} initValue  arbitrary init value
-     * @param {Record<String, any>?} options  template options
-     */
-    constructor (nodeType, initValue, options) {
-        super(nodeType, initValue, options);
-    }
-
     /**
      * set `class` option
      * @returns {this}
@@ -260,10 +263,25 @@ class VAbstractElementTemplate extends VTemplate {
 export class VElementTemplate extends VAbstractElementTemplate {
     /**
      * @param {String} tagName  element tag name
-     * @param {Record<String, any>} options  template options
+     * @param {Record<String, any>?} options  template options
      */
     constructor (tagName, options) {
-        super(NodeType.ELEMENT, tagName, options);
+        super(NodeType.ELEMENT, null, options);
+
+        /**
+         * element tag name
+         *
+         * @type {String}
+         */
+        this.tagName = tagName;
+    }
+
+    /**
+     * @param {VElementTemplate} src
+     */
+    _cloneFrom (src) {
+        super._cloneFrom(src);
+        this.tagName = src.tagName;
     }
 
     clone () {
@@ -280,11 +298,11 @@ export class VElementTemplate extends VAbstractElementTemplate {
 export class VComponentTemplate extends VAbstractElementTemplate {
     /**
      * @param {String} name  component name
-     * @param {any} initValue  arbitrary init value
+     * @param {any[]?} args  init arguments
      * @param {Record<String, any>?} options   template options
      */
-    constructor (name, initValue, options) {
-        super(NodeType.COMPONENT, initValue, options);
+    constructor (name, args, options) {
+        super(NodeType.COMPONENT, args, options);
 
         /**
          * type name of the component
@@ -294,11 +312,9 @@ export class VComponentTemplate extends VAbstractElementTemplate {
         this.name = name;
 
         /**
-         * template arguments for deferred component creation
-         *
-         * @type {Array?}
+         * deferred component creation flag
          */
-        this.$args = null;
+        this.$deferred = false;
 
         /**
          * component definition for isolate components
@@ -307,13 +323,13 @@ export class VComponentTemplate extends VAbstractElementTemplate {
     }
 
     /**
-     * @param {VElementTemplate} src
+     * @param {VComponentTemplate} src
      */
     _cloneFrom (src) {
         super._cloneFrom(src);
 
         this.name = src.name;
-        this.$args = src.$args;
+        this.$deferred = src.$deferred;
         this.$definition = src.$definition;
     }
 

@@ -270,7 +270,7 @@ export class Compiler {
     }
 
     _compileText(tpl, ctx) {
-        var textNode = new VText(tpl.initValue);
+        var textNode = new VText(tpl.arg(0));
         this._attachNodeContext(textNode, null, ctx);
 
         return textNode;
@@ -286,7 +286,7 @@ export class Compiler {
             elmNode = new VElement(domNode.tagName);
             elmNode.domNode = domNode;
         } else {
-            elmNode = new VElement(tpl.initValue);
+            elmNode = new VElement(tpl.tagName || tpl.arg(0));
         }
 
         this._setupVElement(elmNode, options);
@@ -361,28 +361,28 @@ export class Compiler {
     }
 
     _compileIf (tpl, ctx) {
-        var ifNode = new VIf(tpl.initValue, tpl.children);
+        var ifNode = new VIf(tpl.arg(0), tpl.children);
         ifNode.cacheNode = utility.getOptionValue(tpl.options, 'cache', false);
         ifNode.ctx = ctx.getNodeContext();
         return ifNode;
     }
 
     _compileRepeat (tpl, ctx) {
-        var repeatNode = new VRepeat(tpl.initValue, utility.getOptionValue(tpl.options, 'key', null), tpl.children);
+        var repeatNode = new VRepeat(tpl.arg(0), utility.getOptionValue(tpl.options, 'key', null), tpl.children);
         this._attachNodeContext(repeatNode, tpl.options, ctx);
 
         return repeatNode;
     }
 
     _compileDynamic (tpl, ctx) {
-        var dynamicNode = new VDynamic(tpl.initValue);
+        var dynamicNode = new VDynamic(tpl.arg(0));
         dynamicNode.once = utility.getOptionValue(tpl.options, 'once', true);
         dynamicNode.ctx = ctx.getNodeContext();
         return dynamicNode;
     }
 
     _compileFragment (tpl, ctx) {
-        var fragNode = new VFragment(tpl.initValue);
+        var fragNode = new VFragment(tpl.arg(0));
         fragNode.sanitize = utility.getOptionValue(tpl.options, 'sanitize', true);
 
         return fragNode;
@@ -422,13 +422,13 @@ export class Compiler {
         }
 
         // create actual component template when deferred arguments present
-        if (tpl.$args) {
+        if (tpl.$deferred) {
             var builder = getComponentBuilder(tpl.name);
             if (!builder) {
                 throw new Error(`unrecognized component [${tpl.name}]`);
             }
 
-            tpl = builder(...tpl.$args);
+            tpl = builder(...tpl.args);
         }
 
         // get component definition
@@ -442,7 +442,14 @@ export class Compiler {
             }
         }
 
+        // generate final options
         var options = !!cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
+
+        if (cdef.builderArgs.length > 0) {
+            for (var a = 0; a < cdef.builderArgs.length; a++) {
+                options = utility.setOptionValue(options, cdef.builderArgs[a], tpl.arg(a));
+            }
+        }
 
         // prepare component template
         var children;

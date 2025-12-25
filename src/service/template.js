@@ -26,7 +26,7 @@ function ensuerNotTemplate (obj, msg) {
  * @returns {VTemplate}
  */
 export function buildText (text, options) {
-    return new VTemplate(NodeType.TEXT, text, options);
+    return new VTemplate(NodeType.TEXT, [text], options);
 }
 
 /**
@@ -294,7 +294,7 @@ export function buildIf (condition, ...args) {
 
     var [children, options] = readTemplateCreateArgs(args, 0);
 
-    var template = new VTemplate(NodeType.IF, condition, options);
+    var template = new VTemplate(NodeType.IF, [condition], options);
     template.children = children;
 
     return template;
@@ -323,7 +323,7 @@ export function buildRepeat (dataOrProvider, ...args) {
         options.key = key;
     }
 
-    var template = new VTemplate(NodeType.REPEAT, dataOrProvider, options);
+    var template = new VTemplate(NodeType.REPEAT, [dataOrProvider], options);
     template.children = children;
 
     return template;
@@ -342,7 +342,7 @@ export function buildDynamic (provider, once = true) {
         throw new TypeError("provider input must be function");
     }
 
-    return new VTemplate(NodeType.DYNAMIC, provider, { once: !!once });
+    return new VTemplate(NodeType.DYNAMIC, [provider], { once: !!once });
 }
 
 /**
@@ -354,7 +354,7 @@ export function buildDynamic (provider, once = true) {
  * @returns {VTemplate}
  */
 export function buildFragment (content, options) {
-    return new VTemplate(NodeType.FRAGMENT, content, options);
+    return new VTemplate(NodeType.FRAGMENT, [content], options);
 }
 
 /**
@@ -412,18 +412,13 @@ export function getComponentBuilder (componentDef, bindToTpl = false) {
             throw new Error(`component [${componentDef.name}] does not accept any children`);
         }
 
-        // update options using arguments
-        for (var a = 0; a < componentDef.builderArgs.length; a++) {
-            options = utility.setOptionValue(options, componentDef.builderArgs[a], nodeArgs[a]);
-        }
-
         // create component tempalte instance
         var tpl;
         if (!!componentDef.templateClass &&
             utility.isSubclass(componentDef.templateClass, VComponentTemplate)) {
-            tpl = new componentDef.templateClass(componentDef.name, null, options);
+            tpl = new componentDef.templateClass(componentDef.name, nodeArgs, options);
         } else {
-            tpl = new VComponentTemplate(componentDef.name, null, options);
+            tpl = new VComponentTemplate(componentDef.name, nodeArgs, options);
         }
 
         // set template children
@@ -450,8 +445,8 @@ export function getComponentBuilder (componentDef, bindToTpl = false) {
  * @returns {VComponentTemplate}
  */
 export function buildDeferredComponent(name, ...args) {
-    var template = new VComponentTemplate(name, null, null);
-    template.$args = args;
+    var template = new VComponentTemplate(name, args, null);
+    template.$deferred = true;
 
     return template;
 }

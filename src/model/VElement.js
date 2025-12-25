@@ -71,6 +71,7 @@ class VElement extends VNode {
     constructor (tagName) {
         super();
 
+        utility.ensureValidString(tagName, 'tagName');
         this.nodeType = NodeType.ELEMENT;
 
         /**
