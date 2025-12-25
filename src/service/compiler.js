@@ -14,7 +14,7 @@ import utility from './utility';
 import LOG from './log';
 import * as NODE from './node';
 import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlots } from './component';
-import { getDirective } from './directive';
+import { loadDirectives } from './directive';
 
 
 /**
@@ -87,24 +87,6 @@ export class CompilerExtension {
      * @param {VNode?} node  the node that launch compilation
      */
     init (node) { return; }
-
-    /**
-     * pre-compilation callback used to transform template
-     *
-     * @param {VTemplate} tpl  template to be compiled
-     * @returns {VTemplate?}
-     */
-    onBeforeNodeCompile (tpl) { return tpl; }
-
-    /**
-     * post-compilation callback used to post-process nodes being compiled
-     *
-     * @param {VNode} node  the compiled node
-     * @param {VTemplate} tpl  the template used to compile the node
-     *
-     * @returns {VNode?}
-     */
-    onNodeCompiled (node, tpl) { return node; }
 }
 
 /**
@@ -164,10 +146,13 @@ export class Compiler {
     _compileTemplate (tpl, ctx) {
         var compileFunc = this._compileFuncs[tpl.nodeType];
         if (compileFunc) {
-            // invoke pre-compilation callbacks
-            this.extensions.forEach(ext => {
-                tpl = ext.onBeforeNodeCompile(tpl) || tpl;
-            });
+            // load directives
+            var directives = tpl.options ? loadDirectives(tpl.options) : null;
+
+            // pre template transformation using directives
+            if (directives) {
+                tpl = this._transformTemplate(tpl, directives);
+            }
 
             // compile the input template into vnode
             var node = compileFunc.call(this, tpl, ctx);
@@ -181,13 +166,10 @@ export class Compiler {
             // register hooks
             this._attachNodeHooks(node, tpl.options);
 
-            // load and run directives
-            this._loadNodeDirectives(node, tpl.options);
-
-            // invoke post-compilation callbacks
-            this.extensions.forEach(ext => {
-                node = ext.onNodeCompiled(node, tpl) || node;
-            });
+            // attach directives to node
+            if (directives) {
+                this._attachNodeDirectives(node, directives, tpl.options);
+            }
 
             // invoke node init hook
             node.invokeHook('nodeInit');
@@ -195,6 +177,21 @@ export class Compiler {
             return node;
         } else {
             throw new TypeError(`unrecognized template of type [${tpl.nodeType}]`);
+        }
+    }
+
+    _transformTemplate (tpl, directives) {
+        for (let directive of directives) {
+            tpl = directive.precompile(tpl);
+        }
+
+        return tpl;
+    }
+
+    _attachNodeDirectives (node, directives, options) {
+        for (let directive of directives) {
+            directive.postcompile(node, options);
+            node.directives.push(directive);
         }
     }
 
@@ -248,17 +245,6 @@ export class Compiler {
                     hook.forEach(f => node.hook(name, f));
                 } else {
                     node.hook(name, hook);
-                }
-            });
-        }
-    }
-
-    _loadNodeDirectives (node, options) {
-        if (options) {
-            utility.entries(options).forEach(([name, value]) => {
-                var directive = getDirective(name);
-                if (directive) {
-                    directive.setup(node, value, options);
                 }
             });
         }
@@ -569,9 +555,12 @@ export class Compiler {
     }
 }
 
+/**
+ * @typedef {(new () => CompilerExtension)|(() => CompilerExtension)} CompilerExtensionFactory
+ */
 
 /**
- * @type {CompilerExtension[]}
+ * @type {CompilerExtensionFactory[]}
  */
 const COMPILER_EXTENSIONS = [];
 
@@ -584,11 +573,15 @@ const COMPILER_EXTENSIONS = [];
 export function loadCompiler (caller) {
     var compiler = new Compiler();
 
-    for (let factory of COMPILER_EXTENSIONS) {
-        var extension = utility.isSubclass(factory, CompilerExtension) ? new factory() : factory();
-        extension.init(caller);
-        compiler.extensions.push(extension);
-    }
+    // TODO: compiler extension mechanism is temporarily disabled since most of its
+    //       functions have been moved into directive system, which is more reasonalbe,
+    //       we will come back to work on custom node compilation in extensions later.
+
+    // for (let factory of COMPILER_EXTENSIONS) {
+    //     var extension = utility.isSubclass(factory, CompilerExtension) ? new factory() : factory();
+    //     extension.init(caller);
+    //     compiler.extensions.push(extension);
+    // }
 
     if (caller) {
         compiler.initFrom(caller);
@@ -600,7 +593,7 @@ export function loadCompiler (caller) {
 /**
  * register compiler extension
  *
- * @param {Function} factory  the extension factory
+ * @param {CompilerExtensionFactory} factory  the extension class or factory
  */
 export function useCompilerExtension (factory) {
     if (!utility.isFunc(factory)) {

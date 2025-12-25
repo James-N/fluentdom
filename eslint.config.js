@@ -13,7 +13,8 @@ module.exports = defineConfig({
         globals: {
             ...globals.browser,
             ...globals.es2018,
-            '__VERSION__': 'readonly'
+            '__VERSION__': 'readonly',
+            globalThis: 'readonly'
         },
         parserOptions: {
             ecmaFeatures: {
@@ -37,6 +38,7 @@ module.exports = defineConfig({
         'curly': 'error',
         'no-redeclare': 'error',
         'no-useless-escape': 'warn',
+        'constructor-super': 'error',
 
         // style rules
         'stylistic/indent': [

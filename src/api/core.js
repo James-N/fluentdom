@@ -11,6 +11,7 @@ import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
 import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 import VTree from '../model/VTree';
+import { Directive } from '../service/directive';
 import { CompilerExtension } from '../service/compiler';
 
 
@@ -30,6 +31,7 @@ var API = {
     VElementTemplate: VElementTemplate,
     VComponentTemplate: VComponentTemplate,
     VTree: VTree,
+    Directive: Directive,
     CompilerExtension: CompilerExtension
 };
 

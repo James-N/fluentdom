@@ -1,7 +1,7 @@
 import VTree from '../model/VTree';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
-import { VTemplate, VComponentTemplate } from '../model/VTemplate';
+import { VTemplate } from '../model/VTemplate';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
@@ -209,23 +209,15 @@ export function fluentTreeFromDOM (domNode, options) {
 
 /**
  * define a new component
- *
- * @param {Record<String, any>} componentOpt  component options
- * @returns {function(...any):VComponentTemplate}
  */
 export const defineComponent = component.defineComponent;
 
 /**
  * register directive
- *
- * @param {String} name  name of the directive
- * @param {Record<String, any>|Function} directive  directive implementation
  */
-export const registerdirective = directive.registerDirective;
+export const registerDirective = directive.registerDirective;
 
 /**
  * override the internal compiler factory
- *
- * @param {function(compiler.Compiler):void} factory
  */
 export const useCompilerExtension = compiler.useCompilerExtension;

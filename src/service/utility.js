@@ -8,6 +8,7 @@ const isNullOrUndef = o => o === null || o === undefined;
 const isStr = s => typeof s == 'string';
 const isNum = n => typeof n == 'number';
 const isValidNum = n => typeof n == 'number' && !isNaN(n) && n !== Infinity;
+const isBool = b => typeof b == 'boolean';
 const isFunc = f => typeof f == 'function';
 const isObj = o => typeof o == 'object';
 const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
@@ -37,7 +38,7 @@ function isSubclass (cls1, cls2) {
 }
 
 /**
- * @param {Any} value
+ * @param {any} value
  * @param {String} identiry
  */
 function validString (value, identiry) {
@@ -81,13 +82,13 @@ const hasOwn = Object.hasOwn || function (obj, prop) {
 /**
  * set value into option set
  *
- * @param {Object?} options
+ * @param {Record<String, any>?} options
  * @param {String[]|String} keyPath
  * @param {any} value
  * @param {Boolean=} whenAbsent
  * @param {Boolean=} appendArray
  *
- * @returns {Object}
+ * @returns {Record<String, any>}
  */
 function setOptionValue (options, keyPath, value, whenAbsent, appendArray) {
     if (isNullOrUndef(options)) {
@@ -141,11 +142,11 @@ function setOptionValue (options, keyPath, value, whenAbsent, appendArray) {
 /**
  * retrive value from option set
  *
- * @param {Object?} options
+ * @param {Record<String, any>?} options
  * @param {String} key  key name
- * @param {Any=} defaultValue  default value to return when key is not found
+ * @param {any=} defaultValue  default value to return when key is not found
  *
- * @returns {Any}
+ * @returns {any}
  */
 function getOptionValue (options, key, defaultValue) {
     if (arguments.length < 3) {
@@ -163,8 +164,8 @@ function getOptionValue (options, key, defaultValue) {
  * do naive deep-cloning for given object, plain objects and arrays are cloned recursively while primitive
  * types, functions and values of complex types will be kept as-is
  *
- * @param {Any} obj
- * @returns {Any}
+ * @param {any} obj
+ * @returns {any}
  */
 function simpleDeepClone (obj) {
     if (isStrictObj(obj)) {
@@ -206,6 +207,22 @@ function camel2KebabCase (str) {
 }
 
 /* -------------------- --- -------------------- */
+// array manipulation utilities
+/* -------------------- --- -------------------- */
+
+/**
+ * perform stable sort on array
+ */
+const stableSort = Array.prototype.flat ?       // Array.prototype.sort is gauranteed to be stable since ES2019
+    (arr, compare) => arr.sort(compare) :
+    function (arr, compare) {
+        var packedArr = arr.map((v, i) => [v, i]);
+        packedArr.sort((a, b) => compare(a[0], b[0]) || a[1] - b[1]);
+        return packedArr.map(v => v[0]);
+    };
+
+
+/* -------------------- --- -------------------- */
 // utility namespace
 /* -------------------- --- -------------------- */
 
@@ -214,6 +231,7 @@ export default {
     isStr: isStr,
     isNum: isNum,
     isValidNum: isValidNum,
+    isBool: isBool,
     isFunc: isFunc,
     isObj: isObj,
     isStrictObj: isStrictObj,
@@ -231,5 +249,7 @@ export default {
     simpleDeepClone: simpleDeepClone,
 
     kebab2CamelCase: kebab2CamelCase,
-    camel2KebabCase: camel2KebabCase
+    camel2KebabCase: camel2KebabCase,
+
+    stableSort: stableSort
 };

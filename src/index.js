@@ -13,7 +13,7 @@ export default {
     fromDOM: pub.fluentTreeFromDOM,
     templateFromDOM: pub.templateFromDOM,
     newComponent: pub.defineComponent,
-    addDirective: pub.registerdirective,
+    addDirective: pub.registerDirective,
 
     compile: pub.compileTemplate,
     extendCompiler: pub.useCompilerExtension

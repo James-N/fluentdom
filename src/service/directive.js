@@ -1,57 +1,185 @@
 import utility from './utility';
 
 /**
+ * @typedef {import('../model/VNode')} VNode
+ * @typedef {import('../model/VTemplate').VTemplate} VTemplate
+ */
+
+/**
+ * @typedef {(new (any=) => Directive)|((any=) => Directive)} DriectiveFactory
+ */
+
+/**
  * directive option registration
+ *
+ * @type {Record<String, DriectiveFactory[]>}
  */
 export const DIRECTIEV_REGISTRATION = {};
 
-class DirectiveDelegate {
+
+/**
+ * directive base class
+ *
+ * @abstract
+ */
+export class Directive {
     constructor () {
-        this.directives = [];
+        /**
+         * directive priority
+         *
+         * @type {Number}
+         */
+        this.priority = 0;
+
+        /**
+         * directive name
+         *
+         * @type {String}
+         */
+        this.name = '';
     }
 
-    add (directive) {
-        this.directives.push(directive);
-    }
+    /**
+     * handle invoked before template compilation
+     *
+     * @param {VTemplate} tpl  template template to be compiled
+     * @returns {VTemplate}
+     *
+     * @virtual
+     */
+    precompile (tpl) { return tpl; }
 
-    invoke (method, ...args) {
-        for (let ext of this.directives) {
-            var fun = ext[method];
-            if (utility.isFunc(fun)) {
-                fun.apply(ext, args);
+    /**
+     * handle invoked after template is compiled into node
+     *
+     * @param {VNode} node  the node this directive attached to
+     * @param {VTemplate} tpl  the compiled template
+     *
+     * @virtual
+     */
+    postcompile (node, tpl) { return; }
+
+    /**
+     * destroy directive, normally triggered by node destruction
+     *
+     * @virtual
+     */
+    destroy () { return; }
+}
+
+/**
+ * delegate class for inline-defined directives
+ */
+class DirectiveDelegate extends Directive {
+    constructor (impl, initValue) {
+        super();
+
+        // set priority if necessary
+        if (utility.isObj(impl)) {
+            var priority = utility.getOptionValue(impl, 'priority', 0);
+            if (priority != 0) {
+                this.priority = priority;
             }
         }
+
+        this._impl = {
+            precompile: utility.isFunc(impl.precompile) ? impl.precompile : null,
+            postcompile: utility.isFunc(impl) ? impl : (utility.isFunc(impl.postcompile) ? impl.postcompile : null)
+        };
+
+        this._initValue = initValue;
     }
 
-    setup (node, ...args) {
-        this.invoke('setup', node, ...args);
+    precompile (tpl) {
+        return this._impl.precompile ? this._impl.precompile.call(null, tpl, this._initValue) : tpl;
     }
+
+    postcompile (node, options) {
+        if (this._impl.postcompile) {
+            this._impl.postcompile.call(null, node, this._initValue, options);
+        }
+    }
+}
+
+/**
+ * @param {String} name  directive name
+ * @param {Record<String, any>} impl  directive implementation
+ *
+ * @returns {(any) => DirectiveDelegate}
+ */
+function getDelegateFactory (name, impl) {
+    return function (initValue) {
+        var directive = new DirectiveDelegate(impl, initValue);
+        directive.name = name;
+
+        return directive;
+    };
 }
 
 /**
  * register node builder directive
  *
  * @param {String} name  name of the directive
- * @param {Object|Function} directive  directive implementation
+ * @param {any} directive  directive impelementation
  */
 export function registerDirective (name, directive) {
-    directive = utility.isFunc(directive) ? { setup: directive } : directive;
-
-    var delegate = DIRECTIEV_REGISTRATION[name];
-    if (!delegate) {
-        delegate = new DirectiveDelegate();
-        DIRECTIEV_REGISTRATION[name] = delegate;
+    if (!directive) {
+        throw new Error("directive impelementation is null");
     }
 
-    delegate.add(directive);
+    if (utility.isFunc(directive)) {
+        directive = utility.isSubclass(directive, Directive) ? directive : getDelegateFactory(name, directive);
+    } else {
+        directive = getDelegateFactory(name, directive);
+    }
+
+    var register = DIRECTIEV_REGISTRATION[name];
+    if (!register) {
+        register = [];
+        DIRECTIEV_REGISTRATION[name] = register;
+    }
+
+    register.push(directive);
 }
 
 /**
- * get registered directive by name
+ * get registered directive factories by name
  *
  * @param {String} name  directive name
- * @returns {Object}
+ * @returns {DriectiveFactory[]?}
  */
-export function getDirective (name) {
+export function getDirectives (name) {
     return DIRECTIEV_REGISTRATION[name] || null;
+}
+
+/**
+ * batch instantiate directives from template options
+ *
+ * @param {any} options  template options
+ * @returns {Directive[]?}
+ */
+export function loadDirectives (options) {
+    var directives = [];
+
+    for (let [key, opt] of utility.entries(options)) {
+        if (opt !== false) {
+            let arg = utility.isBool(opt) ? undefined : opt;
+            let register = getDirectives(key);
+            if (register) {
+                for (let factory of register) {
+                    if (utility.isSubclass(factory, Directive)) {
+                        directives.push(new factory(arg));
+                    } else {
+                        directives.push(factory(arg));
+                    }
+                }
+            }
+        }
+    }
+
+    if (directives.length > 0) {
+        return utility.stableSort(directives, (a, b) => a.priority - b.priority);
+    } else {
+        return null;
+    }
 }
