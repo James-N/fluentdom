@@ -3,6 +3,7 @@ import NodeType from './NodeType';
 
 import utility from '../service/utility';
 import LOG from '../service/log';
+import * as DOM from '../service/dom';
 
 
 /**
@@ -112,7 +113,7 @@ class VElement extends VNode {
     _prepareElm () {
         if (!this.domNode) {
             // create element node
-            var elm = document.createElement(this.tagName);
+            var elm = DOM.createEl(this.tagName);
             this.domNode = elm;
             // bind event handles if necessary
             if (!this.static) {

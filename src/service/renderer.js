@@ -1,6 +1,7 @@
 import VNode from '../model/VNode';
 
 import * as NODE from './node';
+import * as DOM from './dom';
 import LOG from './log';
 import { emptyNode } from './dom';
 
@@ -89,7 +90,7 @@ export function renderNodeTree (node) {
                 emptyNode(domNode);
 
                 if (nodes.length > 0) {
-                    var fragment = document.createDocumentFragment();
+                    var fragment = DOM.createFragment();
 
                     for (let child of nodes) {
                         syncDom(child);

@@ -2,6 +2,7 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
+import * as DOM from '../service/dom';
 import { emptyNode } from '../service/dom';
 
 
@@ -21,14 +22,13 @@ class VTree extends VNode {
 
     _getElement (el) {
         if (utility.isStr(el)) {
-            var elm = document.querySelector(el);
-
+            var elm = DOM.query(el);
             if (elm) {
                 return elm;
             } else {
                 throw new Error(`cannot find element by selector [${el}]`);
             }
-        } else if (el instanceof Element || el instanceof DocumentFragment) {
+        } else if (utility.isElementNode(el) || utility.isDocumentFragment(el)) {
             return el;
         } else {
             throw new TypeError("invalid mounting element input for VTree");

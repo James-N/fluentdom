@@ -1,3 +1,5 @@
+import global from './global';
+
 /* -------------------- --- -------------------- */
 // type or value checking utilities
 /* -------------------- --- -------------------- */
@@ -9,8 +11,9 @@ const isValidNum = n => typeof n == 'number' && !isNaN(n) && n !== Infinity;
 const isFunc = f => typeof f == 'function';
 const isObj = o => typeof o == 'object';
 const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
-const isDOMNode = n => n instanceof window.Node;
-const isElementNode = n => n instanceof window.Element;
+const isDOMNode = n => n instanceof global.Node;
+const isElementNode = n => n instanceof global.Element;
+const isDocumentFragment = n => n instanceof global.DocumentFragment;
 
 /**
  * subclass checking, only works for ES6 `class` syntax based classes
@@ -178,6 +181,10 @@ function simpleDeepClone (obj) {
     }
 }
 
+/* -------------------- --- -------------------- */
+// string manipulation utilities
+/* -------------------- --- -------------------- */
+
 /**
  * convert kebab-case string to camelCase
  *
@@ -212,6 +219,7 @@ export default {
     isStrictObj: isStrictObj,
     isDOMNode: isDOMNode,
     isElementNode: isElementNode,
+    isDocumentFragment: isDocumentFragment,
     isSubclass: isSubclass,
     ensureValidString: validString,
 

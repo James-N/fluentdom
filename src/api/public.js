@@ -4,6 +4,7 @@ import NodeType from '../model/NodeType';
 import { VTemplate, VComponentTemplate } from '../model/VTemplate';
 
 import utility from '../service/utility';
+import * as DOM from '../service/dom';
 import * as compiler from '../service/compiler';
 import * as component from '../service/component';
 import * as directive from '../service/directive';
@@ -77,7 +78,7 @@ function getDOMNode (input) {
     if (utility.isDOMNode(input)) {
         return input;
     } else if (utility.isStr(input)) {
-        return document.querySelector(input);
+        return DOM.query(input);
     } else {
         throw new TypeError(`invalid element selector [${input}]`);
     }

@@ -1,3 +1,8 @@
+import global from './global';
+
+
+const document = global.document;
+
 /**
  * convert string to dom nodes
  *
@@ -46,7 +51,7 @@ export function str2DOM (s, unsafe = false) {
     }
 
     function convertWithSanitize (s) {
-        var parser = new DOMParser();
+        var parser = new global.DOMParser();
         var doc = parser.parseFromString(s, 'text/html');
 
         sanitizeDOM(doc);
@@ -60,7 +65,7 @@ export function str2DOM (s, unsafe = false) {
 /**
  * remove all child nodes from an element node
  */
-const emptyElement = Element.prototype.replaceChildren ?
+const emptyElement = global.Element.prototype.replaceChildren ?
     e => e.replaceChildren() :
     e => e.innerHTML = '';
 
@@ -70,7 +75,7 @@ const emptyElement = Element.prototype.replaceChildren ?
  * @param {Node} node
  */
 export function emptyNode (node) {
-    if (node instanceof Element) {
+    if (node instanceof global.Element) {
         emptyElement(node);
     } else {
         while (node.firstChild) {
@@ -78,3 +83,28 @@ export function emptyNode (node) {
         }
     }
 }
+
+/**
+ * create element
+ */
+export const createEl = document.createElement.bind(document);
+
+/**
+ * create text node
+ */
+export const createText = document.createTextNode.bind(document);
+
+/**
+ * create document fragment
+ */
+export const createFragment = document.createDocumentFragment.bind(document);
+
+/**
+ * find element by first match
+ */
+export const query = document.querySelector.bind(document);
+
+/**
+ * find element by all matches
+ */
+export const queryAll = document.querySelectorAll.bind(document);

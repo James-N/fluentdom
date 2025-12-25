@@ -2,6 +2,7 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 
 import utility from '../service/utility';
+import * as DOM from '../service/dom';
 
 
 /**
@@ -37,7 +38,7 @@ class VText extends VNode {
     _prepareTextNode () {
         if (!this.domNode) {
             // create text node
-            this.domNode = document.createTextNode('');
+            this.domNode = DOM.createText('');
             // update reflow flag
             this.$flags.reflow = true;
             // trigger `domNodeCreated` hook
