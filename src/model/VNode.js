@@ -1,8 +1,8 @@
 import NodeType from './NodeType';
 import HookMessage from './HookMessage';
+import EventTable from './internal/EventTable';
 
 import * as NODE from '../service/node';
-import LOG from '../service/log';
 import utility from '../service/utility';
 import { renderNodeTree } from '../service/renderer';
 
@@ -65,9 +65,8 @@ class VNode {
 
         /**
          * hook registration
-         * @type {Record<String, Function[]>}
          */
-        this._hooks = {};
+        this._hooks = new EventTable('VNode::hook');
 
         /**
          * node flag table, this attribute shall only be accessed by internal functions
@@ -276,22 +275,7 @@ class VNode {
             throw new TypeError("hook must be function");
         }
 
-        // attach flags to hook function
-        if (flags) {
-            if (flags.once) {
-                hook.$once = true;
-            }
-        }
-
-        // create hook set
-        var hooks = this._hooks[name];
-        if (!hooks) {
-            hooks = [];
-            this._hooks[name] = hooks;
-        }
-
-        // add hook function to set
-        hooks.push(hook);
+        this._hooks.add(name, hook, flags);
     }
 
     /**
@@ -303,28 +287,7 @@ class VNode {
      * @returns {Boolean}
      */
     unhook (name, hook) {
-        var hooks = this._hooks[name];
-        if (hooks) {
-            if (utility.isNullOrUndef(hook)) {
-                delete this._hooks[name];
-                return true;
-            } else {
-                var idx = hooks.indexOf(hook);
-                if (idx >= 0) {
-                    hooks.splice(idx, 1);
-
-                    if (hooks.length === 0) {
-                        delete this._hooks[name];
-                    }
-
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        }
+        return this._hooks.remove(name, hook);
     }
 
     /**
@@ -339,25 +302,11 @@ class VNode {
             throw new TypeError("invalid hook msg type");
         }
 
+        // construct hook message if necessary
         msg = msg || new HookMessage(this);
 
-        var hooks = this._hooks[name];
-        if (hooks && hooks.length > 0) {
-            for (var i = 0; i < hooks.length; i++) {
-                var hook = hooks[i];
-                try {
-                    hook.call(null, msg, ...args);
-                } catch (err) {
-                    LOG.error(`error inside hook callback [${name}]`, err);
-                }
-
-                // remove hook with the `once` flag after invocation
-                if (hook.$once) {
-                    hooks.splice(i, 1);
-                    i--;
-                }
-            }
-        }
+        // invoke hook on this node
+        this._hooks.invoke(name, this, msg, ...args);
 
         // broadcast message to child nodes if necessary
         if (msg.broadcast) {

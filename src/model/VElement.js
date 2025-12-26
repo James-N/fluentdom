@@ -1,8 +1,8 @@
 import VNode from './VNode';
 import NodeType from './NodeType';
+import EventTable from './internal/EventTable';
 
 import utility from '../service/utility';
-import LOG from '../service/log';
 import * as DOM from '../service/dom';
 
 
@@ -24,30 +24,6 @@ function normalizeCssPropName (name) {
  */
 function splitClassList (cls) {
     return cls.split(' ').map(c => c.trim()).filter(c => c.length > 0);
-}
-
-/**
- * @param {String} evtName
- * @param {VElement} vnode
- */
-function createEventSet (evtName, vnode) {
-    var evtSet = {
-        name: evtName,
-        callback: null,
-        handles: []
-    };
-
-    evtSet.callback = evt => {
-        for (var i = 0; i < evtSet.handles.length; i++) {
-            try {
-                evtSet.handles[i].call(null, evt, vnode);
-            } catch (err) {
-                LOG.error(`error inside callback of event [${evtName}]`, err);
-            }
-        }
-    };
-
-    return evtSet;
 }
 
 class ClassDecl {
@@ -92,7 +68,9 @@ class VElement extends VNode {
          */
         this._frozen = false;
 
-        // element property getter functions
+        /**
+         * element property getter functions
+         */
         this._getters = {
             attr: {},
             prop: {},
@@ -100,12 +78,33 @@ class VElement extends VNode {
             class: []
         };
 
+        /**
+         * element attributes
+         */
         this.attrs = {};
+        /**
+         * element properties
+         */
         this.props = {};
+        /**
+         * element styles
+         */
         this.styles = {};
+        /**
+         * element classes
+         */
         this.classes = [];
 
-        this._eventHandles = {};
+        /**
+         * element event registration
+         */
+        this._events = new EventTable("VElement::events");
+        /**
+         * element event trigger callback table
+         *
+         * @type {Record<String, Function>}
+         */
+        this._eventTriggers = {};
     }
 
     /**
@@ -133,17 +132,19 @@ class VElement extends VNode {
     }
 
     _bindElmEvents (elm) {
-        utility.entries(this._eventHandles)
-            .forEach(([evt, evtSet]) => {
-                elm.addEventListener(evt, evtSet.callback);
+        utility.entries(this._eventTriggers)
+            .forEach(([evt, cb]) => {
+                elm.addEventListener(evt, cb);
             });
     }
 
     _discardElmEvents (elm) {
-        utility.entries(this._eventHandles)
-            .forEach(([evt, evtSet]) => {
-                elm.removeEventListener(evt, evtSet.callback);
+        utility.entries(this._eventTriggers)
+            .forEach(([evt, cb]) => {
+                elm.removeEventListener(evt, cb);
             });
+
+        this._events.clear();
     }
 
     _updateValueSet (valueSet, getters) {
@@ -375,46 +376,72 @@ class VElement extends VNode {
         });
     }
 
-    on (evt, callback) {
+    /**
+     * register element event
+     *
+     * @param {String} name  event name
+     * @param {Function} callback  event callback
+     * @param {Record<String, Boolean>=} flags  callback flags
+     */
+    on (name, callback, flags) {
+        /**
+         * @param {VElement} self
+         */
+        function makeTriggerCallback (self) {
+            function triggerCallback (evt) {
+                self._events.invoke(name, self, evt, self);
+
+                if (self._events.removeSetIfEmpty(name)) {
+                    // delete cached trigger callback
+                    delete self._eventTriggers[name];
+                    // unbind trigger callback from dom node
+                    self.domNode.removeEventListener(name, triggerCallback);
+                }
+            }
+
+            return triggerCallback;
+        }
+
         this._ensureNotStatic("cannot register event handle on static node");
-        utility.ensureValidString(evt, 'evt');
+        utility.ensureValidString(name, 'name');
 
         if (!utility.isFunc(callback)) {
             throw new TypeError("callback must be function");
         }
 
-        var evtSet = this._eventHandles[evt];
-        if (!evtSet) {
-            evtSet = createEventSet(evt, this);
-            this._eventHandles[evt] = evtSet;
-
+        var evtSet = this._events.add(name, callback, flags);
+        if (evtSet.callbacks.length == 1) {
+            // create trigger callback
+            var triggerCb = makeTriggerCallback(this);
+            // cache trigger callback
+            this._eventTriggers[name] = triggerCb;
+            // bind trigger callback to dom node if necessary
             if (this.domNode) {
-                this.domNode.addEventListener(evt, evtSet.callback);
+                this.domNode.addEventListener(name, triggerCb);
             }
-        }
-
-        if (evtSet.handles.indexOf(callback) < 0) {
-            evtSet.handles.push(callback);
         }
     }
 
-    off (evt, callback) {
+    /**
+     * unregister element event
+     *
+     * @param {String} name  event name
+     * @param {Function=} callback  event callback
+     *
+     * @returns {Boolean}
+     */
+    off (name, callback) {
         this._ensureNotStatic("cannot remove event handle from static node");
-        utility.ensureValidString(evt, 'evt');
+        utility.ensureValidString(name, 'name');
 
-        var evtSet = this._eventHandles[evt];
-        if (evtSet) {
-            var index = evtSet.handles.indexOf(callback);
-            if (index >= 0) {
-                evtSet.handles.splice(index, 1);
+        if (this._events.remove(name, callback) && (!callback || this._events.removeSetIfEmpty())) {
+            var triggerCb = this._eventTriggers[name];
+            // delete cached trigger callback
+            delete this._eventTriggers[name];
 
-                if (evtSet.handles.length === 0) {
-                    delete this._eventHandles[evt];
-
-                    if (this.domNode) {
-                        this.domNode.removeEventListener(evt, evtSet.callback);
-                    }
-                }
+            // unbind trigger callback from dom node if necessary
+            if (this.domNode) {
+                this.domNode.removeEventListener(name, triggerCb);
             }
         }
     }
