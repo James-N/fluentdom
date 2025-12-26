@@ -8,7 +8,7 @@ import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
-import { VTemplate, VSlotTemplate } from '../model/VTemplate';
+import { VTemplate, VSlotTemplate, VComponentTemplate } from '../model/VTemplate';
 
 import utility from './utility';
 import LOG from './log';
@@ -140,7 +140,28 @@ export class Compiler {
             throw new TypeError("template must be VTemplate");
         }
 
+        template = this._resolveDeferredTemplate(template);
         return this._compileTemplate(template.clone(), this.ctx);
+    }
+
+    /**
+     * expand deferred template to actual template, currently only component template is supported
+     *
+     * @param {VTemplate} tpl
+     * @returns {VTemplate}
+     */
+    _resolveDeferredTemplate (tpl) {
+        if (tpl instanceof VComponentTemplate && tpl.$deferred) {
+            // fetch and invoke component builder manually to get the actual component template
+            var builder = getComponentBuilder(tpl.name);
+            if (!builder) {
+                throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
+            }
+
+            return builder(...tpl.args);
+        } else {
+            return tpl;
+        }
     }
 
     _compileTemplate (tpl, ctx) {
@@ -419,16 +440,6 @@ export class Compiler {
             } else {
                 return opt1 || opt2 || null;
             }
-        }
-
-        // create actual component template when deferred arguments present
-        if (tpl.$deferred) {
-            var builder = getComponentBuilder(tpl.name);
-            if (!builder) {
-                throw new Error(`unrecognized component [${tpl.name}]`);
-            }
-
-            tpl = builder(...tpl.args);
         }
 
         // get component definition

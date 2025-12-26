@@ -397,7 +397,7 @@ export function buildSlot (...args) {
 /**
  * create builder function for component
  *
- * @param {Record<String, any>} componentDef  component definition
+ * @param {import('./component').ComponentDefinition} componentDef  component definition
  * @param {Boolean=} bindToTpl  bind component definition onto template
  *
  * @returns {function(...any):VComponentTemplate}

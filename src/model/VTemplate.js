@@ -313,11 +313,15 @@ export class VComponentTemplate extends VAbstractElementTemplate {
 
         /**
          * deferred component creation flag
+         *
+         * @type {Boolean}
          */
         this.$deferred = false;
 
         /**
          * component definition for isolate components
+         *
+         * @type {import('../service/component').ComponentDefinition?}
          */
         this.$definition = null;
     }

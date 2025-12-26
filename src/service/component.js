@@ -4,6 +4,10 @@ import VComponent from '../model/VComponent';
 import utility from './utility';
 import * as TEMPLATE from './template';
 
+/**
+ * @typedef {ReturnType<getDefaultDefinition>} ComponentDefinition
+ */
+
 
 /**
  * component option registration
@@ -144,7 +148,7 @@ export function findTemplateSlots (template) {
 /**
  * define component and get the component builder function
  *
- * @param {ReturnType<getDefaultDefinition>} options  component definition options
+ * @param {ComponentDefinition} options  component definition options
  * @param {Boolean=} local  do not register the component to global storage
  *
  * @returns {function(...any):VComponentTemplate}
@@ -175,7 +179,7 @@ export function defineComponent (options, local = false) {
  * get registered component options by name
  *
  * @param {String} name  name of the component
- * @returns {ReturnType<getDefaultDefinition>?}
+ * @returns {ComponentDefinition?}
  */
 export function getComponent (name) {
     return COMPONENT_REGISTRATION[name] || null;
