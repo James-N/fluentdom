@@ -97,7 +97,7 @@ class EventTable {
                     return false;
                 }
             } else {
-                delete this.events[name];
+                evtSet.callbacks.length = 0;
                 return true;
             }
         } else {

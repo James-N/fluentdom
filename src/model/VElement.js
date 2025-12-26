@@ -434,7 +434,7 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove event handle from static node");
         utility.ensureValidString(name, 'name');
 
-        if (this._events.remove(name, callback) && (!callback || this._events.removeSetIfEmpty())) {
+        if (this._events.remove(name, callback) && this._events.removeSetIfEmpty()) {
             var triggerCb = this._eventTriggers[name];
             // delete cached trigger callback
             delete this._eventTriggers[name];
