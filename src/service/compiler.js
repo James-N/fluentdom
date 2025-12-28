@@ -318,9 +318,6 @@ export class Compiler {
     }
 
     _setupVElement (node, options) {
-        // set static flag
-        node.static = utility.getOptionValue(options, 'static', false);
-
         // update dom-related propreties
         if (options) {
             if (options.id) {

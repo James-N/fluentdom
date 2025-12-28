@@ -48,18 +48,6 @@ class VElement extends VNode {
         this.tagName = tagName.toUpperCase();
 
         /**
-         * whether the element node is static
-         * @type {Boolean}
-         */
-        this.static = false;
-
-        /**
-         * whether the element can be updated later
-         * @type {Boolean}
-         */
-        this._frozen = false;
-
-        /**
          * element attribute exprs
          *
          * @type {Record<String, Expr>}
@@ -111,10 +99,8 @@ class VElement extends VNode {
             // create element node
             var elm = DOM.createEl(this.tagName);
             this.domNode = elm;
-            // bind event handles if necessary
-            if (!this.static) {
-                this._bindElmEvents(elm);
-            }
+            // bind event handles
+            this._bindElmEvents(elm);
 
             // update reflow flag
             this.$flags.reflow = true;
@@ -214,26 +200,12 @@ class VElement extends VNode {
             });
     }
 
-    _ensureNotStatic (msg) {
-        if (this.static) {
-            throw new Error(msg);
-        }
-    }
-
     compute () {
         // make sure the bound element is initiated
         var elm = this._prepareElm();
 
-        var needRecompute = !this.static || !this._frozen;
-        if (needRecompute) {
-            // update element attrs/props/styles/classes
-            this._updateElementNode(elm);
-
-            // set `frozen` state
-            if (this.static) {
-                this._frozen = true;
-            }
-        }
+        // update element attrs/props/styles/classes
+        this._updateElementNode(elm);
     }
 
     destroy () {
@@ -251,9 +223,7 @@ class VElement extends VNode {
      * @param {any} value  attribute value or expression
      */
     setAttr (attr, value) {
-        this._ensureNotStatic("cannot set attribute on static node");
         utility.ensureValidString(attr, 'attr');
-
         this._attrs[attr] = value2Expr(value);
     }
 
@@ -263,9 +233,7 @@ class VElement extends VNode {
      * @param {String} attr  attribute name
      */
     removeAttr (attr) {
-        this._ensureNotStatic("cannot remove attribute from static node");
         utility.ensureValidString(attr, 'attr');
-
         delete this._attrs[attr];
     }
 
@@ -276,9 +244,7 @@ class VElement extends VNode {
      * @param {any} value  property value or expression
      */
     setProp (prop, value) {
-        this._ensureNotStatic("cannot set property of static node");
         utility.ensureValidString(prop, 'prop');
-
         this._props[prop] = value2Expr(value);
     }
 
@@ -288,9 +254,7 @@ class VElement extends VNode {
      * @param {String} prop  property name
      */
     removeProp (prop) {
-        this._ensureNotStatic("cannot remove property from static node");
         utility.ensureValidString(prop, 'prop');
-
         delete this._props[prop];
     }
 
@@ -301,9 +265,7 @@ class VElement extends VNode {
      * @param {any} value  css property value or expression
      */
     setStyle (cssProp, value) {
-        this._ensureNotStatic("cannot set style on static node");
         utility.ensureValidString(cssProp, 'cssProp');
-
         this._styles[normalizeCssPropName(cssProp)] = value2Expr(value);
     }
 
@@ -313,9 +275,7 @@ class VElement extends VNode {
      * @param {String} cssProp  css property name
      */
     removeStyle (cssProp) {
-        this._ensureNotStatic("cannot remove style from static node");
         utility.ensureValidString(cssProp, 'cssProp');
-
         delete this._styles[normalizeCssPropName(cssProp)];
     }
 
@@ -326,8 +286,6 @@ class VElement extends VNode {
      * @param {(function(VNode):Boolean|Expr<Boolean>)=} switcher  class switcher function or expression
      */
     addClass (cls, switcher) {
-        this._ensureNotStatic("cannot add class to static node");
-
         if (utility.isFunc(cls)) {
             this._classes.dynamic.push(new DynExpr(cls));
         } else {
@@ -348,8 +306,6 @@ class VElement extends VNode {
      * @param {String|String[]} cls  class property name
      */
     removeClass (cls) {
-        this._ensureNotStatic("cannot remove class from static node");
-
         var clsProps = Array.isArray(cls) ? cls : splitClassList(cls);
         for (let prop of clsProps) {
             delete this._classes.named[prop];
@@ -382,7 +338,6 @@ class VElement extends VNode {
             return triggerCallback;
         }
 
-        this._ensureNotStatic("cannot register event handle on static node");
         utility.ensureValidString(name, 'name');
 
         if (!utility.isFunc(callback)) {
@@ -411,7 +366,6 @@ class VElement extends VNode {
      * @returns {Boolean}
      */
     off (name, callback) {
-        this._ensureNotStatic("cannot remove event handle from static node");
         utility.ensureValidString(name, 'name');
 
         if (this._events.remove(name, callback) && this._events.removeSetIfEmpty()) {

@@ -104,7 +104,7 @@ export function templateFromDOM (domNode, options) {
     }
 
     function convertElmDefault (domNode, parentTpl, state) {
-        return new VElementTemplate(domNode.tagName, { static: true, domNode: domNode });
+        return new VElementTemplate(domNode.tagName, { domNode: domNode });
     }
 
     function convert (node, parentTpl, state) {
