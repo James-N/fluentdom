@@ -14,6 +14,7 @@ export default {
     templateFromDOM: pub.templateFromDOM,
     newComponent: pub.defineComponent,
     addDirective: pub.registerDirective,
+    expr: pub.createExpr,
 
     compile: pub.compileTemplate,
     extendCompiler: pub.useCompilerExtension

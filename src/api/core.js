@@ -9,8 +9,9 @@ import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
-import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 import VTree from '../model/VTree';
+import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
+import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
 import { Directive } from '../service/directive';
 import { CompilerExtension } from '../service/compiler';
 
@@ -27,10 +28,14 @@ var API = {
     VDynamic: VDynamic,
     VFragment: VFragment,
     VComponent: VComponent,
+    VTree: VTree,
     VTemplate: VTemplate,
     VElementTemplate: VElementTemplate,
     VComponentTemplate: VComponentTemplate,
-    VTree: VTree,
+    Expr: Expr,
+    ConstExpr: ConstExpr,
+    DynExpr: DynExpr,
+    RefExpr: RefExpr,
     Directive: Directive,
     CompilerExtension: CompilerExtension
 };

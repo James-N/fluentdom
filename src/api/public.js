@@ -2,12 +2,14 @@ import VTree from '../model/VTree';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
 import { VTemplate, VElementTemplate } from '../model/VTemplate';
+import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
 import * as compiler from '../service/compiler';
 import * as component from '../service/component';
 import * as directive from '../service/directive';
+import { value2Expr } from '../service/expr';
 
 
 
@@ -221,3 +223,19 @@ export const registerDirective = directive.registerDirective;
  * override the internal compiler factory
  */
 export const useCompilerExtension = compiler.useCompilerExtension;
+
+/**
+ * expression factory
+ */
+export function createExpr (value) {
+    if (value instanceof Expr) {
+        throw new TypeError("cannot create an expression object from another expression");
+    }
+
+    return value2Expr(value);
+}
+
+// add quick expression factory methods
+createExpr.const = function (value) { return new ConstExpr(value); };
+createExpr.dyn = function (getter) { return new DynExpr(getter); };
+createExpr.ref = function (value) { return new RefExpr(null, value); };
