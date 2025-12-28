@@ -158,15 +158,12 @@ class VRepeat extends VNode {
     _updateChildrenByCompare (compiler, arr) {
         var oldArr = this._cache.data;
         var children = this.children;
-        var abandonedNodes = [];
         var reflow = false;
 
         arr.forEach((e, i) => {
             if (i < oldArr.length) {
                 if (e != oldArr[i]) {
-                    abandonedNodes.push(children[i]);
-                    children[i] = this._compileChild(compiler, e, i);
-                    reflow = true;
+                    children[i].ctx.$value = e;
                 }
             } else {
                 children.push(this._compileChild(compiler, e, i));
@@ -175,16 +172,10 @@ class VRepeat extends VNode {
         });
 
         if (oldArr.length > arr.length) {
-            for (var i = arr.length; i < oldArr.length; i++) {
-                abandonedNodes.push(children[i]);
-            }
+            NODE.destroyNodes(children.slice(arr.length));
 
             children.length = arr.length;
             reflow = true;
-        }
-
-        if (abandonedNodes.length > 0) {
-            NODE.destroyNodes(abandonedNodes);
         }
 
         this.$flags.reflow = reflow;
@@ -205,10 +196,7 @@ class VRepeat extends VNode {
             if (this.children.length === 0) {
                 if (arr.length > 0) {
                     compiler = loadCompiler(this);
-
-                    arr.forEach((e, i) => {
-                        this.children.push(this._compileChild(compiler, e, i));
-                    });
+                    this.children = arr.map((e, i) => this._compileChild(compiler, e, i));
 
                     this.$flags.reflow = true;
                 }
