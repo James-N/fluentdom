@@ -1,9 +1,9 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
 import { VTemplate } from './VTemplate';
+import { Expr } from './Expr';
 
-import LOG from '../service/log';
-import utility from '../service/utility';
+import { value2Expr } from '../service/expr';
 import * as NODE from '../service/node';
 import { loadCompiler } from '../service/compiler';
 
@@ -13,7 +13,7 @@ import { loadCompiler } from '../service/compiler';
  */
 class VIf extends VNode {
     /**
-     * @param {function(VNode):Boolean} condition  condition function
+     * @param {function(VNode):Boolean|Expr<Boolean>} condition  condition function
      * @param {VTemplate[]?} templates  child node template
      */
     constructor (condition, templates) {
@@ -21,23 +21,12 @@ class VIf extends VNode {
 
         this.nodeType = NodeType.IF;
 
-        if (!utility.isFunc(condition)) {
-            LOG.warn("condition input of VIf node must be function");
-            condition = null;
-        }
-
         /**
-         * condition function
+         * the condition expression
          *
-         * @type {function(VNode):Boolean}
+         * @type {Expr<Boolean>}
          */
-        this._cond = condition;
-        /**
-         * the last compute result of condition function
-         *
-         * @type {Boolean}
-         */
-        this._condValue = false;
+        this._cond = value2Expr(condition);
 
         /**
          * children template
@@ -60,18 +49,12 @@ class VIf extends VNode {
     }
 
     compute () {
-        if (!this._cond) {
-            return;
-        }
-
         if (this._tpls.length === 0) {
             return;
         }
 
-        var condValueOld = this._condValue;
-        this._condValue = !!this._cond.call(null, this);
-        if (condValueOld != this._condValue) {
-            if (this._condValue) {
+        if (this._cond.evalChecked(this)) {
+            if (this._cond.value()) {
                 if (this.cacheNode && this._childNodeCache) {
                     for (let cache of this._childNodeCache) {
                         this.children.push(cache);

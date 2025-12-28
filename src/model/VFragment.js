@@ -1,25 +1,30 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
+import { Expr } from './Expr';
 
 import utility from '../service/utility';
+import { value2Expr } from '../service/expr';
 import { str2DOM } from '../service/dom';
 
+/**
+ * @typedef {String|Node|Node[]} FragmentContent
+ */
 
 /**
  * virtual node for html fragment
  */
 class VFragment extends VNode {
     /**
-     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} contentOrProvider  fragment content or content generator function
+     * @param {FragmentContent|(function(VFragment):FragmentContent)|Expr<FragmentContent>} content  fragment content or provider
      */
-    constructor (contentOrProvider) {
+    constructor (content) {
         super();
 
         this.nodeType = NodeType.FRAGMENT;
         this.$flags.endpoint = true;
 
         /**
-         * @type {String|Node|Node[]}
+         * @type {FragmentContent?}
          */
         this.content = null;
 
@@ -33,52 +38,18 @@ class VFragment extends VNode {
         /**
          * fragment content or content generator function
          *
-         * @type {String|Node|Node[]|function(VFragment):String|Node|Node[]}
+         * @type {Expr<FragmentContent>}
          */
-        this._contentProvider = null;
-
-        /**
-         * node udpate flag
-         *
-         * @type {Boolean}
-         */
-        this._updated = false;
-
-        // init content if necessray
-        if (contentOrProvider) {
-            this.setContent(contentOrProvider);
-        }
+        this._contentExpr = value2Expr(content);
     }
 
     /**
      * set fragment content
      *
-     * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} content  fragment content or provider
+     * @param {FragmentContent|function(VFragment):FragmentContent} content  fragment content or provider
      */
     setContent (content) {
-        this._contentProvider = null;
-
-        if (utility.isFunc(content)) {
-            this._contentProvider = content;
-        } else {
-            this.content = content;
-        }
-
-        this._updated = false;
-    }
-
-    _tryUpdateContent () {
-        if (this._contentProvider) {
-            var content = this._contentProvider.call(null, this);
-            if (this.content !== content) {
-                this.content = content;
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return !this._updated;
-        }
+        this._contentExpr = value2Expr(content);
     }
 
     compute () {
@@ -92,10 +63,11 @@ class VFragment extends VNode {
             }
         }
 
-        if (this._tryUpdateContent()) {
-            this.domNode = !!this.content ? convertContent(this.content, this.sanitize) : null;
+        if (this._contentExpr.evalChecked(this)) {
+            var content = this._contentExpr.value();
+            this.domNode = !!content ? convertContent(content, this.sanitize) : null;
+            this.content = content;
             this.$flags.reflow = true;
-            this._updated = true;
         }
     }
 }

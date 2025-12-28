@@ -1,8 +1,10 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
 import { VTemplate } from './VTemplate';
+import { Expr } from './Expr';
 
 import * as NODE from '../service/node';
+import { value2Expr } from '../service/expr';
 import { loadCompiler } from '../service/compiler';
 
 
@@ -11,7 +13,7 @@ import { loadCompiler } from '../service/compiler';
  */
 class VDynamic extends VNode {
     /**
-     * @param {function(VNode):VTemplate|VTemplate[]} provider  template provider
+     * @param {(function(VNode):VTemplate|VTemplate[])|Expr<VTemplate|VTemplate[]?>} provider  template provider
      */
     constructor (provider) {
         super();
@@ -33,46 +35,39 @@ class VDynamic extends VNode {
         this._updated = false;
 
         /**
-         * dynamic template generator function
+         * template expression
          *
-         * @type {function(VNode):VTemplate|VTemplate[]}
+         * @type {Expr<VTemplate|VTemplate[]?>}
          */
-        this._tplProvider = provider;
-
-        /**
-         * cache to generated template
-         *
-         * @type {(VTemplate|VTemplate[])?}
-         */
-        this._tpl = null;
+        this._tplExpr = value2Expr(provider);
     }
 
     compute () {
         if (!this._updated || !this.once) {
-            var tpl = this._tplProvider.call(null, this);
-
-            if (tpl !== this._tpl) {
+            if (this._tplExpr.evalChecked(this)) {
                 // clean old child nodes if necessary
-                if (this._tpl !== null) {
+                if (this.children.length > 0) {
                     NODE.destroyNodes(this.children);
                     this.children.length = 0;
                 }
 
                 // compile template to nodes
-                var compiler = loadCompiler(this);
-                if (Array.isArray(tpl)) {
-                    for (let t of tpl) {
-                        this.addChild(compiler.compile(t));
+                var tpl = this._tplExpr.value();
+                if (tpl) {
+                    var compiler = loadCompiler(this);
+                    if (Array.isArray(tpl)) {
+                        for (let t of tpl) {
+                            this.addChild(compiler.compile(t));
+                        }
+                    } else {
+                        this.addChild(compiler.compile(tpl));
                     }
-                } else {
-                    this.addChild(compiler.compile(tpl));
                 }
 
                 // set reflow flag
                 this.$flags.reflow = true;
             }
 
-            this._tpl = tpl;
             this._updated = true;
         }
     }

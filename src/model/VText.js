@@ -1,7 +1,8 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
+import { Expr } from './Expr';
 
-import utility from '../service/utility';
+import { value2Expr } from '../service/expr';
 import * as DOM from '../service/dom';
 
 
@@ -10,9 +11,9 @@ import * as DOM from '../service/dom';
  */
 class VText extends VNode {
     /**
-     * @param {String|function(VText):String} textOrProvider  text content or text provider
+     * @param {String|(function(VText):String)|Expr<String>=} text  text content or provider
      */
-    constructor (textOrProvider) {
+    constructor (text) {
         super();
 
         this.nodeType = NodeType.TEXT;
@@ -25,11 +26,10 @@ class VText extends VNode {
         this.text = '';
 
         /**
-         * get getter function
+         * text expression
+         * @type {Expr<String>}
          */
-        this._textProvider = null;
-
-        this.setText(textOrProvider);
+        this._textExpr = value2Expr(text === undefined ? '' : text);
     }
 
     /**
@@ -53,27 +53,19 @@ class VText extends VNode {
     /**
      * set text content
      *
-     * @param {String|function(VText):String} text  text content or provider
+     * @param {String|(function(VText):String)|Expr<String>} text  text content or provider
      */
     setText (text) {
-        this._textProvider = null;
-
-        if (utility.isNullOrUndef(text)) {
-            this.text = '';
-        } else if (utility.isFunc(text)) {
-            this._textProvider = text;
-        } else {
-            this.text = String(text);
-        }
+        this._textExpr = value2Expr(text);
     }
 
     compute () {
-        if (this._textProvider) {
-            this.text = String(this._textProvider.call(null, this));
-        }
+        // eval text expression
+        if (this._textExpr.evalChecked(this)) {
+            this.text = String(this._textExpr.value());
 
-        var node = this._prepareTextNode();
-        if (node.textContent != this.text) {
+            // update text node content
+            var node = this._prepareTextNode();
             node.textContent = this.text;
         }
     }

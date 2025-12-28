@@ -318,58 +318,53 @@ export class Compiler {
     }
 
     _setupVElement (node, options) {
-        function setElementNodeOptions (elmNode, options) {
-            if (options) {
-                var attrs = options.attrs;
-                if (attrs) {
-                    utility.entries(attrs).forEach(e => elmNode.setAttr(e[0], e[1]));
-                }
-
-                var props = options.props;
-                if (props) {
-                    utility.entries(props).forEach(e => elmNode.setProp(e[0], e[1]));
-                }
-
-                if (options.id) {
-                    elmNode.setProp('id', options.id);
-                }
-
-                var styles = options.styles;
-                if (styles) {
-                    utility.entries(styles).forEach(e => elmNode.setStyle(e[0], e[1]));
-                }
-
-                var classes = options.class;
-                if (classes) {
-                    if (!Array.isArray(classes)) {
-                        classes = [classes];
-                    }
-
-                    classes.forEach(cls => {
-                        if (utility.isObj(cls)) {
-                            utility.entries(cls).forEach(e => elmNode.addClass(e[0], e[1]));
-                        } else if (utility.isStr(cls) || utility.isFunc(cls)) {
-                            elmNode.addClass(cls);
-                        }
-                    });
-                }
-
-                var events = options.events;
-                if (events) {
-                    utility.entries(events).forEach(([name, handle]) => {
-                        if (Array.isArray(handle)) {
-                            handle.forEach(f => elmNode.on(name, f));
-                        } else {
-                            elmNode.on(name, handle);
-                        }
-                    });
-                }
-            }
-        }
-
+        // set static flag
         node.static = utility.getOptionValue(options, 'static', false);
 
-        setElementNodeOptions(node, options);
+        // update dom-related propreties
+        if (options) {
+            if (options.id) {
+                node.setProp('id', options.id);
+            }
+
+            var attrs = options.attrs;
+            if (attrs) {
+                utility.entries(attrs).forEach(e => node.setAttr(e[0], e[1]));
+            }
+
+            var props = options.props;
+            if (props) {
+                utility.entries(props).forEach(e => node.setProp(e[0], e[1]));
+            }
+
+            var styles = options.styles;
+            if (styles) {
+                utility.entries(styles).forEach(e => node.setStyle(e[0], e[1]));
+            }
+
+            var classes = options.class;
+            if (classes) {
+                classes = Array.isArray(classes) ? classes : [classes];
+                classes.forEach(cls => {
+                    if (utility.isObj(cls)) {
+                        utility.entries(cls).forEach(e => node.addClass(e[0], e[1]));
+                    } else if (utility.isStr(cls) || utility.isFunc(cls)) {
+                        node.addClass(cls);
+                    }
+                });
+            }
+
+            var events = options.events;
+            if (events) {
+                utility.entries(events).forEach(([name, handle]) => {
+                    if (Array.isArray(handle)) {
+                        handle.forEach(f => node.on(name, f));
+                    } else {
+                        node.on(name, handle);
+                    }
+                });
+            }
+        }
     }
 
     _compileEmpty (tpl, ctx) {

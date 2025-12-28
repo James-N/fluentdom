@@ -1,8 +1,10 @@
 import VNode from './VNode';
 import NodeType from './NodeType';
 import EventTable from './internal/EventTable';
+import { Expr, DynExpr, ConstExpr } from './Expr';
 
 import utility from '../service/utility';
+import { value2Expr } from '../service/expr';
 import * as DOM from '../service/dom';
 
 
@@ -11,11 +13,11 @@ import * as DOM from '../service/dom';
  * @return {String}
  */
 function normalizeCssPropName (name) {
-    if (name.charAt(0) == '-') {
-        name = name.substring(1);
+    if (name.charAt(0) == '-' && name.charAt(1) != '-') {
+        name = name.substring(1);       // remove `-` before vendor specified property name
     }
 
-    return utility.kebab2CamelCase(name);
+    return utility.camel2KebabCase(name);
 }
 
 /**
@@ -24,17 +26,6 @@ function normalizeCssPropName (name) {
  */
 function splitClassList (cls) {
     return cls.split(' ').map(c => c.trim()).filter(c => c.length > 0);
-}
-
-class ClassDecl {
-    constructor (cls, getter) {
-        this.cls = cls;
-        this._getter = getter;
-    }
-
-    isEnable (vn) {
-        return utility.isFunc(this._getter) ? !!this._getter.call(null, vn) : !!this._getter;
-    }
 }
 
 /**
@@ -69,31 +60,36 @@ class VElement extends VNode {
         this._frozen = false;
 
         /**
-         * element property getter functions
+         * element attribute exprs
+         *
+         * @type {Record<String, Expr>}
          */
-        this._getters = {
-            attr: {},
-            prop: {},
-            style: {},
-            class: []
+        this._attrs = {};
+        /**
+         * element property exprs
+         *
+         * @type {Record<String, Expr>}
+         */
+        this._props = {};
+        /**
+         * element style exprs
+         *
+         * @type {Record<String, Expr>}
+         */
+        this._styles = {};
+        /**
+         * element class exprs
+         */
+        this._classes = {
+            /**
+             * @type {Record<String, Expr<Boolean>>}
+             */
+            named: {},
+            /**
+             * @type {Expr<String|String[]>[]}
+             */
+            dynamic: []
         };
-
-        /**
-         * element attributes
-         */
-        this.attrs = {};
-        /**
-         * element properties
-         */
-        this.props = {};
-        /**
-         * element styles
-         */
-        this.styles = {};
-        /**
-         * element classes
-         */
-        this.classes = [];
 
         /**
          * element event registration
@@ -147,72 +143,74 @@ class VElement extends VNode {
         this._events.clear();
     }
 
-    _updateValueSet (valueSet, getters) {
-        Object.keys(valueSet).forEach(k => {
-            var getter = getters[k];
-            if (getter) {
-                valueSet[k] = getter(this);
-            }
-        });
-    }
-
-    _setValueSetItem (valueSet, getters, key, value) {
-        if (utility.isFunc(value)) {
-            getters[key] = value;
-            valueSet[key] = null;
-        } else {
-            valueSet[key] = value;
-        }
-    }
-
-    _getClassList () {
-        return this._getters.class
-            .map(c => {
-                var cls;
-                if (utility.isFunc(c)) {
-                    cls = c(this);
-                } else {
-                    cls = c.isEnable(this) ? c.cls : '';
-                }
-
-                return Array.isArray(cls) ? cls.join(' ') : cls;
-            })
-            .filter(c => !!c);
-    }
-
     /**
      * @param {Element} elm
      */
     _updateElementNode (elm) {
-        utility.entries(this.attrs)
-            .forEach(([attr, value]) => {
-                if (value === undefined || value === false) {
-                    elm.removeAttribute(attr);
-                } else {
-                    if (value === true) {
-                        elm.setAttribute(attr, '');
+        // eval and update element attributes
+        utility.entries(this._attrs)
+            .forEach(([attr, expr]) => {
+                if (expr.evalChecked(this)) {
+                    var value = expr.value();
+                    if (value === undefined || value === false) {
+                        elm.removeAttribute(attr);
                     } else {
-                        elm.setAttribute(attr, String(value));
+                        if (value === true) {
+                            elm.setAttribute(attr, '');
+                        } else {
+                            elm.setAttribute(attr, String(value));
+                        }
                     }
                 }
             });
 
-        utility.entries(this.props)
-            .forEach(([prop, value]) => {
-                elm[prop] = value;
+        // eval and update element properties
+        utility.entries(this._props)
+            .forEach(([prop, expr]) => {
+                if (expr.evalChecked(this)) {
+                    elm[prop] = expr.value();
+                }
             });
 
-        // only update class attribute when getter exists, otherwise leave the class attribute as-is
-        if (this._getters.class.length > 0) {
-            var className = this.classes.join(' ');
-            if (elm.className != className) {
-                elm.className = className;
+        // eval and update element class
+        var clsHasChange = false;
+        var clsSet = new Set();
+
+        utility.entries(this._classes.named)
+            .forEach(([cls, expr]) => {
+                if (expr.eval(this)) {
+                    clsSet.add(cls);
+                }
+
+                if (expr.check()) {
+                    clsHasChange = true;
+                }
+            });
+
+        this._classes.dynamic.forEach(expr => {
+            var cls = expr.eval(this);
+            cls = Array.isArray(cls) ? cls : splitClassList(cls);
+
+            for (let c of cls) {
+                clsSet.add(c);
             }
+
+            if (expr.check()) {
+                clsHasChange = true;
+            }
+        });
+
+        if (clsHasChange) {
+            elm.className = Array.from(clsSet).join(' ');
         }
 
-        utility.entries(this.styles)
-            .forEach(([cssProp, value]) => {
-                elm.style[normalizeCssPropName(cssProp)] = value;
+        // eval and update element styles
+        utility.entries(this._styles)
+            .forEach(([cssProp, expr]) => {
+                if (expr.evalChecked(this)) {
+                    var value = expr.value();
+                    elm.style[cssProp] = !!value ? value : '';
+                }
             });
     }
 
@@ -228,13 +226,7 @@ class VElement extends VNode {
 
         var needRecompute = !this.static || !this._frozen;
         if (needRecompute) {
-            // update states of this virtual node
-            this._updateValueSet(this.attrs, this._getters.attr);
-            this._updateValueSet(this.props, this._getters.prop);
-            this._updateValueSet(this.styles, this._getters.style);
-            this.classes = this._getClassList();
-
-            // update element states
+            // update element attrs/props/styles/classes
             this._updateElementNode(elm);
 
             // set `frozen` state
@@ -256,13 +248,13 @@ class VElement extends VNode {
      * set attribute
      *
      * @param {String} attr  attribute name
-     * @param {Any} value  attribute value or getter
+     * @param {any} value  attribute value or expression
      */
     setAttr (attr, value) {
         this._ensureNotStatic("cannot set attribute on static node");
         utility.ensureValidString(attr, 'attr');
 
-        this._setValueSetItem(this.attrs, this._getters.attr, attr, value);
+        this._attrs[attr] = value2Expr(value);
     }
 
     /**
@@ -274,23 +266,20 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove attribute from static node");
         utility.ensureValidString(attr, 'attr');
 
-        if (utility.hasOwn(this.attrs, attr)) {
-            delete this._getters.attr[attr];
-            this.attrs[attr] = undefined;
-        }
+        delete this._attrs[attr];
     }
 
     /**
      * set property
      *
      * @param {String} prop  property name
-     * @param {Any} value  property value or getter
+     * @param {any} value  property value or expression
      */
     setProp (prop, value) {
         this._ensureNotStatic("cannot set property of static node");
         utility.ensureValidString(prop, 'prop');
 
-        this._setValueSetItem(this.props, this._getters.prop, prop, value);
+        this._props[prop] = value2Expr(value);
     }
 
     /**
@@ -302,23 +291,20 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove property from static node");
         utility.ensureValidString(prop, 'prop');
 
-        if (utility.hasOwn(this.props, prop)) {
-            delete this.props[prop];
-            delete this._getters.prop[prop];
-        }
+        delete this._props[prop];
     }
 
     /**
      * set style
      *
      * @param {String} cssProp  css property name
-     * @param {Any} value  css property value
+     * @param {any} value  css property value or expression
      */
     setStyle (cssProp, value) {
         this._ensureNotStatic("cannot set style on static node");
         utility.ensureValidString(cssProp, 'cssProp');
 
-        this._setValueSetItem(this.styles, this._getters.style, cssProp, value);
+        this._styles[normalizeCssPropName(cssProp)] = value2Expr(value);
     }
 
     /**
@@ -330,50 +316,44 @@ class VElement extends VNode {
         this._ensureNotStatic("cannot remove style from static node");
         utility.ensureValidString(cssProp, 'cssProp');
 
-        if (utility.hasOwn(this.styles, cssProp)) {
-            delete this._getters.style[cssProp];
-            this.styles[cssProp] = undefined;
-        }
+        delete this._styles[normalizeCssPropName(cssProp)];
     }
 
     /**
      * add a class
      *
-     * @param {String|Function} cls  class name or getter
-     * @param {function(VNode):Boolean?=} value  class state getter
+     * @param {String|String[]|function(VNode):String|String[]} cls  class property name or getter
+     * @param {(function(VNode):Boolean|Expr<Boolean>)=} switcher  class switcher function or expression
      */
-    addClass (cls, value) {
+    addClass (cls, switcher) {
         this._ensureNotStatic("cannot add class to static node");
 
         if (utility.isFunc(cls)) {
-            this._getters.class.push(cls);
+            this._classes.dynamic.push(new DynExpr(cls));
         } else {
-            utility.ensureValidString(cls, 'cls');
-
-            splitClassList(cls).forEach(c => {
-                this._getters.class.push(new ClassDecl(c, utility.isNullOrUndef(value) ? true : value));
-            });
+            var clsProps = Array.isArray(cls) ? cls : splitClassList(cls);
+            for (let prop of clsProps) {
+                if (switcher) {
+                    this._classes.named[prop] = value2Expr(switcher);
+                } else {
+                    this._classes.named[prop] = new ConstExpr(true);
+                }
+            }
         }
     }
 
     /**
      * remove class
      *
-     * @param {String|Function} cls  class name or getter
+     * @param {String|String[]} cls  class property name
      */
     removeClass (cls) {
         this._ensureNotStatic("cannot remove class from static node");
 
-        var clsList = this._getters.class;
-        splitClassList(cls).forEach(c => {
-            for (var i = 0; i < clsList.length; i++) {
-                if (clsList[i] === c ||
-                    (clsList[i] instanceof ClassDecl && clsList[i].cls == c)) {
-                    clsList.splice(i, 1);
-                    return;
-                }
-            }
-        });
+        var clsProps = Array.isArray(cls) ? cls : splitClassList(cls);
+        for (let prop of clsProps) {
+            delete this._classes.named[prop];
+        }
     }
 
     /**
