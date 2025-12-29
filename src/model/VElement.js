@@ -217,7 +217,7 @@ class VElement extends VNode {
     }
 
     /**
-     * set attribute
+     * set attribute updater
      *
      * @param {String} attr  attribute name
      * @param {any} value  attribute value or expression
@@ -231,14 +231,22 @@ class VElement extends VNode {
      * remove attribue
      *
      * @param {String} attr  attribute name
+     * @param {Boolean=} force  remove the attribute updater directly instead of override it with special state
      */
-    removeAttr (attr) {
+    removeAttr (attr, force) {
         utility.ensureValidString(attr, 'attr');
-        delete this._attrs[attr];
+
+        if (utility.hasOwn(this._attrs, attr)) {
+            if (force) {
+                delete this._attrs[attr];
+            } else {
+                this._attrs[attr] = ConstExpr(false);
+            }
+        }
     }
 
     /**
-     * set property
+     * set property updater
      *
      * @param {String} prop  property name
      * @param {any} value  property value or expression
@@ -249,7 +257,7 @@ class VElement extends VNode {
     }
 
     /**
-     * remove property
+     * remove property updater
      *
      * @param {String} prop  property name
      */
@@ -259,7 +267,7 @@ class VElement extends VNode {
     }
 
     /**
-     * set style
+     * set style updater
      *
      * @param {String} cssProp  css property name
      * @param {any} value  css property value or expression
@@ -273,10 +281,19 @@ class VElement extends VNode {
      * remove style
      *
      * @param {String} cssProp  css property name
+     * @param {Boolean=} force  remove the style updater directly instead of override it with special state
      */
-    removeStyle (cssProp) {
+    removeStyle (cssProp, force) {
         utility.ensureValidString(cssProp, 'cssProp');
-        delete this._styles[normalizeCssPropName(cssProp)];
+
+        cssProp = normalizeCssPropName(cssProp);
+        if (utility.hasOwn(this._styles, cssProp)) {
+            if (force) {
+                delete this._styles[cssProp];
+            } else {
+                this._styles[cssProp] = ConstExpr('');
+            }
+        }
     }
 
     /**
