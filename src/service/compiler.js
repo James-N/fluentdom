@@ -9,6 +9,7 @@ import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
 import { VTemplate, VSlotTemplate, VComponentTemplate } from '../model/VTemplate';
+import { Expr } from '../model/Expr';
 
 import utility from './utility';
 import LOG from './log';
@@ -216,7 +217,7 @@ export class Compiler {
         }
     }
 
-    _createNodeContext (topCtx, ...ctxValueList) {
+    _createNodeContext (topCtx, ...ctxTemplateList) {
         var newCtx;
         if (topCtx) {
             newCtx = Object.create(topCtx);
@@ -224,12 +225,13 @@ export class Compiler {
             newCtx = {};
         }
 
-        for (let ctxValues of ctxValueList.reverse()) {
-            if (ctxValues) {
-                for (let [ctxKey, ctxVal] of utility.entries(ctxValues)) {
+        for (let ctxTpl of ctxTemplateList.reverse()) {
+            if (ctxTpl) {
+                for (let [ctxKey, ctxVal] of utility.entries(ctxTpl)) {
                     if (!utility.hasOwn(newCtx, ctxKey)) {
-                        if (utility.isFunc(ctxVal)) {
-                            newCtx[ctxKey] = ctxVal();
+                        if (ctxVal instanceof Expr) {
+                            // evaluate expression to get compile-time generated context value
+                            newCtx[ctxKey] = ctxVal.eval();
                         } else {
                             newCtx[ctxKey] = ctxVal;
                         }
