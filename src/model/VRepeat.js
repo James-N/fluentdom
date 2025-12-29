@@ -33,7 +33,7 @@ function generateNumberSeq (size) {
  */
 class VRepeat extends VNode {
     /**
-     * @param {RepeatSource|function(VNode):RepeatSource} repeatSrc  data or provider of data to iterate through
+     * @param {RepeatSource|(function(VNode):RepeatSource)|Expr<RepeatSource>} repeatSrc  data or provider of data to iterate through
      * @param {(function(any):String)|String?} key  key function
      * @param {VTemplate[]} templates  children templates
      */

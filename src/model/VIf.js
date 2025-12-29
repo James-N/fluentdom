@@ -13,7 +13,7 @@ import { loadCompiler } from '../service/compiler';
  */
 class VIf extends VNode {
     /**
-     * @param {function(VNode):Boolean|Expr<Boolean>} condition  condition function
+     * @param {(function(VNode):Boolean)|Expr<Boolean>} condition  condition function
      * @param {VTemplate[]?} templates  child node template
      */
     constructor (condition, templates) {

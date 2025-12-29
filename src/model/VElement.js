@@ -300,7 +300,7 @@ class VElement extends VNode {
      * add a class
      *
      * @param {String|String[]|function(VNode):String|String[]} cls  class property name or getter
-     * @param {(function(VNode):Boolean|Expr<Boolean>)=} switcher  class switcher function or expression
+     * @param {(function(VNode):Boolean)|Expr<Boolean>=} switcher  class switcher function or expression
      */
     addClass (cls, switcher) {
         if (utility.isFunc(cls)) {
