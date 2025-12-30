@@ -17,27 +17,27 @@ import { CompilerExtension } from '../service/compiler';
 
 
 var API = {
-    NodeType: NodeType,
-    HookMessage: HookMessage,
-    VNode: VNode,
-    VElement: VElement,
-    VText: VText,
-    VEmpty: VEmpty,
-    VIf: VIf,
-    VRepeat: VRepeat,
-    VDynamic: VDynamic,
-    VFragment: VFragment,
-    VComponent: VComponent,
-    VTree: VTree,
-    VTemplate: VTemplate,
-    VElementTemplate: VElementTemplate,
-    VComponentTemplate: VComponentTemplate,
-    Expr: Expr,
-    ConstExpr: ConstExpr,
-    DynExpr: DynExpr,
-    RefExpr: RefExpr,
-    Directive: Directive,
-    CompilerExtension: CompilerExtension
+    NodeType,
+    HookMessage,
+    VNode,
+    VElement,
+    VText,
+    VEmpty,
+    VIf,
+    VRepeat,
+    VDynamic,
+    VFragment,
+    VComponent,
+    VTree,
+    VTemplate,
+    VElementTemplate,
+    VComponentTemplate,
+    Expr,
+    ConstExpr,
+    DynExpr,
+    RefExpr,
+    Directive,
+    CompilerExtension
 };
 
 export default API;
