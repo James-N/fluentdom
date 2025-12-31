@@ -1,5 +1,6 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
+import HookMessage from './HookMessage';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
@@ -20,13 +21,13 @@ class VTree extends VNode {
         super.render();
     }
 
-    _getElement (el) {
+    _fetchMountingElm (el) {
         if (utility.isStr(el)) {
             var elm = DOM.query(el);
             if (elm) {
                 return elm;
             } else {
-                throw new Error(`cannot find element by selector [${el}]`);
+                throw new Error(`cannot find mounting element by selector [${el}]`);
             }
         } else if (utility.isElementNode(el) || utility.isDocumentFragment(el)) {
             return el;
@@ -47,8 +48,13 @@ class VTree extends VNode {
             throw new Error("el is null");
         }
 
+        // unmount old element if necessary
+        if (this.domNode) {
+            this.unmount();
+        }
+
         // get mounting element
-        var mountEl = this._getElement(el);
+        var mountEl = this._fetchMountingElm(el);
         // clean old children
         emptyNode(mountEl);
         // save mount element to `domNode` property
@@ -60,7 +66,7 @@ class VTree extends VNode {
         }
 
         // invoke mount hook
-        this.invokeHook('mounted');
+        this.invokeHook('mounted', new HookMessage(this, { broadcast: true }));
     }
 
     /**
@@ -81,7 +87,7 @@ class VTree extends VNode {
             this.domNode = null;
 
             // invoke unmount hook
-            this.invokeHook('unmounted');
+            this.invokeHook('unmounted', new HookMessage(this, { broadcast: true }));
         }
     }
 }
