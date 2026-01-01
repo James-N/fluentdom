@@ -221,6 +221,19 @@ const stableSort = Array.prototype.flat ?       // Array.prototype.sort is gaura
         return packedArr.map(v => v[0]);
     };
 
+/**
+ * get last item in array
+ *
+ * @template T
+ *
+ * @param {T[]} arr
+ * @param {T?=} defaultValue  default value to return when array is empty
+ *
+ * @returns {T?}
+ */
+function lastArrayItem (arr, defaultValue) {
+    return arr.length > 0 ? arr[arr.length - 1] : defaultValue;
+}
 
 /* -------------------- --- -------------------- */
 // utility namespace
@@ -251,5 +264,6 @@ export default {
     kebab2CamelCase: kebab2CamelCase,
     camel2KebabCase: camel2KebabCase,
 
-    stableSort: stableSort
+    stableSort: stableSort,
+    lastArrayItem: lastArrayItem
 };

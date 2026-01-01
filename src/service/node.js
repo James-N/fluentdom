@@ -201,3 +201,19 @@ export function isDescendent (node, parent) {
 
     return false;
 }
+
+/**
+ * find the first ancestor node that meets the given condition, return null if no satisfied node found
+ *
+ * @param {VNode} node  the node to start finding
+ * @param {function(VNode):Boolean} filter  the filter callback
+ *
+ * @returns {VNode?}
+ */
+export function findAnsestorNode (node, filter) {
+    while (node && !filter(node)) {
+        node = node.parent;
+    }
+
+    return node;
+}

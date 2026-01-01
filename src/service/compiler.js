@@ -55,11 +55,7 @@ class CompileContext {
     }
 
     _getTopState () {
-        if (this.stack.length > 0) {
-            return this.stack[this.stack.length - 1];
-        } else {
-            return null;
-        }
+        return utility.lastArrayItem(this.stack, null);
     }
 
     getNode () {

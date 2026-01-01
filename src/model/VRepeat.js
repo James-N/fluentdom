@@ -115,6 +115,8 @@ class VRepeat extends VNode {
         // update child reference properties
         node.parent = this;
         NODE.updateNodeDep(node, this);
+        // set node reflow flag
+        node.$flags.reflow = true;
 
         return node;
     }
@@ -126,8 +128,6 @@ class VRepeat extends VNode {
         var oldChildren = this.children;
         var newChlidren = [];
 
-        var reflow = false;
-
         arr.forEach((e, i) => {
             var id = this._key.call(null, e);
             newMap[id] = i;
@@ -137,13 +137,12 @@ class VRepeat extends VNode {
                 if (oldIdx != i) {
                     oldNode.ctx.$index = i;
                     oldNode.ctx.$value = e;
+                    oldNode.$flags.reflow = true;
                     oldChildren[oldIdx] = null;
-                    reflow = true;
                 }
                 newChlidren.push(oldNode);
             } else {
                 newChlidren.push(this._compileChild(compiler, e, i));
-                reflow = true;
             }
         });
 
@@ -151,14 +150,11 @@ class VRepeat extends VNode {
         this._cache.keyMap = newMap;
 
         NODE.destroyNodes(oldChildren.filter(c => c !== null));
-
-        this.$flags.reflow = reflow;
     }
 
     _updateChildrenByCompare (compiler, arr) {
         var oldArr = this._cache.data;
         var children = this.children;
-        var reflow = false;
 
         arr.forEach((e, i) => {
             if (i < oldArr.length) {
@@ -167,7 +163,6 @@ class VRepeat extends VNode {
                 }
             } else {
                 children.push(this._compileChild(compiler, e, i));
-                reflow = true;
             }
         });
 
@@ -175,10 +170,7 @@ class VRepeat extends VNode {
             NODE.destroyNodes(children.slice(arr.length));
 
             children.length = arr.length;
-            reflow = true;
         }
-
-        this.$flags.reflow = reflow;
     }
 
     compute () {
@@ -197,8 +189,6 @@ class VRepeat extends VNode {
                 if (arr.length > 0) {
                     compiler = loadCompiler(this);
                     this.children = arr.map((e, i) => this._compileChild(compiler, e, i));
-
-                    this.$flags.reflow = true;
                 }
             } else {
                 compiler = loadCompiler(this);
