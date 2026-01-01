@@ -78,7 +78,9 @@ class VNode {
             reflow: false,
 
             /**
-             * mark this node should always be a leaf node in node tree
+             * mark this node to be the last hierarchy for DOM reconstruction, during rendering process,
+             * child nodes of this node will still be computed but excluded from DOM synchronization, how
+             * the child DOM nodes are constructed are fully controlled by implementation of this node
              */
             endpoint: false,
         };
@@ -92,10 +94,6 @@ class VNode {
      * @param {Boolean=} safe  perform additional safety checking & operation before addind child
      */
     addChild (node, index, safe) {
-        if (this.$flags.endpoint) {
-            throw new Error("cannot add child to an endpoint node");
-        }
-
         if (utility.isNullOrUndef(node)) {
             throw new Error("child node is null");
         }

@@ -24,10 +24,8 @@ export function renderNodeTree (node) {
             return;
         }
 
-        if (!node.$flags.endpoint) {
-            for (let child of node.children) {
-                computeNodeTree(child);
-            }
+        for (let child of node.children) {
+            computeNodeTree(child);
         }
     }
 
@@ -204,11 +202,12 @@ export function renderNodeTree (node) {
     }
 
     /**
-     * recursively update DOM structure to match the virtual node tree
+     * recursively reconstruct DOM structure to match the virtual node tree
      *
      * @param {VNode} node
      */
     function syncDOM (node) {
+        // nodes with `endpoint` flag are excluded from DOM synchronization process
         if (node.$flags.endpoint) {
             return;
         }
