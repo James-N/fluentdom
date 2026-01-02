@@ -199,6 +199,16 @@ function kebab2CamelCase (str) {
 }
 
 /**
+ * convert kebab-case string to PascalCase
+ *
+ * @param {String} str
+ * @returns {String}
+ */
+function kebab2PascalCase (str) {
+    return str.toLowerCase().replace(/(?:^|-)([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+/**
  * convert camelCase string to kebab-case
  *
  * @param {String} str
@@ -266,6 +276,7 @@ export default {
     simpleDeepClone: simpleDeepClone,
 
     kebab2CamelCase: kebab2CamelCase,
+    kebab2PascalCase: kebab2PascalCase,
     camel2KebabCase: camel2KebabCase,
 
     stableSort: stableSort,

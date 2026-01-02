@@ -99,23 +99,6 @@ function getDefaultDefinition () {
 }
 
 /**
- * @param {String} name
- * @returns {String}
- */
-function convertComponentBuilderName (name) {
-    var parts = name.split('-');
-    if (parts.length > 0) {
-        return parts.map(p => {
-            p = p.toLowerCase();
-            return p.charAt(0).toUpperCase() + p.substring(1);
-        })
-        .join('');
-    } else {
-        return name;
-    }
-}
-
-/**
  * find all slots from given template(s)
  *
  * @param {VTemplate|VTemplate[]} template
@@ -169,7 +152,7 @@ export function defineComponent (options, local = false) {
     // register template option and builder function
     if (!local) {
         COMPONENT_REGISTRATION[cdef.name] = cdef;
-        COMPONENT_BUILDER[convertComponentBuilderName(cdef.name)] = builder;
+        COMPONENT_BUILDER[utility.kebab2PascalCase(cdef.name)] = builder;
     }
 
     return builder;
@@ -192,5 +175,5 @@ export function getComponent (name) {
  * @returns {function(...any):VComponentTemplate?}
  */
 export function getComponentBuilder (name) {
-    return COMPONENT_BUILDER[convertComponentBuilderName(name)] || null;
+    return COMPONENT_BUILDER[utility.kebab2PascalCase(name)] || null;
 }

@@ -289,7 +289,7 @@ export function buildEmpty(...args) {
  */
 export function buildIf (condition, ...args) {
     if (utility.isNullOrUndef(condition)) {
-        throw new Error('the first branch condition is null');
+        throw new Error("the first branch condition is null");
     }
 
     var [children, options] = readTemplateCreateArgs(args, 0);
