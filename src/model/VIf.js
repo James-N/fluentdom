@@ -9,7 +9,7 @@ import { loadCompiler } from '../service/compiler';
 
 
 /**
- * virtual node for if statement
+ * virtual node for simple if statement
  */
 class VIf extends VNode {
     /**
@@ -26,7 +26,7 @@ class VIf extends VNode {
          *
          * @type {Expr<Boolean>}
          */
-        this._cond = value2Expr(condition);
+        this._condExpr = value2Expr(condition);
 
         /**
          * children template
@@ -53,11 +53,11 @@ class VIf extends VNode {
             return;
         }
 
-        if (this._cond.evalChecked(this)) {
-            if (this._cond.value()) {
+        if (this._condExpr.evalChecked(this)) {
+            if (this._condExpr.value()) {
                 if (this.cacheNode && this._childNodeCache) {
-                    for (let cache of this._childNodeCache) {
-                        this.children.push(cache);
+                    for (let node of this._childNodeCache) {
+                        this.children.push(node);
                     }
                 } else {
                     var compiler = loadCompiler(this);

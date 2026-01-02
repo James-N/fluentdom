@@ -31,7 +31,7 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
 
 
 /**
- * template holds VNodes initiation data
+ * template holds VNodes initialization data
  */
 export class VTemplate {
     /**
@@ -172,6 +172,68 @@ export class VTemplate {
 }
 
 /**
+ * template holds `IF` type node initialization data
+ */
+export class VIfTemplate extends VTemplate {
+    /**
+     * @param {any} cond  first branch condition
+     * @param {VTemplate|VTemplate[]?} tpl  first branch template
+     * @param {Record<String, any>=} options
+     */
+    constructor (cond, tpl, options) {
+        super(NodeType.IF, [], options);
+
+        if (cond) {
+            this.children.push(this._makeBranchTpl(cond, tpl));
+        }
+    }
+
+    _makeBranchTpl (cond, branchTpl) {
+        var tpl = new VTemplate('@branch', [cond]);
+        if (branchTpl) {
+            tpl.children = Array.isArray(branchTpl) ? branchTpl : [branchTpl];
+        }
+
+        return tpl;
+    }
+
+    /**
+     * append an `else if` branch
+     *
+     * @param {any} cond  branch condition
+     * @param {...VTemplate} tpl  branch template
+     *
+     * @returns {this}
+     */
+    elif (cond, ...tpl) {
+        this.children.push(this._makeBranchTpl(cond, tpl));
+        return this;
+    }
+
+    /**
+     * append an `else` branch
+     *
+     * @param {...VTemplate} tpl  branch template
+     * @returns {this}
+     */
+    else (...tpl) {
+        this.children.push(this._makeBranchTpl(null, tpl));
+        return this;
+    }
+
+    append (...children) {
+        throw new Error('cannot manually append child to VIfTemplate');
+    }
+
+    clone () {
+        var cloned = new VIfTemplate();
+        cloned._cloneFrom(this);
+
+        return cloned;
+    }
+}
+
+/**
  * @abstract
  *
  * abstract class for element-like node templates
@@ -258,7 +320,7 @@ class VAbstractElementTemplate extends VTemplate {
 }
 
 /**
- * template holds element initiation data
+ * template holds element initialization data
  */
 export class VElementTemplate extends VAbstractElementTemplate {
     /**
@@ -293,7 +355,7 @@ export class VElementTemplate extends VAbstractElementTemplate {
 }
 
 /**
- * template holds component initiation data
+ * template holds component initialization data
  */
 export class VComponentTemplate extends VAbstractElementTemplate {
     /**

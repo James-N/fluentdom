@@ -5,6 +5,7 @@ import VElement from '../model/VElement';
 import VText from '../model/VText';
 import VEmpty from '../model/VEmpty';
 import VIf from '../model/VIf';
+import VIfElse from '../model/VIfElse';
 import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
@@ -24,6 +25,7 @@ var API = {
     VText,
     VEmpty,
     VIf,
+    VIfElse,
     VRepeat,
     VDynamic,
     VFragment,

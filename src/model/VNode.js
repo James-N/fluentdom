@@ -91,7 +91,7 @@ class VNode {
      *
      * @param {VNode} node  the child node to add
      * @param {Number=} index  child position index
-     * @param {Boolean=} safe  perform additional safety checking & operation before addind child
+     * @param {Boolean=} safe  perform additional safety checking & operation before adding child
      */
     addChild (node, index, safe) {
         if (utility.isNullOrUndef(node)) {

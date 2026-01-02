@@ -2,7 +2,7 @@ import NodeType from '../model/NodeType';
 import VNode from '../model/VNode';
 import VText from '../model/VText';
 import VFragment from '../model/VFragment';
-import { VTemplate, VElementTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
+import { VTemplate, VElementTemplate, VComponentTemplate, VIfTemplate, VSlotTemplate } from '../model/VTemplate';
 
 import utility from './utility';
 
@@ -288,15 +288,13 @@ export function buildEmpty(...args) {
  * @returns {VTemplate}
  */
 export function buildIf (condition, ...args) {
-    if (!utility.isFunc(condition)) {
-        condition = ((c) => () => !!c)(condition);
+    if (utility.isNullOrUndef(condition)) {
+        throw new Error('the first branch condition is null');
     }
 
     var [children, options] = readTemplateCreateArgs(args, 0);
 
-    var template = new VTemplate(NodeType.IF, [condition], options);
-    template.children = children;
-
+    var template = new VIfTemplate(condition, children, options);
     return template;
 }
 

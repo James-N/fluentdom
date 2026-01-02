@@ -4,11 +4,12 @@ import VText from '../model/VText';
 import VElement from '../model/VElement';
 import VEmpty from '../model/VEmpty';
 import VIf from '../model/VIf';
+import VIfElse from '../model/VIfElse';
 import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
-import { VTemplate, VSlotTemplate, VComponentTemplate } from '../model/VTemplate';
+import { VTemplate, VSlotTemplate, VComponentTemplate, VIfTemplate } from '../model/VTemplate';
 import { Expr } from '../model/Expr';
 
 import utility from './utility';
@@ -372,7 +373,17 @@ export class Compiler {
     }
 
     _compileIf (tpl, ctx) {
-        var ifNode = new VIf(tpl.arg(0), tpl.children);
+        var ifNode;
+        if (tpl instanceof VIfTemplate) {
+            if (tpl.children.length === 1) {
+                ifNode = new VIf(tpl.children[0].arg(0), tpl.children[0].children);
+            } else {
+                ifNode = new VIfElse(tpl.children.map(c => [c.arg(0), c.children.length > 0 ? c.children : null]));
+            }
+        } else {
+            ifNode = new VIf(tpl.arg(0), tpl.children);
+        }
+
         ifNode.cacheNode = utility.getOptionValue(tpl.options, 'cache', false);
         ifNode.ctx = ctx.getNodeContext();
         return ifNode;
