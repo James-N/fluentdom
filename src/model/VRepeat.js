@@ -2,6 +2,7 @@ import NodeType from './NodeType';
 import VNode from './VNode';
 import { VTemplate } from './VTemplate';
 import { Expr } from './Expr';
+import IterAdaptor from './internal/IterAdaptor';
 
 import * as NODE from '../service/node';
 import utility from '../service/utility';
@@ -11,7 +12,7 @@ import { value2Expr } from '../service/expr';
 
 
 /**
- * @typedef {Number|Array} RepeatSource
+ * @typedef {Number|Array|Iterable|Iterator|Record<String, any>} RepeatSource
  */
 
 /**
@@ -34,13 +35,20 @@ function generateNumberSeq (size) {
 class VRepeat extends VNode {
     /**
      * @param {RepeatSource|(function(VNode):RepeatSource)|Expr<RepeatSource>} repeatSrc  data or provider of data to iterate through
-     * @param {(function(any):String)|String?} key  key function
+     * @param {(function(any):String|Number)|String?} key  key function
      * @param {VTemplate[]} templates  children templates
      */
     constructor (repeatSrc, key, templates) {
         super();
 
         this.nodeType = NodeType.REPEAT;
+
+        /**
+         * whether force keep the repeated data after each computation
+         *
+         * @type {Boolean}
+         */
+        this.keepData = false;
 
         /**
          * repeat data expression
@@ -68,11 +76,11 @@ class VRepeat extends VNode {
          */
         this._cache = {
             /**
-             * cache to last repeat data
+             * cache to last repeat data array
              *
              * @type {Array}
              */
-            data: [],
+            arr: [],
             /**
              * cache to last key comparsion result
              *
@@ -83,17 +91,28 @@ class VRepeat extends VNode {
     }
 
     /**
-     * @param {RepeatSource} repetaSrc
-     * @returns {Array}
+     * @param {RepeatSource} repeatSrc
+     * @param {Boolean} keepValue
+     *
+     * @returns {IterAdaptor}
      */
-    _prepareData (repetaSrc) {
-        if (utility.isValidNum(repetaSrc)) {
-            return generateNumberSeq(repetaSrc);
-        } else if (Array.isArray(repetaSrc)) {
-            return repetaSrc.slice(0);
+    _prepareIter (repeatSrc, keepValue) {
+        var iter;
+        if (utility.isValidNum(repeatSrc)) {
+            iter = generateNumberSeq(repeatSrc);
+        } else if (Array.isArray(repeatSrc)) {
+            iter = repeatSrc.slice(0);
+        } else if (utility.isStrictObj(repeatSrc)) {
+            iter = utility.entries(repeatSrc);
         } else {
-            LOG.warn(`invalid data for repeat node: ${repetaSrc}`);
-            return [];
+            iter = repeatSrc;
+        }
+
+        try {
+            return new IterAdaptor(iter, keepValue);
+        } catch (err) {
+            LOG.warn(`invalid data for repeat node: ${repeatSrc}, ${err.message}`);
+            return new IterAdaptor([]);
         }
     }
 
@@ -121,26 +140,26 @@ class VRepeat extends VNode {
         return node;
     }
 
-    _updateChildrenByKey (compiler, arr) {
+    _updateChildrenByKey (compiler, iter) {
         var oldMap = this._cache.keyMap;
         var newMap = {};
 
         var oldChildren = this.children;
         var newChlidren = [];
 
-        arr.forEach((e, i) => {
-            var id = this._key.call(null, e);
-            newMap[id] = i;
-            if (utility.hasOwn(oldMap, id)) {
-                var oldIdx = oldMap[id];
+        iter.forEach((e, i) => {
+            var key = this._key.call(null, e);
+            newMap[key] = i;
+            if (utility.hasOwn(oldMap, key)) {
+                var oldIdx = oldMap[key];
                 var oldNode = oldChildren[oldIdx];
                 if (oldIdx != i) {
                     oldNode.ctx.$index = i;
                     oldNode.ctx.$value = e;
                     oldNode.$flags.reflow = true;
-                    oldChildren[oldIdx] = null;
                 }
                 newChlidren.push(oldNode);
+                oldChildren[oldIdx] = null;
             } else {
                 newChlidren.push(this._compileChild(compiler, e, i));
             }
@@ -152,11 +171,11 @@ class VRepeat extends VNode {
         NODE.destroyNodes(oldChildren.filter(c => c !== null));
     }
 
-    _updateChildrenByCompare (compiler, arr) {
-        var oldArr = this._cache.data;
+    _updateChildrenByCompare (compiler, iter) {
+        var oldArr = this._cache.arr;
         var children = this.children;
 
-        arr.forEach((e, i) => {
+        iter.forEach((e, i) => {
             if (i < oldArr.length) {
                 if (e != oldArr[i]) {
                     children[i].ctx.$value = e;
@@ -166,10 +185,11 @@ class VRepeat extends VNode {
             }
         });
 
-        if (oldArr.length > arr.length) {
-            NODE.destroyNodes(children.slice(arr.length));
+        this._cache.arr = iter.values();
 
-            children.length = arr.length;
+        if (oldArr.length > iter.count()) {
+            NODE.destroyNodes(children.slice(iter.count()));
+            children.length = iter.count();
         }
     }
 
@@ -181,27 +201,36 @@ class VRepeat extends VNode {
         // prepare repeat data
         var src = this._repeatExpr.eval(this);
         if (!utility.isNum(src) || this._repeatExpr.check()) {
-            var arr = this._prepareData(src);
+            var hasKey = !!this._key;
+            var iter = this._prepareIter(src, !hasKey || this.keepData);
 
             // update children
-            var compiler;
+            var compiler = loadCompiler(this);
             if (this.children.length === 0) {
-                if (arr.length > 0) {
-                    compiler = loadCompiler(this);
-                    this.children = arr.map((e, i) => this._compileChild(compiler, e, i));
+                if (hasKey) {
+                    var keyMap = {};
+                    iter.forEach((e, i) => {
+                        keyMap[this._key.call(null, e)] = i;
+                        this.children.push(this._compileChild(compiler, e, i));
+                    });
+                    this._cache.keyMap = keyMap;
+                } else {
+                    var data = iter.flush();
+                    this.children = data.map((e, i) => this._compileChild(compiler, e, i));
+                    this._cache.arr = data;
                 }
             } else {
-                compiler = loadCompiler(this);
-
-                if (this._key) {
-                    this._updateChildrenByKey(compiler, arr);
+                if (hasKey) {
+                    this._updateChildrenByKey(compiler, iter);
                 } else {
-                    this._updateChildrenByCompare(compiler, arr);
+                    this._updateChildrenByCompare(compiler, iter);
                 }
             }
 
-            // cache the repeated array
-            this._cache.data = arr;
+            // cache repeat data
+            if (this.keepData) {
+                this._cache.arr = iter.values();
+            }
 
             // invoke repeat init hooks
             this.children.forEach(c => this.invokeHook('repeatInit', null, c, c.ctx.$value, c.ctx.$index));

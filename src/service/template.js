@@ -301,18 +301,12 @@ export function buildIf (condition, ...args) {
 /**
  * create template for repeat node
  *
- * @param {Number|Array|function(VNode):Number|Array} dataOrProvider  init value for repeat
+ * @param {any} repeatSrc  the source value or its factory for repeating
  * @param {...any} args
  *
  * @returns {VTemplate}
  */
-export function buildRepeat (dataOrProvider, ...args) {
-    if (!Array.isArray(dataOrProvider) &&
-        !utility.isValidNum(dataOrProvider) &&
-        !utility.isFunc(dataOrProvider)) {
-        throw new TypeError("dataOrProvider input must be array, number or function");
-    }
-
+export function buildRepeat (repeatSrc, ...args) {
     var key = utility.isFunc(args[0]) ? args[0] : null;
     var [children, options] = readTemplateCreateArgs(args, key ? 1 : 0);
 
@@ -321,7 +315,7 @@ export function buildRepeat (dataOrProvider, ...args) {
         options.key = key;
     }
 
-    var template = new VTemplate(NodeType.REPEAT, [dataOrProvider], options);
+    var template = new VTemplate(NodeType.REPEAT, [repeatSrc], options);
     template.children = children;
 
     return template;

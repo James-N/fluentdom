@@ -12,6 +12,8 @@ const isBool = b => typeof b == 'boolean';
 const isFunc = f => typeof f == 'function';
 const isObj = o => typeof o == 'object';
 const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
+const isIterable = o => !!o && (typeof o[Symbol.iterator] == 'function');
+const isIterator = o => !!o && (typeof o['next'] == 'function');
 const isDOMNode = n => n instanceof global.Node;
 const isElementNode = n => n instanceof global.Element;
 const isDocumentFragment = n => n instanceof global.DocumentFragment;
@@ -248,6 +250,8 @@ export default {
     isFunc: isFunc,
     isObj: isObj,
     isStrictObj: isStrictObj,
+    isIterable: isIterable,
+    isIterator: isIterator,
     isDOMNode: isDOMNode,
     isElementNode: isElementNode,
     isDocumentFragment: isDocumentFragment,

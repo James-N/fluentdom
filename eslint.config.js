@@ -67,7 +67,7 @@ module.exports = defineConfig({
         'jsdoc/no-undefined-types': [
             'warn',
             {
-                definedTypes: ['Any', 'Promise', 'Map', 'Set']
+                definedTypes: ['Any', 'Promise', 'Map', 'Set', 'Iterator', 'Iterable']
             }
         ]
     }
