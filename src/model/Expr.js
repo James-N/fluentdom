@@ -128,9 +128,10 @@ export class ConstExpr extends Expr {
 export class DynExpr extends Expr {
     /**
      * @param {function(...any):T} getter  the getter function
+     * @param {any=} defaultValue
      */
-    constructor (getter) {
-        super();
+    constructor (getter, defaultValue) {
+        super(defaultValue);
 
         if (!utility.isFunc(getter)) {
             throw new TypeError("getter must be function");
