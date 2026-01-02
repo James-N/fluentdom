@@ -163,7 +163,7 @@ export class Compiler {
     }
 
     _compileTemplate (tpl, ctx) {
-        var compileFunc = this._compileFuncs[tpl.nodeType];
+        var compileFunc = this._compileFuncs[tpl.type];
         if (compileFunc) {
             // load directives
             var directives = tpl.options ? loadDirectives(tpl.options) : null;
@@ -195,7 +195,7 @@ export class Compiler {
 
             return node;
         } else {
-            throw new TypeError(`unrecognized template of type [${tpl.nodeType}]`);
+            throw new TypeError(`unrecognized template of type [${tpl.type}]`);
         }
     }
 

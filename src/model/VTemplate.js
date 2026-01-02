@@ -35,27 +35,35 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
  */
 export class VTemplate {
     /**
-     * @param {NodeType} nodeType  node type
+     * @param {String} type  template type
      * @param {any[]?} args  init arguments
      * @param {Record<String, any>?} options  template options
      */
-    constructor (nodeType, args, options) {
+    constructor (type, args, options) {
         /**
+         * template type, this property is (mainly) used by compiler to choose different compile modules
+         *
          * @type {String}
          */
-        this.nodeType = nodeType;
+        this.type = type;
 
         /**
+         * template arguments
+         *
          * @type {any[]}
          */
         this.args = args || [];
 
         /**
+         * template creation options
+         *
          * @type {Record<String, any>?}
          */
         this.options = options || null;
 
         /**
+         * child templates
+         *
          * @type {VTemplate[]}
          */
         this.children = [];
@@ -64,6 +72,7 @@ export class VTemplate {
 
         /**
          * whether allow child templates to be added
+         *
          * @type {Boolean}
          */
         this.$allowChildren = true;
@@ -164,7 +173,7 @@ export class VTemplate {
      * create clone of this template
      */
     clone () {
-        var cloned = new VTemplate(this.nodeType);
+        var cloned = new VTemplate(this.type);
         cloned._cloneFrom(this);
 
         return cloned;
