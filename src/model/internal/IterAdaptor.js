@@ -113,24 +113,27 @@ class IterAdaptor {
     }
 
     /**
+     * flush iterator into an array
+     *
      * @returns {Array}
      */
     flush () {
         var values;
         if (Array.isArray(this._iter)) {
             this._counter = this._iter.length;
-            this._ended = true;
-
             values = this._iter.slice(0);
-
-            if (this._keepValue) {
-                this._values = values;
-            }
         } else {
             values = [];
-            this.forEach(v => {
-                values.push(v);
-            });
+            var result;
+            while (!(result = this._iter.next()).done) {
+                values.push(result.value);
+                this._counter++;
+            }
+        }
+
+        this._ended = true;
+        if (this._keepValue) {
+            this._values = values;
         }
 
         return values;
