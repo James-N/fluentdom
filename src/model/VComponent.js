@@ -29,6 +29,8 @@ class VComponent extends VElement {
 
     /**
      * component post initialization method, implemented by derived class
+     *
+     * @virtual
      */
     init () {
         // component initialization

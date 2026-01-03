@@ -7,6 +7,9 @@ import LOG from './log';
 
 /**
  * tree walk methods
+ *
+ * @readonly
+ * @enum {Number}
  */
 const WALK_METHOD = {
     DFS: 1,
@@ -19,8 +22,8 @@ const WALK_METHOD = {
 class NodeTreeWalker {
     /**
      * @param {VNode|VNode[]} node   the node(s) to start traversal
-     * @param {Number} method   the traverse method
-     * @param {(function(VNode):Boolean|Boolean[])=} filter    custom filter
+     * @param {WALK_METHOD} method   the traverse method
+     * @param {((node: VNode) => Boolean|Boolean[])=} filter    custom filter
      */
     constructor (node, method, filter) {
         this._queue = Array.isArray(node) ? node.slice(0) : [node];
@@ -114,7 +117,7 @@ function createNodeIterParams () {
  *
  * @param {VNode} node  node on which to start iteration
  * @param {ReturnType<createNodeIterParams>=} params  iterator creation params
- * @param {(function(VNode):Boolean|Boolean[])=} filter    custom filter
+ * @param {((node: VNode) => Boolean|Boolean[])=} filter    custom filter
  *
  * @returns {NodeTreeWalker}
  */
@@ -206,7 +209,7 @@ export function isDescendent (node, parent) {
  * find the first ancestor node that meets the given condition, return null if no satisfied node found
  *
  * @param {VNode} node  the node to start finding
- * @param {function(VNode):Boolean} filter  the filter callback
+ * @param {(node: VNode) => Boolean} filter  the filter callback
  *
  * @returns {VNode?}
  */

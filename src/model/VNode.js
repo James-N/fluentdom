@@ -292,7 +292,7 @@ class VNode {
      * invoke hook callback
      *
      * @param {String} name  hook name
-     * @param {HookMessage?=} msg  the optional pre-generated hook message
+     * @param {HookMessage?=} msg  an optional pre-generated hook message
      * @param  {...any} args  additional args
      */
     invokeHook (name, msg, ...args) {

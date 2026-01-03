@@ -145,7 +145,7 @@ export function renderNodeTree (node) {
 
     /**
      * keep removing DOM nodes in NodeList until meet the target node,
-     * pass in `null` as target node means remove all remaining DOM nodes
+     * pass in `null` as target node will remove all remaining DOM nodes
      *
      * @param {Node} current
      * @param {Node?} target
@@ -163,7 +163,7 @@ export function renderNodeTree (node) {
     }
 
     /**
-     * synchonize existing DOM NodeList from specified node with nodes collected from a set of virtual nodes without `reflow` mark,
+     * synchronize existing DOM NodeList from specified node with nodes collected from a set of virtual nodes without `reflow` mark,
      * this function will remove unmatched nodes from DOM, but will not try to fix other problems
      *
      * @param {Node} domNode  the start DOM node to synchronize
@@ -179,13 +179,13 @@ export function renderNodeTree (node) {
                 if (removeDOMNodeUntil(domNode, refNodes[n])) {
                     domNode = domNode.nextSibling;
                 } else {
-                    LOG.warn('DOM node structure mismatch, rendering result maybe incorrect', parent);
+                    LOG.warn("DOM node structure mismatch, rendering result maybe incorrect", parent);
                 }
             }
 
             return domNode;
         } else {
-            LOG.warn('DOM node structure mismatch, rendering result maybe incorrect');
+            LOG.warn("DOM node structure mismatch, rendering result maybe incorrect");
             return null;
         }
     }
@@ -251,7 +251,7 @@ export function renderNodeTree (node) {
                             }
                         } else {
                             // we can't just take the old DOM when it comes to un-reflowed segment, since some nodes may be
-                            // removed after previous computing and remain the surrounding nodes unflowed, so an extra
+                            // removed after previous computing and remain the surrounding nodes un-reflowed, so an extra
                             // synchronization is necessary to detect these changes
                             curDOMChild = syncUnflowDOMNodes(curDOMChild, flattenDOMNodes(curSeg.nodes));
 
@@ -259,7 +259,7 @@ export function renderNodeTree (node) {
                         }
                     }
 
-                    // remove renamining unmatched DOM nodes
+                    // remove remaining unmatched DOM nodes
                     if (curDOMChild) {
                         removeDOMNodeUntil(curDOMChild, null);
                     }

@@ -124,7 +124,7 @@ export class Compiler {
     }
 
     /**
-     * render template into a tree
+     * render template into node tree
      *
      * @param {VTemplate} template
      * @returns {VNode}

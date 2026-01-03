@@ -21,7 +21,7 @@ class VDynamic extends VNode {
         this.nodeType = NodeType.DYNAMIC;
 
         /**
-         * whther to compile template only once
+         * whether to compile template only once
          *
          * @type {Boolean}
          */
@@ -43,7 +43,7 @@ class VDynamic extends VNode {
     }
 
     compute () {
-        if (!this._updated || !this.once) {
+        if (!this.once || !this._updated) {
             if (this._tplExpr.evalChecked(this)) {
                 // clean old child nodes if necessary
                 if (this.children.length > 0) {

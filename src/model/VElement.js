@@ -50,7 +50,7 @@ class VElement extends VNode {
         /**
          * element attribute exprs
          *
-         * @type {Record<String, Expr>}
+         * @type {Record<String, Expr<String|Boolean>>}
          */
         this._attrs = {};
         /**
@@ -62,7 +62,7 @@ class VElement extends VNode {
         /**
          * element style exprs
          *
-         * @type {Record<String, Expr>}
+         * @type {Record<String, Expr<String>>}
          */
         this._styles = {};
         /**
@@ -82,7 +82,7 @@ class VElement extends VNode {
         /**
          * element event registration
          */
-        this._events = new EventTable("VElement::events");
+        this._events = new EventTable('VElement::events');
         /**
          * element event trigger callback table
          *

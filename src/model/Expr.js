@@ -127,7 +127,7 @@ export class ConstExpr extends Expr {
  */
 export class DynExpr extends Expr {
     /**
-     * @param {(...any) => T} getter  the getter function
+     * @param {function(...any):T} getter  the getter function
      * @param {any=} defaultValue
      */
     constructor (getter, defaultValue) {
@@ -138,7 +138,7 @@ export class DynExpr extends Expr {
         }
 
         /**
-         * @type {(...any) => T}
+         * @type {function(...any):T}
          */
         this.$getter = getter;
     }

@@ -9,7 +9,7 @@ import utility from '../service/utility';
 class HookMessage {
     /**
      * @param {VNode} srcNode  root node that triggers the hook
-     * @param {Record<String, any>=} properties  optional message properties set
+     * @param {Record<String, any>=} properties  optional message property set
      */
     constructor (srcNode, properties) {
         /**

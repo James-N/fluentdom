@@ -113,7 +113,7 @@ export class VTemplate {
     }
 
     /**
-     * override node options
+     * override template options
      *
      * @param {Record<String, Object>} options
      * @returns {this}
@@ -231,7 +231,7 @@ export class VIfTemplate extends VTemplate {
     }
 
     append (...children) {
-        throw new Error('cannot manually append child to VIfTemplate');
+        throw new Error("cannot manually append child to VIfTemplate");
     }
 
     clone () {

@@ -81,7 +81,7 @@ class IterAdaptor {
     /**
      * loop through iterator values
      *
-     * @param {(any, Number) => void} callback  loop callback
+     * @param {(value: any, index: Number) => void} callback  loop callback
      */
     forEach (callback) {
         if (this._ended) {
@@ -113,7 +113,7 @@ class IterAdaptor {
     }
 
     /**
-     * flush iterator into an array
+     * flush iterator into array
      *
      * @returns {Array}
      */
