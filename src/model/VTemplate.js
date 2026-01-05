@@ -185,16 +185,10 @@ export class VTemplate {
  */
 export class VIfTemplate extends VTemplate {
     /**
-     * @param {any} cond  first branch condition
-     * @param {VTemplate|VTemplate[]?} tpl  first branch template
      * @param {Record<String, any>=} options
      */
-    constructor (cond, tpl, options) {
+    constructor (options) {
         super(NodeType.IF, [], options);
-
-        if (cond) {
-            this.children.push(this._makeBranchTpl(cond, tpl));
-        }
     }
 
     _makeBranchTpl (cond, branchTpl) {
@@ -207,6 +201,22 @@ export class VIfTemplate extends VTemplate {
     }
 
     /**
+     * append the `if` branch
+     *
+     * @param {any} cond  main branch condition
+     * @param {...VTemplate} tpl  branch template
+     *
+     * @returns {this}
+     */
+    if (cond, ...tpl) {
+        if (this.children.length > 0) {
+            throw new Error("cannot add multiple `if` branches");
+        }
+
+        this.children.push(this._makeBranchTpl(cond, tpl));
+    }
+
+    /**
      * append an `else if` branch
      *
      * @param {any} cond  branch condition
@@ -215,6 +225,10 @@ export class VIfTemplate extends VTemplate {
      * @returns {this}
      */
     elif (cond, ...tpl) {
+        if (this.children.length === 0) {
+            throw new Error("cannot add `else if` branch when `if` branch is missing");
+        }
+
         this.children.push(this._makeBranchTpl(cond, tpl));
         return this;
     }
@@ -226,6 +240,10 @@ export class VIfTemplate extends VTemplate {
      * @returns {this}
      */
     else (...tpl) {
+        if (this.children.length === 0) {
+            throw new Error("cannot add `else` branch when `if` branch is missing");
+        }
+
         this.children.push(this._makeBranchTpl(null, tpl));
         return this;
     }

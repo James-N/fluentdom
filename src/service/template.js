@@ -282,19 +282,28 @@ export function buildEmpty(...args) {
 /**
  * create template for if node
  *
- * @param {Boolean|function(VNode):Boolean} condition  condition value or function
  * @param {...any} args
- *
  * @returns {VTemplate}
  */
-export function buildIf (condition, ...args) {
-    if (utility.isNullOrUndef(condition)) {
-        throw new Error("the first branch condition is null");
+export function buildIf (...args) {
+    var condition, children, options;
+    if (args.length > 0 && (utility.isFunc(args[0]) || utility.isBool(args[0]))) {
+        condition = args[0];
+        [children, options] = readTemplateCreateArgs(args, 1);
+    } else {
+        condition = null;
+        [children, options] = readTemplateCreateArgs(args, 0);
+
+        if (children.length > 0) {
+            throw new Error("missing `if` branch condition");
+        }
     }
 
-    var [children, options] = readTemplateCreateArgs(args, 0);
+    var template = new VIfTemplate(options);
+    if (condition) {
+        template.if(condition, ...children);
+    }
 
-    var template = new VIfTemplate(condition, children, options);
     return template;
 }
 
