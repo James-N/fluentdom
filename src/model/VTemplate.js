@@ -1,4 +1,5 @@
 import NodeType from './NodeType';
+import MethodExtension from './internal/MethodExtension';
 
 import utility from '../service/utility';
 import { buildText } from '../service/template';
@@ -33,13 +34,15 @@ function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
 /**
  * template holds VNodes initialization data
  */
-export class VTemplate {
+export class VTemplate extends MethodExtension {
     /**
      * @param {String} type  template type
      * @param {any[]?} args  init arguments
      * @param {Record<String, any>?} options  template options
      */
     constructor (type, args, options) {
+        super();
+
         /**
          * template type, this property is (mainly) used by compiler to choose different compile modules
          *
@@ -267,66 +270,6 @@ export class VIfTemplate extends VTemplate {
  */
 class VAbstractElementTemplate extends VTemplate {
     /**
-     * set `class` option
-     * @returns {this}
-     */
-    class (clsOrSet, value) {
-        if (utility.isStrictObj(clsOrSet)) {
-            clsOrSet = utility.extend({}, clsOrSet);
-        } else if (utility.isStr(clsOrSet) && utility.isFunc(value)) {
-            clsOrSet = { [clsOrSet]: value };
-        }
-
-        this.options = utility.setOptionValue(this.options, ['class'], clsOrSet, false, true);
-        return this;
-    }
-
-    /**
-     * set `id` option
-     * @returns {this}
-     */
-    id (id) {
-        this.options = utility.setOptionValue(this.options, ['id'], id);
-        return this;
-    }
-
-    /**
-     * set `styles` option
-     * @returns {this}
-     */
-    style (nameOrSet, value) {
-        updateTplKVOption(this, 'styles', nameOrSet, value);
-        return this;
-    }
-
-    /**
-     * set `attrs` option
-     * @returns {this}
-     */
-    attr (nameOrSet, value) {
-        updateTplKVOption(this, 'attrs', nameOrSet, value);
-        return this;
-    }
-
-    /**
-     * set `props` option
-     * @returns {this}
-     */
-    prop (nameOrSet, value) {
-        updateTplKVOption(this, 'props', nameOrSet, value);
-        return this;
-    }
-
-    /**
-     * set `events` handle
-     * @returns {this}
-     */
-    event (nameOrSet, handle) {
-        updateTplKVOption(this, 'events', nameOrSet, handle, true);
-        return this;
-    }
-
-    /**
      * @param {VAbstractElementTemplate} src
      */
     _cloneFrom (src) {
@@ -433,6 +376,72 @@ export class VComponentTemplate extends VAbstractElementTemplate {
         return cloned;
     }
 }
+
+// register common extension methods to VElement and VComponentTemplate
+MethodExtension.extend(
+    [VElementTemplate, VComponentTemplate],
+    {
+        /**
+         * set `class` option
+         * @returns {this}
+         */
+        class (clsOrSet, value) {
+            if (utility.isStrictObj(clsOrSet)) {
+                clsOrSet = utility.extend({}, clsOrSet);
+            } else if (utility.isStr(clsOrSet) && utility.isFunc(value)) {
+                clsOrSet = { [clsOrSet]: value };
+            }
+
+            this.options = utility.setOptionValue(this.options, ['class'], clsOrSet, false, true);
+            return this;
+        },
+
+        /**
+         * set `id` option
+         * @returns {this}
+         */
+        id (id) {
+            this.options = utility.setOptionValue(this.options, ['id'], id);
+            return this;
+        },
+
+        /**
+         * set `styles` option
+         * @returns {this}
+         */
+        style (nameOrSet, value) {
+            updateTplKVOption(this, 'styles', nameOrSet, value);
+            return this;
+        },
+
+        /**
+         * set `attrs` option
+         * @returns {this}
+         */
+        attr (nameOrSet, value) {
+            updateTplKVOption(this, 'attrs', nameOrSet, value);
+            return this;
+        },
+
+        /**
+         * set `props` option
+         * @returns {this}
+         */
+        prop (nameOrSet, value) {
+            updateTplKVOption(this, 'props', nameOrSet, value);
+            return this;
+        },
+
+        /**
+         * set `events` handle
+         * @returns {this}
+         */
+        event (nameOrSet, handle) {
+            updateTplKVOption(this, 'events', nameOrSet, handle, true);
+            return this;
+        }
+    }
+);
 
 /**
  * special placeholder template that is used to insert custom templates into template tree at compile time

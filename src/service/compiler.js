@@ -391,9 +391,10 @@ export class Compiler {
     }
 
     _compileRepeat (tpl, ctx) {
-        var repeatNode = new VRepeat(tpl.arg(0), utility.getOptionValue(tpl.options, 'key', null), tpl.children);
-        repeatNode.keepData = utility.getOptionValue(tpl.options, 'keepData', false);
-        this._attachNodeContext(repeatNode, tpl.options, ctx);
+        var options = tpl.options;
+        var repeatNode = new VRepeat(tpl.arg(0), utility.getOptionValue(options, 'key', null), tpl.children);
+        repeatNode.keepData = utility.getOptionValue(options, 'keepData', false);
+        this._attachNodeContext(repeatNode, options, ctx);
 
         return repeatNode;
     }

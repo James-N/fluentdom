@@ -3,6 +3,7 @@ import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
 import { VTemplate, VElementTemplate } from '../model/VTemplate';
 import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
+import MethodExtension from '../model/internal/MethodExtension';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
@@ -239,3 +240,8 @@ export function createExpr (value) {
 createExpr.const = function (value) { return new ConstExpr(value); };
 createExpr.dyn = function (getter, defaultValue) { return new DynExpr(getter, defaultValue); };
 createExpr.ref = function (value) { return new RefExpr(null, value); };
+
+/**
+ * register extension methods to class
+ */
+export const extendClass = MethodExtension.extend;

@@ -15,6 +15,7 @@ export default {
     newComponent: pub.defineComponent,
     addDirective: pub.registerDirective,
     expr: pub.createExpr,
+    extendClass: pub.extendClass,
 
     compile: pub.compileTemplate,
     extendCompiler: pub.useCompilerExtension

@@ -1,7 +1,7 @@
 import global from './global';
 
 /* -------------------- --- -------------------- */
-// type or value checking utilities
+// type checking & manipulation utilities
 /* -------------------- --- -------------------- */
 
 const isNullOrUndef = o => o === null || o === undefined;
@@ -25,11 +25,11 @@ const isDocumentFragment = n => n instanceof global.DocumentFragment;
  */
 function isSubclass (cls1, cls2) {
     if (!isFunc(cls1) || !cls1.prototype) {
-        throw new Error("cls1 is not a class");
+        throw new TypeError("cls1 is not a class");
     }
 
     if (!isFunc(cls2) || !cls2.prototype) {
-        throw new Error("cls2 is not a class");
+        throw new TypeError("cls2 is not a class");
     }
 
     if (cls1 === cls2) {
@@ -37,6 +37,29 @@ function isSubclass (cls1, cls2) {
     } else {
         return cls1.prototype instanceof cls2;
     }
+}
+
+/**
+ * get class function of the given object, only works for ES6 `class` syntax based classes
+ *
+ * @template T
+ *
+ * @param {T?} obj
+ * @returns {(new () => T)?}
+ */
+function classOf (obj) {
+    return (obj && obj.constructor) || null;
+}
+
+/**
+ * get base class of the given class, only works for ES6 `class` syntax based classes
+ */
+function baseClassOf (cls) {
+    if (!isFunc(cls) || !cls.prototype) {
+        throw new TypeError("cls is not a class");
+    }
+
+    return Object.getPrototypeOf(cls);
 }
 
 /**
@@ -266,6 +289,8 @@ export default {
     isElementNode: isElementNode,
     isDocumentFragment: isDocumentFragment,
     isSubclass: isSubclass,
+    classOf: classOf,
+    baseClassOf: baseClassOf,
     ensureValidString: validString,
 
     extend: extendObject,
