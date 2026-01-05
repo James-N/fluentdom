@@ -305,6 +305,7 @@ export class Compiler {
             // bind velement with the given dom element node, should be used with care
             elmNode = new VElement(domNode.tagName);
             elmNode.domNode = domNode;
+            elmNode.$flags.reflow = true;   // `reflow` flag must be set manually if domNode is provided from outside
         } else {
             elmNode = new VElement(tpl.tagName || tpl.arg(0));
         }
