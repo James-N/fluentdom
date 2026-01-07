@@ -292,16 +292,20 @@ class VNode {
      * invoke hook callback
      *
      * @param {String} name  hook name
-     * @param {HookMessage?=} msg  an optional pre-generated hook message
+     * @param {HookMessage|Record<String, any>?=} msg  an optional pre-generated hook message
      * @param  {...any} args  additional args
      */
     invokeHook (name, msg, ...args) {
-        if (msg && !(msg instanceof HookMessage)) {
-            throw new TypeError("invalid hook msg type");
+        // valid & construct hook message if necessary
+        if (!(msg instanceof HookMessage)) {
+            if (utility.isNullOrUndef(msg)) {
+                msg = new HookMessage(this);
+            } else if (utility.isStrictObj(msg)) {
+                msg = new HookMessage(this, msg);
+            } else {
+                throw new TypeError("invalid hook msg type");
+            }
         }
-
-        // construct hook message if necessary
-        msg = msg || new HookMessage(this);
 
         // invoke hook on this node
         this._hooks.invoke(name, this, msg, ...args);

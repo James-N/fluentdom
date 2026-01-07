@@ -30,6 +30,13 @@ class HookMessage {
          */
         this.broadcast = !!utility.getOptionValue(properties, 'broadcast', false);
     }
+
+    /**
+     * stop hook message from subsequent broadcasting
+     */
+    stopPropagation () {
+        this.broadcast = false;
+    }
 }
 
 export default HookMessage;
