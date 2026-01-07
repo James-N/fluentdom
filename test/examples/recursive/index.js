@@ -57,7 +57,7 @@ window.addEventListener('DOMContentLoaded', evt => {
 
                     {
                         hooks: {
-                            repeatInit: (msg, cvn, value, index) => {
+                            repeating: (msg, cvn, value, index) => {
                                 cvn.ctx._node = value;
                             }
                         }

@@ -138,7 +138,7 @@ function convertElementNode (node, parentTpl, state) {
                         [vn => model[repeatInfo[1]]],
                         {
                             hooks: {
-                                repeatInit: (vn, cvn, value, index) => {
+                                repeating: (vn, cvn, value, index) => {
                                     cvn.ctx[repeatInfo[0]] = value;
                                 }
                             }

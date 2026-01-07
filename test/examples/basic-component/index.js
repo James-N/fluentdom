@@ -76,7 +76,7 @@ fluent.new({
 
         //     {
         //         hooks: {
-        //             repeatInit: (vn, cvn, value, index) => {
+        //             repeating: (vn, cvn, value, index) => {
         //                 var card = cvn.children[0];
         //                 card.title = value.title;
         //                 card.content = value.content;
