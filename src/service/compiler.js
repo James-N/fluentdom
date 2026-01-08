@@ -187,7 +187,7 @@ export class Compiler {
 
             // attach directives to node
             if (directives) {
-                this._attachNodeDirectives(node, directives, tpl.options);
+                this._configNodeDirectives(node, directives, tpl.options);
             }
 
             // invoke node init hook
@@ -207,7 +207,7 @@ export class Compiler {
         return tpl;
     }
 
-    _attachNodeDirectives (node, directives, options) {
+    _configNodeDirectives (node, directives, options) {
         for (let directive of directives) {
             directive.postcompile(node, options);
             node.directives.push(directive);

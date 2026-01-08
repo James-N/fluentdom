@@ -40,9 +40,9 @@ export class Directive {
     }
 
     /**
-     * handle invoked before template compilation
+     * method invoked before template compilation
      *
-     * @param {VTemplate} tpl  template template to be compiled
+     * @param {VTemplate} tpl  template to be compiled
      * @returns {VTemplate}
      *
      * @virtual
@@ -50,14 +50,14 @@ export class Directive {
     precompile (tpl) { return tpl; }
 
     /**
-     * handle invoked after template is compiled into node
+     * method invoked after template is compiled into node
      *
      * @param {VNode} node  the node this directive attached to
-     * @param {VTemplate} tpl  the compiled template
+     * @param {Record<String, any>?} options  options of the template that compiled into node
      *
      * @virtual
      */
-    postcompile (node, tpl) { return; }
+    postcompile (node, options) { return; }
 
     /**
      * destroy directive, normally triggered by node destruction
@@ -152,6 +152,8 @@ export function getDirectives (name) {
     return DIRECTIEV_REGISTRATION[name] || null;
 }
 
+const DIRECTIVE_OPTION_KEY_REG = /^(?:directive:)?(.+)$/;
+
 /**
  * batch instantiate directives from template options
  *
@@ -159,19 +161,31 @@ export function getDirectives (name) {
  * @returns {Directive[]?}
  */
 export function loadDirectives (options) {
-    var directives = [];
+    function getDirectiveName (key) {
+        var matcher = DIRECTIVE_OPTION_KEY_REG.exec(key);
+        return matcher ? matcher[1] : null;
+    }
 
-    for (let [key, opt] of utility.entries(options)) {
+    var directives = [];
+    var loadedDirectives = new Set();
+
+    var entries = utility.entries(options).sort((e1, e2) => e2[0].length - e1[0].length);
+    for (let [key, opt] of entries) {
         if (opt !== false) {
-            let arg = utility.isBool(opt) ? undefined : opt;
-            let register = getDirectives(key);
-            if (register) {
-                for (let factory of register) {
-                    if (utility.isSubclass(factory, Directive)) {
-                        directives.push(new factory(arg));
-                    } else {
-                        directives.push(factory(arg));
+            let name = getDirectiveName(key);
+            if (name && !loadedDirectives.has(name)) {
+                let arg = utility.isBool(opt) ? undefined : opt;
+                let registry = getDirectives(name);
+                if (registry) {
+                    for (let factory of registry) {
+                        if (utility.isSubclass(factory, Directive)) {
+                            directives.push(new factory(arg));
+                        } else {
+                            directives.push(factory(arg));
+                        }
                     }
+
+                    loadedDirectives.add(name);
                 }
             }
         }
