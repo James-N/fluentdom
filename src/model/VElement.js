@@ -3,6 +3,7 @@ import NodeType from './NodeType';
 import EventTable from './internal/EventTable';
 import { Expr, DynExpr, ConstExpr } from './Expr';
 
+import global from '../service/global';
 import utility from '../service/utility';
 import { value2Expr } from '../service/expr';
 import * as DOM from '../service/dom';
@@ -27,6 +28,10 @@ function normalizeCssPropName (name) {
 function splitClassList (cls) {
     return cls.split(' ').map(c => c.trim()).filter(c => c.length > 0);
 }
+
+const isStyleValue = global.CSSStyleValue ?
+    value => value instanceof global.CSSStyleValue :
+    value => false;
 
 /**
  * virtual node for html element
@@ -62,7 +67,7 @@ class VElement extends VNode {
         /**
          * element style exprs
          *
-         * @type {Record<String, Expr<String>>}
+         * @type {Record<String, Expr<String|CSSStyleValue>>}
          */
         this._styles = {};
         /**
@@ -195,7 +200,11 @@ class VElement extends VNode {
             .forEach(([cssProp, expr]) => {
                 if (expr.evalChecked(this)) {
                     var value = expr.value();
-                    elm.style[cssProp] = !!value ? value : '';
+                    if (isStyleValue(value)) {
+                        elm.attributeStyleMap.set(cssProp, value);
+                    } else {
+                        elm.style[cssProp] = !!value ? String(value) : '';
+                    }
                 }
             });
     }

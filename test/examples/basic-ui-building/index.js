@@ -63,8 +63,8 @@ window.addEventListener('DOMContentLoaded', evt => {
                         'background-color': '#fdc765',
                         'padding': '8px',
                         'margin': '5px 0',
-                        'width': '300px',
-                        'min-height': '130px'
+                        'width': CSS.px(300),
+                        'min-height': CSS.px(130)
                     })
                 ),
                 FB.Fragment(
