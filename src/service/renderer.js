@@ -68,7 +68,7 @@ export function renderNodeTree (node) {
             var shouldReflow = reflow || node.$flags.reflow;    // if a node is marked as `reflow`, all its descendants will all be marked as well
             if (node.domNode) {
                 // only nodes with dom nodes will be collected
-                var seg = utility.lastArrayItem(segments, null);
+                var seg = utility.lastArrItem(segments, null);
                 if (seg && seg.reflow === shouldReflow) {
                     seg.nodes.push(node);
                 } else {

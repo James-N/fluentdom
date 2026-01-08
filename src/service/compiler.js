@@ -56,7 +56,7 @@ class CompileContext {
     }
 
     _getTopState () {
-        return utility.lastArrayItem(this.stack, null);
+        return utility.lastArrItem(this.stack, null);
     }
 
     getNode () {

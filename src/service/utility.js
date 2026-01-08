@@ -77,19 +77,6 @@ function validString (value, identiry) {
     }
 }
 
-/**
- * adapt the input value to array
- *
- * @template T
- * @param {T|T[]} value
- * @param {(function(T):T[])?=} converter
- *
- * @returns {T[]}
- */
-function ensureArr (value, converter) {
-    return isArr(value) ? value : (converter ? converter(value) : [value]);
-}
-
 /* -------------------- --- -------------------- */
 // object manipulation utilities
 /* -------------------- --- -------------------- */
@@ -280,8 +267,21 @@ const stableSort = Array.prototype.flat ?       // Array.prototype.sort is gaura
  *
  * @returns {T?}
  */
-function lastArrayItem (arr, defaultValue) {
+function lastArrItem (arr, defaultValue) {
     return arr.length > 0 ? arr[arr.length - 1] : defaultValue;
+}
+
+/**
+ * adapt the input value to array
+ *
+ * @template T
+ * @param {T|T[]} value
+ * @param {(function(T):T[])?=} converter
+ *
+ * @returns {T[]}
+ */
+function ensureArr (value, converter) {
+    return isArr(value) ? value : (converter ? converter(value) : [value]);
 }
 
 /* -------------------- --- -------------------- */
@@ -298,7 +298,6 @@ export default {
     isObj: isObj,
     isStrictObj: isStrictObj,
     isArr: isArr,
-    ensureArr: ensureArr,
     isIterable: isIterable,
     isIterator: isIterator,
     isDOMNode: isDOMNode,
@@ -321,5 +320,6 @@ export default {
     camel2KebabCase: camel2KebabCase,
 
     stableSort: stableSort,
-    lastArrayItem: lastArrayItem
+    lastArrItem: lastArrItem,
+    ensureArr: ensureArr
 };
