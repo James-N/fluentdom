@@ -100,7 +100,7 @@ class VRepeat extends VNode {
         var iter;
         if (utility.isValidNum(repeatSrc)) {
             iter = generateNumberSeq(repeatSrc);
-        } else if (Array.isArray(repeatSrc)) {
+        } else if (utility.isArr(repeatSrc)) {
             iter = repeatSrc.slice(0);
         } else if (utility.isStrictObj(repeatSrc)) {
             iter = utility.entries(repeatSrc);

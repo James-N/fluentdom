@@ -45,7 +45,7 @@ function readTemplateCreateArgs (args, start) {
         var arg = args[i];
         if (utility.isStr(arg)) {
             children.push(buildText(arg));
-        } else if (Array.isArray(arg)) {
+        } else if (utility.isArr(arg)) {
             for (let a of arg) {
                 if (a instanceof VTemplate) {
                     children.push(a);
@@ -130,7 +130,7 @@ export function buildVoidElement (tagName, options) {
  *
  * @param {any[]} args  argument list
  * @param {Number} start  start index
- * @param {Number} paramCount  parametrized
+ * @param {Number} paramCount  number of parametrized arguments
  *
  * @returns {[any[], Record<String, any>]}
  */
@@ -143,7 +143,7 @@ function readParametrizedTemplateArgs (args, start, paramCount) {
     for (var i = start; i < endIndex; i++) {
         var arg = args[i];
         if (i == optionIndex) {
-            if (!Array.isArray(arg) && (utility.isObj(arg) || arg === undefined)) {
+            if (utility.isNullOrUndef(arg) || utility.isStrictObj(arg)) {
                 options = arg || null;
             } else {
                 throw new TypeError(`invalid argument[${i}] for template creation: ${arg}`);

@@ -197,7 +197,7 @@ export class VIfTemplate extends VTemplate {
     _makeBranchTpl (cond, branchTpl) {
         var tpl = new VTemplate('@branch', [cond]);
         if (branchTpl) {
-            tpl.children = Array.isArray(branchTpl) ? branchTpl : [branchTpl];
+            tpl.children = branchTpl;
         }
 
         return tpl;

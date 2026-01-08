@@ -48,7 +48,7 @@ class IterAdaptor {
      * @returns {Iterator}
      */
     _initIter (iter) {
-        if (Array.isArray(iter) || utility.isIterator(iter)) {
+        if (utility.isArr(iter) || utility.isIterator(iter)) {
             return iter;
         } else if (utility.isIterable(iter)) {
             return iter[Symbol.iterator]();
@@ -88,7 +88,7 @@ class IterAdaptor {
             throw new Error("iterator is ended");
         }
 
-        if (Array.isArray(this._iter)) {
+        if (utility.isArr(this._iter)) {
             for (var i = 0; i < this._iter.length; i++) {
                 callback(this._iter[i], i);
                 this._counter++;
@@ -119,7 +119,7 @@ class IterAdaptor {
      */
     flush () {
         var values;
-        if (Array.isArray(this._iter)) {
+        if (utility.isArr(this._iter)) {
             this._counter = this._iter.length;
             values = this._iter.slice(0);
         } else {

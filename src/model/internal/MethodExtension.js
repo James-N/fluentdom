@@ -42,7 +42,7 @@ class MethodExtension {
  * @param {Record<String, Function>} methods  set of methods to extend
  */
 MethodExtension.extend = function (cls, methods) {
-    cls = Array.isArray(cls) ? cls : [cls];
+    cls = utility.ensureArr(cls);
 
     for (let c of cls) {
         if (!utility.isSubclass(c, MethodExtension)) {

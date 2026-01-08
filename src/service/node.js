@@ -26,7 +26,7 @@ class NodeTreeWalker {
      * @param {((node: VNode) => Boolean|Boolean[])=} filter    custom filter
      */
     constructor (node, method, filter) {
-        this._queue = Array.isArray(node) ? node.slice(0) : [node];
+        this._queue = utility.isArr(node) ? node.slice(0) : [node];
         this._method = method;
         this._filter = filter;
 
@@ -36,7 +36,7 @@ class NodeTreeWalker {
     _checkNode (node) {
         if (this._filter) {
             var result = this._filter.call(null, node);
-            if (Array.isArray(result)) {
+            if (utility.isArr(result)) {
                 return result;
             } else {
                 return [!!result, !!result];

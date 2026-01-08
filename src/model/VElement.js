@@ -175,7 +175,7 @@ class VElement extends VNode {
 
         this._classes.dynamic.forEach(expr => {
             var cls = expr.eval(this);
-            cls = Array.isArray(cls) ? cls : splitClassList(cls);
+            cls = utility.ensureArr(cls, splitClassList);
 
             for (let c of cls) {
                 clsSet.add(c);
@@ -306,7 +306,7 @@ class VElement extends VNode {
         if (utility.isFunc(cls)) {
             this._classes.dynamic.push(new DynExpr(cls));
         } else {
-            var clsProps = Array.isArray(cls) ? cls : splitClassList(cls);
+            var clsProps = utility.ensureArr(cls, splitClassList);
             for (let prop of clsProps) {
                 if (switcher) {
                     this._classes.named[prop] = value2Expr(switcher);
@@ -323,7 +323,7 @@ class VElement extends VNode {
      * @param {String|String[]} cls  class property name
      */
     removeClass (cls) {
-        var clsProps = Array.isArray(cls) ? cls : splitClassList(cls);
+        var clsProps = utility.ensureArr(cls, splitClassList);
         for (let prop of clsProps) {
             delete this._classes.named[prop];
         }

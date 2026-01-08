@@ -261,7 +261,7 @@ export class Compiler {
         var hooks = utility.getOptionValue(options, 'hooks', null);
         if (hooks !== null) {
             utility.entries(hooks).forEach(([name, hook]) => {
-                if (Array.isArray(hook)) {
+                if (utility.isArr(hook)) {
                     hook.forEach(f => node.hook(name, f));
                 } else {
                     node.hook(name, hook);
@@ -341,7 +341,7 @@ export class Compiler {
 
             var classes = options.class;
             if (classes) {
-                classes = Array.isArray(classes) ? classes : [classes];
+                classes = utility.ensureArr(classes);
                 classes.forEach(cls => {
                     if (utility.isObj(cls)) {
                         utility.entries(cls).forEach(e => node.addClass(e[0], e[1]));
@@ -354,7 +354,7 @@ export class Compiler {
             var events = options.events;
             if (events) {
                 utility.entries(events).forEach(([name, handle]) => {
-                    if (Array.isArray(handle)) {
+                    if (utility.isArr(handle)) {
                         handle.forEach(f => node.on(name, f));
                     } else {
                         node.on(name, handle);
@@ -423,10 +423,9 @@ export class Compiler {
                         } else if (key == 'class') {
                             utility.setOptionValue(opt1, [key], val, false, true);
                         } else if (key == 'events' || key == 'hooks') {
-                            var val1 = opt1[key];
-                            val1 = Array.isArray(val1) ? val1 : [val1];
-                            if (Array.isArray(val)) {
-                                val1 = val1.concat(val);
+                            var val1 = utility.ensureArr(opt1[key]);
+                            if (utility.isArr(val)) {
+                                val1.push(...val);
                             } else {
                                 val1.push(val);
                             }
@@ -469,11 +468,7 @@ export class Compiler {
         // prepare component template
         var children;
         if (cdef.template) {
-            if (Array.isArray(cdef.template)) {
-                children = cdef.template;
-            } else {
-                children = [cdef.template];
-            }
+            children = utility.ensureArr(cdef.template);
 
             // clone component's builtin template for late compilation
             children = children.map(c => c.clone());

@@ -23,7 +23,7 @@ import { value2Expr } from '../service/expr';
 export function compileTemplate (template) {
     if (template instanceof VTemplate) {
         return compiler.compile(template);
-    } else if (Array.isArray(template)) {
+    } else if (utility.isArr(template)) {
         return template.map(t => {
             if (t instanceof VTemplate) {
                 return compiler.compile(t);
@@ -56,7 +56,7 @@ export function createFluentTree (options) {
 
     // construct tree
     var tree = new VTree();
-    if (Array.isArray(node)) {
+    if (utility.isArr(node)) {
         for (let n of node) {
             tree.addChild(n);
         }

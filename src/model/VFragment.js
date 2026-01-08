@@ -56,7 +56,7 @@ class VFragment extends VNode {
         function convertContent (content, sanitize) {
             if (utility.isDOMNode(content)) {
                 return content;
-            } else if (Array.isArray(content)) {
+            } else if (utility.isArr(content)) {
                 return content.map(convertContent);
             } else {
                 return str2DOM(String(content), !sanitize);

@@ -124,8 +124,7 @@ export function findTemplateSlots (template) {
     }
 
     var result = {};
-    template = Array.isArray(template) ? template : [template];
-    return collect(template, result) ? result : null;
+    return collect(utility.ensureArr(template), result) ? result : null;
 }
 
 /**

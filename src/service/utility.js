@@ -12,6 +12,7 @@ const isBool = b => typeof b == 'boolean';
 const isFunc = f => typeof f == 'function';
 const isObj = o => typeof o == 'object';
 const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
+const isArr = Array.isArray;
 const isIterable = o => !!o && (typeof o[Symbol.iterator] == 'function');
 const isIterator = o => !!o && (typeof o['next'] == 'function');
 const isDOMNode = n => n instanceof global.Node;
@@ -74,6 +75,19 @@ function validString (value, identiry) {
     if (value.length === 0) {
         throw new Error(`'${identiry}' is empty string`);
     }
+}
+
+/**
+ * adapt the input value to array
+ *
+ * @template T
+ * @param {T|T[]} value
+ * @param {(function(T):T[])?=} converter
+ *
+ * @returns {T[]}
+ */
+function ensureArr (value, converter) {
+    return isArr(value) ? value : (converter ? converter(value) : [value]);
 }
 
 /* -------------------- --- -------------------- */
@@ -142,12 +156,12 @@ function setOptionValue (options, keyPath, value, whenAbsent, appendArray) {
                     var oldVal;
                     if (hasOld) {
                         oldVal = valueSet[key];
-                        oldVal = Array.isArray(oldVal) ? oldVal : [oldVal];
+                        oldVal = isArr(oldVal) ? oldVal : [oldVal];
                     } else {
                         oldVal = [];
                     }
 
-                    if (Array.isArray(value)) {
+                    if (isArr(value)) {
                         oldVal = oldVal.concat(value);
                     } else {
                         oldVal.push(value);
@@ -200,7 +214,7 @@ function simpleDeepClone (obj) {
         });
 
         return cloned;
-    } else if (Array.isArray(obj)) {
+    } else if (isArr(obj)) {
         return obj.map(e => simpleDeepClone(e));
     } else {
         return obj;
@@ -283,6 +297,8 @@ export default {
     isFunc: isFunc,
     isObj: isObj,
     isStrictObj: isStrictObj,
+    isArr: isArr,
+    ensureArr: ensureArr,
     isIterable: isIterable,
     isIterator: isIterator,
     isDOMNode: isDOMNode,

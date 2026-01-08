@@ -94,12 +94,11 @@ export function renderNodeTree (node) {
     /**
      * fetch the first DOM node from list of virtual nodes
      *
-     * @param {VNode[]} nodes
+     * @param {VNode} node
      * @returns {Node}
      */
-    function fetchFirstDOMNode (nodes) {
-        var node = nodes[0];
-        return Array.isArray(node.domNode) ? node.domNode[0] : node.domNode;
+    function fetchFirstDOMNode (node) {
+        return utility.isArr(node.domNode) ? node.domNode[0] : node.domNode;
     }
 
     /**
@@ -111,7 +110,7 @@ export function renderNodeTree (node) {
     function flattenDOMNodes (nodes) {
         var domList = [];
         for (let node of nodes) {
-            if (Array.isArray(node.domNode)) {
+            if (utility.isArr(node.domNode)) {
                 domList.push(...node.domNode);
             } else {
                 domList.push(node.domNode);
@@ -131,7 +130,7 @@ export function renderNodeTree (node) {
         var fragment = DOM.createFragment();
 
         for (let node of nodes) {
-            if (Array.isArray(node.domNode)) {
+            if (utility.isArr(node.domNode)) {
                 for (let dom of node.domNode) {
                     fragment.appendChild(dom);
                 }
@@ -220,7 +219,7 @@ export function renderNodeTree (node) {
             var reflow = nodeSegments.some(s => s.reflow);
 
             // decide the DOM node to synchronize
-            var curDOMNode = Array.isArray(node.domNode) ? node.domNode[0] : node.domNode;
+            var curDOMNode = fetchFirstDOMNode(node);
 
             if (reflow) {
                 if (nodeSegments.length > 1) {
@@ -231,7 +230,7 @@ export function renderNodeTree (node) {
                             // for reflowed segment, take next un-reflowed node or end of node list as the anchor point,
                             // then we remove all DOM nodes between current pointer and the anchor point
                             var nextSeg = nodeSegments[i + 1] || null;
-                            var nextUnflowDOMChild = nextSeg ? fetchFirstDOMNode(nextSeg.nodes) : null;
+                            var nextUnflowDOMChild = nextSeg ? fetchFirstDOMNode(nextSeg.nodes[0]) : null;
                             if (removeDOMNodeUntil(curDOMChild, nextUnflowDOMChild)) {
                                 curDOMChild = nextUnflowDOMChild;
                             } else {

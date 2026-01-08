@@ -3,6 +3,7 @@ import VNode from './VNode';
 import { VTemplate } from './VTemplate';
 import { Expr } from './Expr';
 
+import utility from '../service/utility';
 import * as NODE from '../service/node';
 import { value2Expr } from '../service/expr';
 import { loadCompiler } from '../service/compiler';
@@ -55,7 +56,7 @@ class VDynamic extends VNode {
                 var tpl = this._tplExpr.value();
                 if (tpl) {
                     var compiler = loadCompiler(this);
-                    if (Array.isArray(tpl)) {
+                    if (utility.isArr(tpl)) {
                         for (let t of tpl) {
                             this.addChild(compiler.compile(t));
                         }
