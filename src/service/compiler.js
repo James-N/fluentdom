@@ -138,28 +138,90 @@ export class Compiler {
             throw new TypeError("template must be VTemplate");
         }
 
-        template = this._resolveDeferredTemplate(template);
-        return this._compileTemplate(template.clone(), this.ctx);
+        if (template instanceof VComponentTemplate) {
+            template = this._expandComponentTemplate(template);
+        } else {
+            template = template.clone();
+        }
+
+        return this._compileTemplate(template, this.ctx);
     }
 
     /**
-     * expand deferred template to actual template, currently only component template is supported
+     * expand input component template into its final form, includes:
+     * - resolve deferred template
+     * - clone whole template
+     * - merge options from input template with that from component definition to generate final options
      *
-     * @param {VTemplate} tpl
-     * @returns {VTemplate}
+     * @param {VComponentTemplate} tpl
+     * @returns {VComponentTemplate}
      */
-    _resolveDeferredTemplate (tpl) {
-        if (tpl instanceof VComponentTemplate && tpl.$deferred) {
+    _expandComponentTemplate (tpl) {
+        function mergeNodeOptions (opt1, opt2) {
+            if (opt1 && opt2) {
+                utility.entries(opt2).forEach(([key, val]) => {
+                    if (utility.hasOwn(opt1, key)) {
+                        if (key == 'attrs' || key == 'props' || key == 'styles') {
+                            utility.extend(opt1[key], val);
+                        } else if (key == 'class') {
+                            utility.setOptionValue(opt1, [key], val, false, true);
+                        } else if (key == 'events' || key == 'hooks') {
+                            var val1 = utility.ensureArr(opt1[key]);
+                            if (utility.isArr(val)) {
+                                val1.push(...val);
+                            } else {
+                                val1.push(val);
+                            }
+
+                            opt1[key] = val1;
+                        } else {
+                            opt1[key] = val;
+                        }
+                    } else {
+                        opt1[key] = val;
+                    }
+                });
+
+                return opt1;
+            } else {
+                return opt1 || opt2 || null;
+            }
+        }
+
+        // expand deferred template to actual template
+        if (tpl.$deferred) {
             // fetch and invoke component builder manually to get the actual component template
             var builder = getComponentBuilder(tpl.name);
             if (!builder) {
                 throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
             }
 
-            return builder(...tpl.args);
-        } else {
-            return tpl;
+            tpl = builder(...tpl.args);
         }
+
+        // clone template
+        tpl = tpl.clone();
+
+        // get component definition
+        var cdef = tpl.$definition || getComponent(tpl.name);
+        if (!cdef) {
+            throw new Error(`unrecognized component [${tpl.name}]`);
+        }
+
+        // generate final options
+        var options = !!cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
+
+        if (cdef.builderArgs.length > 0) {
+            for (var i = 0; i < cdef.builderArgs.length; i++) {
+                options = utility.setOptionValue(options, cdef.builderArgs[i], tpl.arg(i));
+            }
+        }
+
+        // update template
+        tpl.options = options;
+        tpl.$definition = cdef;
+
+        return tpl;
     }
 
     _compileTemplate (tpl, ctx) {
@@ -414,56 +476,13 @@ export class Compiler {
     }
 
     _compileComponent (tpl, ctx) {
-        function mergeNodeOptions (opt1, opt2) {
-            if (opt1 && opt2) {
-                utility.entries(opt2).forEach(([key, val]) => {
-                    if (utility.hasOwn(opt1, key)) {
-                        if (key == 'attrs' || key == 'props' || key == 'styles') {
-                            utility.extend(opt1[key], val);
-                        } else if (key == 'class') {
-                            utility.setOptionValue(opt1, [key], val, false, true);
-                        } else if (key == 'events' || key == 'hooks') {
-                            var val1 = utility.ensureArr(opt1[key]);
-                            if (utility.isArr(val)) {
-                                val1.push(...val);
-                            } else {
-                                val1.push(val);
-                            }
-
-                            opt1[key] = val1;
-                        } else {
-                            opt1[key] = val;
-                        }
-                    } else {
-                        opt1[key] = val;
-                    }
-                });
-
-                return opt1;
-            } else {
-                return opt1 || opt2 || null;
-            }
-        }
-
         // get component definition
-        var cdef;
-        if (tpl.$definition) {
-            cdef = tpl.$definition;
-        } else {
-            cdef = getComponent(tpl.name);
-            if (!cdef) {
-                throw new Error(`unrecognized component [${tpl.name}]`);
-            }
+        var cdef = tpl.$definition || getComponent(tpl.name);
+        if (!cdef) {
+            throw new Error(`unrecognized component [${tpl.name}]`);
         }
 
-        // generate final options
-        var options = !!cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
-
-        if (cdef.builderArgs.length > 0) {
-            for (var a = 0; a < cdef.builderArgs.length; a++) {
-                options = utility.setOptionValue(options, cdef.builderArgs[a], tpl.arg(a));
-            }
-        }
+        var options = tpl.options;
 
         // prepare component template
         var children;
