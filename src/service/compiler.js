@@ -76,6 +76,28 @@ class CompileContext {
 }
 
 /**
+ * @param {Record<String, any>} options
+ * @param {function(String, Function, Record<String, any>?):void} callback
+ */
+function scanEventOptions (options, callback) {
+    for (let [name, value] of utility.entries(options)) {
+        if (value) {
+            value = utility.ensureArr(value);
+
+            for (let handler of value) {
+                if (utility.isFunc(handler)) {
+                    callback(name, handler, null);
+                } else if (utility.isObj(handler)) {
+                    if (utility.isFunc(handler.handler)) {
+                        callback(name, handler.handler, handler.flags);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * compile extension base class
  */
 export class CompilerExtension {
@@ -321,13 +343,9 @@ export class Compiler {
 
     _attachNodeHooks (node, options) {
         var hooks = utility.getOptionValue(options, 'hooks', null);
-        if (hooks !== null) {
-            utility.entries(hooks).forEach(([name, hook]) => {
-                if (utility.isArr(hook)) {
-                    hook.forEach(f => node.hook(name, f));
-                } else {
-                    node.hook(name, hook);
-                }
+        if (hooks) {
+            scanEventOptions(hooks, (name, hook, flags) => {
+                node.hook(name, hook, flags);
             });
         }
     }
@@ -415,12 +433,8 @@ export class Compiler {
 
             var events = options.events;
             if (events) {
-                utility.entries(events).forEach(([name, handle]) => {
-                    if (utility.isArr(handle)) {
-                        handle.forEach(f => node.on(name, f));
-                    } else {
-                        node.on(name, handle);
-                    }
+                scanEventOptions(events, (name, handler, flags) => {
+                    node.on(name, handler, flags);
                 });
             }
         }

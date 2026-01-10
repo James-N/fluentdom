@@ -263,17 +263,17 @@ class VNode {
      * register hook function
      *
      * @param {String} name  hook name
-     * @param {Function} hook  the hook function
+     * @param {Function} handler  the hook handler function
      * @param {Record<String, Boolean>=} flags  hook flags
      */
-    hook (name, hook, flags) {
+    hook (name, handler, flags) {
         utility.ensureValidString(name, 'hook name');
 
-        if (!utility.isFunc(hook)) {
-            throw new TypeError("hook must be function");
+        if (!utility.isFunc(handler)) {
+            throw new TypeError("hook handler must be function");
         }
 
-        this._hooks.add(name, hook, flags);
+        this._hooks.add(name, handler, flags);
     }
 
     /**
@@ -289,7 +289,7 @@ class VNode {
     }
 
     /**
-     * invoke hook callback
+     * invoke hook handler
      *
      * @param {String} name  hook name
      * @param {HookMessage|Record<String, any>?=} msg  an optional pre-generated hook message

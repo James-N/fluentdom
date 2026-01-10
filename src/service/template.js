@@ -451,3 +451,28 @@ export function buildDeferredComponent(name, ...args) {
 
     return template;
 }
+
+/**
+ * special option builder class for handlers
+ */
+export class HandlerOption {
+    /**
+     * @param {Function} handler
+     */
+    constructor (handler) {
+        /**
+         * @type {Function}
+         */
+        this.handler = handler;
+
+        /**
+         * @type {Record<String, any>}
+         */
+        this.flags = {};
+    }
+
+    once () {
+        this.flags.once = true;
+        return this;
+    }
+}

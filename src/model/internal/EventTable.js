@@ -37,29 +37,29 @@ class EventTable {
             /**
              * @type {Function[]}
              */
-            callbacks: []
+            handlers: []
         };
     }
 
     _createEventFlags () {
         return {
             /**
-             * the callback will be deregistered after first invocation
+             * the handler will be deregistered after first invocation
              */
             once: false
         };
     }
 
     /**
-     * register a new event callback, create event set if not exists
+     * register a new event handler, create event set if not exists
      *
      * @param {String} name  event name
-     * @param {Function} callback  the new event callback
-     * @param {EventFlags=} flags  callback flags
+     * @param {Function} handler  the new event handler
+     * @param {EventFlags=} flags  handler flags
      *
      * @returns {EventSet}
      */
-    add (name, callback, flags) {
+    add (name, handler, flags) {
         // ensure event set existance
         var evtSet = this.events[name];
         if (!evtSet) {
@@ -69,35 +69,35 @@ class EventTable {
 
         // save flags attribute
         flags = utility.extend(this._createEventFlags(), flags);
-        callback.$flags = flags;
+        handler.$flags = flags;
 
-        // register callback
-        evtSet.callbacks.push(callback);
+        // register handler
+        evtSet.handlers.push(handler);
 
         return evtSet;
     }
 
     /**
-     * deregister callback from event set, or remove the whole event if no callback specified
+     * deregister handler from event set, or remove the whole event if no handler specified
      *
      * @param {String} name  event name
-     * @param {Function=} callback  the callback to remove
+     * @param {Function=} handler  the handler to remove
      *
      * @returns {Boolean}
      */
-    remove (name, callback) {
+    remove (name, handler) {
         var evtSet = this.events[name];
         if (evtSet) {
-            if (callback) {
-                var idx = evtSet.callbacks.indexOf(callback);
+            if (handler) {
+                var idx = evtSet.handlers.indexOf(handler);
                 if (idx >= 0) {
-                    evtSet.callbacks.splice(idx, 1);
+                    evtSet.handlers.splice(idx, 1);
                     return true;
                 } else {
                     return false;
                 }
             } else {
-                evtSet.callbacks.length = 0;
+                evtSet.handlers.length = 0;
                 return true;
             }
         } else {
@@ -106,14 +106,14 @@ class EventTable {
     }
 
     /**
-     * remove event set when it has no registered callbacks
+     * remove event set when it has no registered handlers
      *
      * @param {String} name  event name
      * @returns {Boolean}
      */
     removeSetIfEmpty (name) {
         var evtSet = this.events[name];
-        if (evtSet && evtSet.callbacks.length === 0) {
+        if (evtSet && evtSet.handlers.length === 0) {
             delete this.events[name];
             return true;
         } else {
@@ -129,26 +129,26 @@ class EventTable {
     }
 
     /**
-     * invoke event callbacks
+     * invoke event handlers
      *
      * @param {String} name  event set name
-     * @param {any} thisArg  the value to be passed as the this parameter to the callbacks
+     * @param {any} thisArg  the value to be passed as the this parameter to the handlers
      * @param  {...any} args  invocation arguments
      */
     invoke (name, thisArg, ...args) {
         var evtSet = this.events[name];
         if (evtSet) {
-            for (var i = 0; i < evtSet.callbacks.length; i++) {
-                var callback = evtSet.callbacks[i];
+            for (var i = 0; i < evtSet.handlers.length; i++) {
+                var handler = evtSet.handlers[i];
                 try {
-                    callback.apply(thisArg, args);
+                    handler.apply(thisArg, args);
                 } catch (err) {
-                    LOG.error(`error invoking ${this.id} event [${name}] callback`, err);
+                    LOG.error(`error invoking ${this.id} event [${name}] handler`, err);
                 }
 
-                // remove callback with `once` flag
-                if (callback.$flags.once) {
-                    evtSet.callbacks.splice(i, 1);
+                // remove handler with `once` flag
+                if (handler.$flags.once) {
+                    evtSet.handlers.splice(i, 1);
                     i--;
                 }
             }

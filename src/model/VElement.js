@@ -342,10 +342,10 @@ class VElement extends VNode {
      * register element event
      *
      * @param {String} name  event name
-     * @param {Function} callback  event callback
-     * @param {Record<String, Boolean>=} flags  callback flags
+     * @param {Function} handler  event handler
+     * @param {Record<String, Boolean>=} flags  handler flags
      */
-    on (name, callback, flags) {
+    on (name, handler, flags) {
         /**
          * @param {VElement} self
          */
@@ -366,12 +366,12 @@ class VElement extends VNode {
 
         utility.ensureValidString(name, 'name');
 
-        if (!utility.isFunc(callback)) {
-            throw new TypeError("callback must be function");
+        if (!utility.isFunc(handler)) {
+            throw new TypeError("handler must be function");
         }
 
-        var evtSet = this._events.add(name, callback, flags);
-        if (evtSet.callbacks.length == 1) {
+        var evtSet = this._events.add(name, handler, flags);
+        if (evtSet.handlers.length == 1) {
             // create trigger callback
             var triggerCb = makeTriggerCallback(this);
             // cache trigger callback
@@ -387,14 +387,14 @@ class VElement extends VNode {
      * unregister element event
      *
      * @param {String} name  event name
-     * @param {Function=} callback  event callback
+     * @param {Function=} handler  event handler
      *
      * @returns {Boolean}
      */
-    off (name, callback) {
+    off (name, handler) {
         utility.ensureValidString(name, 'name');
 
-        if (this._events.remove(name, callback) && this._events.removeSetIfEmpty()) {
+        if (this._events.remove(name, handler) && this._events.removeSetIfEmpty()) {
             var triggerCb = this._eventTriggers[name];
             // delete cached trigger callback
             delete this._eventTriggers[name];

@@ -11,7 +11,7 @@ import * as compiler from '../service/compiler';
 import * as component from '../service/component';
 import * as directive from '../service/directive';
 import { value2Expr } from '../service/expr';
-
+import { HandlerOption } from '../service/template';
 
 
 /**
@@ -240,6 +240,15 @@ export function createExpr (value) {
 createExpr.const = function (value) { return new ConstExpr(value); };
 createExpr.dyn = function (getter, defaultValue) { return new DynExpr(getter, defaultValue); };
 createExpr.ref = function (value) { return new RefExpr(null, value); };
+
+/**
+ * handler option
+ *
+ * @param {Function} handler
+ */
+export function createHandlerOption (handler) {
+    return new HandlerOption(handler);
+}
 
 /**
  * register extension methods to class
