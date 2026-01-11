@@ -218,7 +218,16 @@ export class Compiler {
                 throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
             }
 
+            // cache deferred template options
+            var deferOptions = tpl.options || null;
+
+            // build actual component template
             tpl = builder(...tpl.args);
+
+            // merge deferred template options
+            if (deferOptions) {
+                tpl.options = tpl.options ? mergeNodeOptions(utility.simpleDeepClone(tpl.options), deferOptions) : deferOptions;
+            }
         }
 
         // clone template
@@ -231,7 +240,7 @@ export class Compiler {
         }
 
         // generate final options
-        var options = !!cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
+        var options = cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
 
         if (cdef.builderArgs.length > 0) {
             for (var i = 0; i < cdef.builderArgs.length; i++) {
