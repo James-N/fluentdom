@@ -535,11 +535,7 @@ export class Compiler {
             }
         } else {
             // when component has no builtin template, take template children as its children
-            if (cdef.children && tpl.children.length > 0) {
-                children = tpl.children;
-            } else {
-                children = [];
-            }
+            children = cdef.children ? tpl.children : null;
         }
 
         // create component node
@@ -571,7 +567,9 @@ export class Compiler {
         }
 
         // compile children
-        this._compileChildren(children, componentNode, ctx);
+        if (children && children.length > 0) {
+            this._compileChildren(children, componentNode, ctx);
+        }
 
         // register component dynamic props
         utility.entries(cdef.props)
