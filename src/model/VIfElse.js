@@ -90,7 +90,7 @@ class VIfElse extends VNode {
     _createBranchExpr (conds) {
         return new DynExpr(() => {
             for (var i = 0; i < conds.length; i++) {
-                if (conds[i].eval()) {
+                if (conds[i].eval(this)) {
                     return i;
                 }
             }
@@ -104,7 +104,7 @@ class VIfElse extends VNode {
             return;
         }
 
-        if (this._branchExpr.evalChecked()) {
+        if (this._branchExpr.evalChecked(this)) {
             // clear old children
             if (this._branchExpr.prev() >= 0) {
                 if (!this.cacheNode) {
