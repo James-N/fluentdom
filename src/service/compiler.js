@@ -8,8 +8,8 @@ import VIfElse from '../model/VIfElse';
 import VRepeat from '../model/VRepeat';
 import VDynamic from '../model/VDynamic';
 import VFragment from '../model/VFragment';
-import VComponent from '../model/VComponent';
-import { VTemplate, VSlotTemplate, VComponentTemplate, VIfTemplate } from '../model/VTemplate';
+import VComponent, { PROPERTY_SCHEMA } from '../model/VComponent';
+import { VTemplate, VSlotTemplate, VComponentTemplate, VIfTemplate, VElementTemplate } from '../model/VTemplate';
 import { Expr } from '../model/Expr';
 
 import utility from './utility';
@@ -17,6 +17,7 @@ import LOG from './log';
 import * as NODE from './node';
 import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlots } from './component';
 import { loadDirectives } from './directive';
+import { value2Expr } from './expr';
 
 
 /**
@@ -76,6 +77,24 @@ class CompileContext {
 }
 
 /**
+ * compile extension base class
+ */
+export class CompilerExtension {
+    /**
+     * initiate extension internal states
+     *
+     * @param {VNode?} node  the node that launch compilation
+     */
+    init (node) { return; }
+}
+
+//#region  compiler constants & helper functions
+
+const FALLTHROUGH_OPTION_PREFIX = 'inherit:';
+const FALLTHROUGH_TARGET_OPTION = 'inherit';
+const COMPONENT_PROP_OPTION_PREFIX = 'prop:';
+
+/**
  * @param {Record<String, any>} options
  * @param {function(String, Function, Record<String, any>?):void} callback
  */
@@ -98,16 +117,47 @@ function scanEventOptions (options, callback) {
 }
 
 /**
- * compile extension base class
+ * expand all deferred component templates in the template tree
+ *
+ * @param {VTemplate} tpl
+ * @returns {VTemplate}
  */
-export class CompilerExtension {
+function expandComponentTemplates (tpl) {
     /**
-     * initiate extension internal states
-     *
-     * @param {VNode?} node  the node that launch compilation
+     * @param {VComponentTemplate} tpl
+     * @returns {VComponentTemplate}
      */
-    init (node) { return; }
+    function expand (tpl) {
+        // expand deferred template to actual template
+        if (tpl.$deferred) {
+            // fetch and invoke component builder manually to get the actual component template
+            var builder = getComponentBuilder(tpl.name);
+            if (!builder) {
+                throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
+            }
+
+            // build actual component template
+            tpl = builder(...tpl.args);
+        }
+
+        // clone template
+        tpl = tpl.clone();
+
+        return tpl;
+    }
+
+    if (tpl instanceof VComponentTemplate) {
+        tpl = expand(tpl);
+    }
+
+    for (var i = 0; i < tpl.children.length; i++) {
+        tpl[i] = expandComponentTemplates(tpl.children[i]);
+    }
+
+    return tpl;
 }
+
+//#endregion
 
 /**
  * default compiler
@@ -160,99 +210,12 @@ export class Compiler {
             throw new TypeError("template must be VTemplate");
         }
 
-        if (template instanceof VComponentTemplate) {
-            template = this._expandComponentTemplate(template);
-        } else {
-            template = template.clone();
-        }
+        // clone whole template tree before compilation
+        template = template.clone();
+        // expand component templates in the template tree
+        template = expandComponentTemplates(template);
 
         return this._compileTemplate(template, this.ctx);
-    }
-
-    /**
-     * expand input component template into its final form, includes:
-     * - resolve deferred template
-     * - clone whole template
-     * - merge options from input template with that from component definition to generate final options
-     *
-     * @param {VComponentTemplate} tpl
-     * @returns {VComponentTemplate}
-     */
-    _expandComponentTemplate (tpl) {
-        function mergeNodeOptions (opt1, opt2) {
-            if (opt1 && opt2) {
-                utility.entries(opt2).forEach(([key, val]) => {
-                    if (utility.hasOwn(opt1, key)) {
-                        if (key == 'attrs' || key == 'props' || key == 'styles') {
-                            utility.extend(opt1[key], val);
-                        } else if (key == 'class') {
-                            utility.setOptionValue(opt1, [key], val, false, true);
-                        } else if (key == 'events' || key == 'hooks') {
-                            var val1 = utility.ensureArr(opt1[key]);
-                            if (utility.isArr(val)) {
-                                val1.push(...val);
-                            } else {
-                                val1.push(val);
-                            }
-
-                            opt1[key] = val1;
-                        } else {
-                            opt1[key] = val;
-                        }
-                    } else {
-                        opt1[key] = val;
-                    }
-                });
-
-                return opt1;
-            } else {
-                return opt1 || opt2 || null;
-            }
-        }
-
-        // expand deferred template to actual template
-        if (tpl.$deferred) {
-            // fetch and invoke component builder manually to get the actual component template
-            var builder = getComponentBuilder(tpl.name);
-            if (!builder) {
-                throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
-            }
-
-            // cache deferred template options
-            var deferOptions = tpl.options || null;
-
-            // build actual component template
-            tpl = builder(...tpl.args);
-
-            // merge deferred template options
-            if (deferOptions) {
-                tpl.options = tpl.options ? mergeNodeOptions(utility.simpleDeepClone(tpl.options), deferOptions) : deferOptions;
-            }
-        }
-
-        // clone template
-        tpl = tpl.clone();
-
-        // get component definition
-        var cdef = tpl.$definition || getComponent(tpl.name);
-        if (!cdef) {
-            throw new Error(`unrecognized component [${tpl.name}]`);
-        }
-
-        // generate final options
-        var options = cdef.options ? mergeNodeOptions(utility.simpleDeepClone(cdef.options), tpl.options) : tpl.options;
-
-        if (cdef.builderArgs.length > 0) {
-            for (var i = 0; i < cdef.builderArgs.length; i++) {
-                options = utility.setOptionValue(options, cdef.builderArgs[i], tpl.arg(i));
-            }
-        }
-
-        // update template
-        tpl.options = options;
-        tpl.$definition = cdef;
-
-        return tpl;
     }
 
     _compileTemplate (tpl, ctx) {
@@ -263,7 +226,7 @@ export class Compiler {
 
             // pre template transformation using directives
             if (directives) {
-                tpl = this._transformTemplate(tpl, directives);
+                tpl = this._transformTemplateByDirectives(tpl, directives);
             }
 
             // compile the input template into vnode
@@ -280,7 +243,7 @@ export class Compiler {
 
             // attach directives to node
             if (directives) {
-                this._configNodeDirectives(node, directives, tpl.options);
+                this._configNodeByDirectives(node, directives, tpl.options);
             }
 
             // invoke node init hook
@@ -292,7 +255,9 @@ export class Compiler {
         }
     }
 
-    _transformTemplate (tpl, directives) {
+    //#region  common compilation pass methods
+
+    _transformTemplateByDirectives (tpl, directives) {
         for (let directive of directives) {
             tpl = directive.precompile(tpl);
         }
@@ -300,7 +265,7 @@ export class Compiler {
         return tpl;
     }
 
-    _configNodeDirectives (node, directives, options) {
+    _configNodeByDirectives (node, directives, options) {
         for (let directive of directives) {
             directive.postcompile(node, options);
             node.directives.push(directive);
@@ -377,6 +342,10 @@ export class Compiler {
 
         ctx.popState();
     }
+
+    //#endregion
+
+    //#region  compilation methods for different type of templates
 
     _compileText(tpl, ctx) {
         var textNode = new VText(tpl.arg(0));
@@ -498,14 +467,132 @@ export class Compiler {
         return fragNode;
     }
 
+    /**
+     * @param {VComponentTemplate} tpl
+     * @param {CompileContext} ctx
+     */
     _compileComponent (tpl, ctx) {
+        function mergeOptions (opt1, opt2) {
+            if (opt1 && opt2) {
+                utility.entries(opt2).forEach(([key, val]) => {
+                    if (utility.hasOwn(opt1, key)) {
+                        if (key == 'attrs' || key == 'props' || key == 'styles' || key == 'context') {
+                            utility.extend(opt1[key], val);
+                        } else if (key == 'class') {
+                            utility.setOptionValue(opt1, [key], val, false, true);
+                        } else if (key == 'events' || key == 'hooks') {
+                            var val1 = utility.ensureArr(opt1[key]);
+                            if (utility.isArr(val)) {
+                                val1.push(...val);
+                            } else {
+                                val1.push(val);
+                            }
+
+                            opt1[key] = val1;
+                        } else {
+                            opt1[key] = val;
+                        }
+                    } else {
+                        opt1[key] = val;
+                    }
+                });
+
+                return opt1;
+            } else {
+                return opt1 || opt2 || null;
+            }
+        }
+
+        /**
+         * @param {import('./component').ComponentDefinition} cdef
+         * @param {VComponentTemplate} tpl
+         *
+         * @returns {[Record<String, any>, Record<String, any>]}
+         */
+        function extractOptions (cdef, tpl) {
+            var componentOptions = {}, throughOptions = {};
+
+            // split input template options
+            utility.entries(tpl.options)
+                .forEach(([key, val]) => {
+                    if (key == 'id' || key == 'attrs' || key == 'props' || key == 'styles' || key == 'class') {
+                        throughOptions[key] = val;
+                    } else if (key.startsWith(FALLTHROUGH_OPTION_PREFIX)) {
+                        throughOptions[key.substring(FALLTHROUGH_OPTION_PREFIX.length)] = val;
+                    } else {
+                        componentOptions[key] = val;
+                    }
+                });
+
+            // inject builder args into component options
+            if (cdef.args.length > 0) {
+                for (var i = 0; i < cdef.args.length; i++) {
+                    componentOptions[cdef.args[i]] = tpl.arg(i);
+                }
+            }
+
+            // merge fall-through options
+            if (cdef.options) {
+                throughOptions = mergeOptions(utility.simpleDeepClone(cdef.options), throughOptions);
+            }
+
+            return [componentOptions, throughOptions];
+        }
+
+        /**
+         * @param {VTemplate[]} tpls
+         * @param {Boolean=} includeDefault
+         *
+         * @returns {VTemplate?}
+         */
+        function findFallThroughTarget (tpls, includeDefault) {
+            var defaultTarget = null;
+
+            for (let tpl of tpls) {
+                if (tpl.type == NodeType.ELEMENT || tpl.type == NodeType.COMPONENT) {
+                    if (tpl.options && tpl.options[FALLTHROUGH_TARGET_OPTION]) {
+                        return tpl;
+                    } else {
+                        let target = findFallThroughTarget(tpl.children);
+                        if (target) {
+                            return target;
+                        } else {
+                            if (includeDefault && !defaultTarget) {
+                                defaultTarget = tpl;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return defaultTarget;
+        }
+
+        /**
+         * @param {Record<String, any>} options
+         * @param {String} propName
+         *
+         * @returns {[Boolean, any]}
+         */
+        function getPropOption (options, propName) {
+            var prefixName = COMPONENT_PROP_OPTION_PREFIX + propName;
+            if (utility.hasOwn(prefixName)) {
+                return [true, options[prefixName]];
+            } else if (utility.hasOwn(options, propName)) {
+                return [true, options[propName]];
+            } else {
+                return [false, null];
+            }
+        }
+
         // get component definition
         var cdef = tpl.$definition || getComponent(tpl.name);
         if (!cdef) {
             throw new Error(`unrecognized component [${tpl.name}]`);
         }
 
-        var options = tpl.options;
+        // prepare options
+        var [options, throughOptions] = extractOptions(cdef, tpl);
 
         // prepare component template
         var children;
@@ -535,19 +622,26 @@ export class Compiler {
             }
         } else {
             // when component has no builtin template, take template children as its children
-            children = cdef.children ? tpl.children : null;
+            children = cdef.children ? tpl.children : [];
+        }
+
+        if (cdef.root) {
+            var rootTpl = new VElementTemplate(cdef.name, throughOptions);
+            rootTpl.children = children;
+            children = [rootTpl];
+        } else {
+            var throughTarget = findFallThroughTarget(children, true);
+            if (throughTarget) {
+                throughTarget.options = mergeOptions(throughTarget.options, throughOptions);
+            }
         }
 
         // create component node
         var componentNode;
-        if (utility.isFunc(cdef.nodeClass)) {
-            if (utility.isSubclass(cdef.nodeClass, VComponent)) {
-                componentNode = new cdef.nodeClass(options);
-            } else {
-                componentNode = cdef.nodeClass.call(null, cdef.name, options);
-                if (!(componentNode instanceof VComponent)) {
-                    throw new TypeError(`invalid node created by ${cdef.name} component`);
-                }
+        if (cdef.nodeFactory) {
+            componentNode = cdef.nodeFactory.call(null, cdef.name, options);
+            if (!(componentNode instanceof VComponent)) {
+                throw new TypeError(`invalid node created by ${cdef.name} component`);
             }
         } else {
             var tagName = utility.camel2KebabCase(cdef.name);
@@ -566,28 +660,29 @@ export class Compiler {
             componentNode.ctx = this._createNodeContext(topCtx, cdef.context, optionsCtx);
         }
 
-        // compile children
-        if (children && children.length > 0) {
-            this._compileChildren(children, componentNode, ctx);
+        // init component properties
+        if (cdef.properties) {
+            utility.entries(cdef.properties)
+                .forEach(([name, prop]) => {
+                    // dynamically define property
+                    VComponent.$defineProperty(componentNode, name, prop);
+
+                    // override property init values by options
+                    if (prop.schema != PROPERTY_SCHEMA.METHOD && prop.option) {
+                        var [hasOption, optionValue] = getPropOption(options, name);
+                        if (hasOption) {
+                            componentNode.$props[name].value = prop.schema == PROPERTY_SCHEMA.EXPR ?
+                                value2Expr(optionValue) :
+                                optionValue;
+                        }
+                    }
+                });
         }
 
-        // register component dynamic props
-        utility.entries(cdef.props)
-            .forEach(([prop, val]) => {
-                var propVal, getter;
-                if (utility.isFunc(val)) {
-                    propVal = null;
-                    getter = val;
-                } else {
-                    propVal = val.defaultValue === undefined ? null : val.defaultValue;
-                    getter = utility.isFunc(val.getter) ? val.getter : null;
-                }
-
-                componentNode.defProp(prop, propVal, getter);
-            });
-
-        // setup VElement related options
-        this._setupVElement(componentNode, options);
+        // compile children
+        if (children.length > 0) {
+            this._compileChildren(children, componentNode, ctx);
+        }
 
         // schedule initialization
         componentNode.hook('nodeInit', () => {
@@ -610,6 +705,8 @@ export class Compiler {
 
         return componentNode;
     }
+
+    //#endregion
 }
 
 /**

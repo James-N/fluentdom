@@ -101,6 +101,10 @@ const objectEntries = Object.entries || function (obj) {
     return Object.keys(obj).map(a => [a, obj[a]]);
 };
 
+const objectValues = Object.values || function (obj) {
+    return Object.keys(obj).map(a => obj[a]);
+};
+
 const hasOwn = Object.hasOwn || function (obj, prop) {
     return Object.prototype.hasOwnProperty.call(obj, prop);
 };
@@ -310,6 +314,7 @@ export default {
 
     extend: extendObject,
     entries: objectEntries,
+    values: objectValues,
     hasOwn: hasOwn,
     setOptionValue: setOptionValue,
     getOptionValue: getOptionValue,

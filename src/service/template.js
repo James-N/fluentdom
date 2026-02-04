@@ -405,7 +405,7 @@ export function buildSlot (...args) {
  */
 export function getComponentBuilder (componentDef, bindToTpl = false) {
     return function (...args) {
-        var argCount = componentDef.builderArgs.length;
+        var argCount = componentDef.args.length;
         var nodeArgs = argCount > 0 ? args.slice(0, argCount) : [];
         var [children, options] = readTemplateCreateArgs(args, argCount);
 
@@ -415,9 +415,12 @@ export function getComponentBuilder (componentDef, bindToTpl = false) {
 
         // create component tempalte instance
         var tpl;
-        if (!!componentDef.templateClass &&
-            utility.isSubclass(componentDef.templateClass, VComponentTemplate)) {
-            tpl = new componentDef.templateClass(componentDef.name, nodeArgs, options);
+        if (componentDef.templateFactory) {
+            tpl = componentDef.templateFactory.call(null, componentDef.name, nodeArgs, options);
+
+            if (!(tpl instanceof VComponentTemplate)) {
+                throw new TypeError(`invalid component template created by ${componentDef.name} template factory`);
+            }
         } else {
             tpl = new VComponentTemplate(componentDef.name, nodeArgs, options);
         }
