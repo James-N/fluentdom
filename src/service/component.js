@@ -1,5 +1,5 @@
 import { VTemplate, VComponentTemplate, VSlotTemplate } from '../model/VTemplate';
-import VComponent from '../model/VComponent';
+import VComponent, { PROPERTY_SCHEMA } from '../model/VComponent';
 
 import utility from './utility';
 import * as TEMPLATE from './template';
@@ -20,6 +20,9 @@ export const COMPONENT_REGISTRATION = {};
 export const COMPONENT_BUILDER = {};
 
 /**
+ * @readonly
+ * @enum {String}
+ *
  * component context type constants
  */
 export const CONTEXT_MODE = {
@@ -30,7 +33,7 @@ export const CONTEXT_MODE = {
 function getDefaultDefinition () {
     return {
         /**
-         * component name, will be used as registration key and element tag name
+         * component name, will be used as registration key and element tag name if necessary
          *
          * @type {String}
          */
@@ -42,11 +45,17 @@ function getDefaultDefinition () {
          */
         template: null,
         /**
-         * custom component template class type
+         * custom component template factory function
          *
-         * @type {(new function(String, any, Record<String, any>):VComponentTemplate)?}
+         * @type {(function(String, any[], Record<String, any>):VComponentTemplate)?}
          */
-        templateClass: null,
+        templateFactory: null,
+        /**
+         * extra template builder arguments, will be injected into options
+         *
+         * @type {String[]}
+         */
+        args: [],
         /**
          * default context object
          *
@@ -56,7 +65,7 @@ function getDefaultDefinition () {
         /**
          * context mode
          *
-         * @type {String}
+         * @type {CONTEXT_MODE}
          */
         contextMode: CONTEXT_MODE.ISOLATE,
         /**
@@ -64,31 +73,31 @@ function getDefaultDefinition () {
          *
          * @type {(function(String, Record<String, any>):VComponent)|(new function(String, Record<String, any>):VComponent)?}
          */
-        nodeClass: null,
-        /**
-         * list of additional arguments for the auto-generated component builder function
-         *
-         * @type {String[]}
-         */
-        builderArgs: [],
+        nodeFactory: null,
         /**
          * additional custom component post initializer
          *
-         * @type {Function}
+         * @type {(function(VComponent):void)?}
          */
         init: null,
         /**
-         * component dynamic property table
+         * component extension property table
          *
-         * @type {Record<String, any>}
+         * @type {Record<String, import('../model/VComponent').PropertyConfig>?}
          */
-        props: {},
+        properties: null,
         /**
-         * default options for component node, will be merged with user provided options
+         * default options to be inherited by fall-through target
          *
-         * @type {Record<String, any>}
+         * @type {Record<String, any>?}
          */
         options: null,
+        /**
+         * whether to generate root element by component name automatically
+         *
+         * @type {Boolean}
+         */
+        root: true,
         /**
          * whether component accepts children
          *
@@ -139,10 +148,34 @@ export function defineComponent (options, local = false) {
     var cdef = getDefaultDefinition();
     utility.extend(cdef, options);
 
+    // normalize property name
     cdef.name = cdef.name.trim();
 
     if (!cdef.name) {
         throw new Error("missing component name");
+    }
+
+    // normalize properties
+    if (cdef.properties) {
+        utility.entries(cdef.properties)
+            .forEach(([name, prop]) => {
+                if (utility.isFunc(prop)) {
+                    cdef.properties[name] = {
+                        schema: PROPERTY_SCHEMA.METHOD,
+                        fn: prop
+                    };
+                } else if (prop.schema == PROPERTY_SCHEMA.VALUE) {
+                    cdef.properties[name] = utility.extend({
+                        readonly: false,
+                        option: true
+                    }, prop);
+                } else if (prop.schema == PROPERTY_SCHEMA.EXPR) {
+                    cdef.properties[name] = utility.extend({
+                        readonly: true,
+                        option: true
+                    }, prop);
+                }
+            });
     }
 
     // create builder function
@@ -171,7 +204,7 @@ export function getComponent (name) {
  * get registered component builder function
  *
  * @param {String} name  name of the component
- * @returns {function(...any):VComponentTemplate?}
+ * @returns {(function(...any):VComponentTemplate)?}
  */
 export function getComponentBuilder (name) {
     return COMPONENT_BUILDER[utility.kebab2PascalCase(name)] || null;

@@ -10,21 +10,6 @@ fluent.addDirective('autoDisable', function (node, callback) {
     }
 });
 
-class CardComponent extends fluent.core.VComponent {
-    constructor (options) {
-        super('my-card');
-
-        this.title = options.title;
-        this.content = options.content;
-
-        this.state = '';
-    }
-
-    execAction (data) {
-        window.alert(data);
-    }
-}
-
 var CardBuilder = fluent.newComponent({
     name: 'my-card',
     template:
@@ -39,14 +24,21 @@ var CardBuilder = fluent.newComponent({
                 .class('card-actions')
         )
         .class('card-wrapper'),
+    args: ['title', 'content'],
     context: {},
-    nodeClass: CardComponent,
-    builderArgs: ['title', 'content'],
-    props: {
-        state: { defaultValue: 'normal' }
+    properties: {
+        title: { schema: 'value' },
+        content: { schema: 'value' },
+        state: {
+            schema: 'expr',
+            value: 'normal'
+        },
+        execAction: function (data) {
+            window.alert(data);
+        }
     },
     options: {
-        class: vn => 'state-' + vn.state
+        class: vn => 'state-' + vn.dep.state
     }
 });
 
@@ -95,7 +87,7 @@ fluent.new({
                         autoDisable: vn => !ctx.$value.hasAction
                     })
                 )
-                .prop('state', vn => ctx.$value.hasAction ? 'normal' : 'mute'))
+                .option('state', vn => ctx.$value.hasAction ? 'normal' : 'mute'))
         )
 });
 
