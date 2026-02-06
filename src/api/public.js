@@ -239,7 +239,7 @@ export function createExpr (value) {
 // add quick expression factory methods
 createExpr.const = function (value) { return new ConstExpr(value); };
 createExpr.dyn = function (getter, defaultValue) { return new DynExpr(getter, defaultValue); };
-createExpr.ref = function (value) { return new RefExpr(null, value); };
+createExpr.ref = function (value) { return value instanceof RefExpr ? new RefExpr(value) : new RefExpr(null, value); };
 
 /**
  * handler option
