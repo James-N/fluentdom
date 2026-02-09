@@ -12,7 +12,7 @@ import VFragment from '../model/VFragment';
 import VComponent from '../model/VComponent';
 import VTree from '../model/VTree';
 import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
-import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
+import { Expr, ConstExpr, DynExpr, RefExpr, CompoundExpr } from '../model/Expr';
 import Directive from '../model/Directive';
 import { CompilerExtension } from '../service/compiler';
 
@@ -38,6 +38,7 @@ var API = {
     ConstExpr,
     DynExpr,
     RefExpr,
+    CompoundExpr,
     Directive,
     CompilerExtension
 };

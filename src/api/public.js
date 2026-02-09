@@ -2,7 +2,7 @@ import VTree from '../model/VTree';
 import VNode from '../model/VNode';
 import NodeType from '../model/NodeType';
 import { VTemplate, VElementTemplate } from '../model/VTemplate';
-import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
+import { Expr, ConstExpr, DynExpr, RefExpr, CompoundExpr } from '../model/Expr';
 import MethodExtension from '../model/internal/MethodExtension';
 
 import utility from '../service/utility';
@@ -229,10 +229,6 @@ export const useCompilerExtension = compiler.useCompilerExtension;
  * expression factory
  */
 export function createExpr (value) {
-    if (value instanceof Expr) {
-        throw new TypeError("cannot create an expression object from another expression");
-    }
-
     return value2Expr(value);
 }
 
@@ -240,6 +236,7 @@ export function createExpr (value) {
 createExpr.const = function (value) { return new ConstExpr(value); };
 createExpr.dyn = function (getter, defaultValue) { return new DynExpr(getter, defaultValue); };
 createExpr.ref = function (value) { return value instanceof RefExpr ? new RefExpr(value) : new RefExpr(null, value); };
+createExpr.comp = function (evaluator, args, defaultValue) { return new CompoundExpr(evaluator, args.map(value2Expr), defaultValue); };
 
 /**
  * handler option

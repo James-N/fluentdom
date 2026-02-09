@@ -128,7 +128,7 @@ export class ConstExpr extends Expr {
 export class DynExpr extends Expr {
     /**
      * @param {function(...any):T} getter  the getter function
-     * @param {any=} defaultValue
+     * @param {T=} defaultValue
      */
     constructor (getter, defaultValue) {
         super(defaultValue);
@@ -214,5 +214,60 @@ export class RefExpr extends Expr {
         }
 
         return this._value;
+    }
+}
+
+/**
+ * compound expression, the expression value is computed by invoke function upon arguments evaluated
+ * from given expressions
+ *
+ * @template T
+ */
+export class CompoundExpr extends Expr {
+    /**
+     * @param {function(...any):T} evaluator  the evaluator function
+     * @param {Expr[]} args  argumnet expressions
+     * @param {T=} defaultValue
+     */
+    constructor (evaluator, args, defaultValue) {
+        super(defaultValue);
+
+        if (!utility.isFunc(evaluator)) {
+            throw new TypeError("evaluator must be function");
+        }
+
+        if (!utility.isArr(args)) {
+            throw new TypeError("args must be array");
+        }
+
+        if (args.length === 0) {
+            throw new Error("args array is empty");
+        }
+
+        /**
+         * @type {function(...any):T}
+         */
+        this.$evaluator = evaluator;
+
+        /**
+         * @type {Expr[]}
+         */
+        this.$args = args;
+    }
+
+    eval (...args) {
+        this._prevValue = this._value;
+
+        var argChanged = false;
+        for (let exp of this.$args) {
+            argChanged = argChanged || exp.evalChecked(...args);
+        }
+
+        if (argChanged) {
+            this._value = this.$evaluator.apply(null, this.$args.map(e => e.value()));
+            this._changed = this._prevValue !== this._value;
+        } else {
+            this._changed = false;
+        }
     }
 }
