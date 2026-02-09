@@ -13,7 +13,7 @@ import VComponent from '../model/VComponent';
 import VTree from '../model/VTree';
 import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 import { Expr, ConstExpr, DynExpr, RefExpr } from '../model/Expr';
-import { Directive } from '../service/directive';
+import Directive from '../model/Directive';
 import { CompilerExtension } from '../service/compiler';
 
 

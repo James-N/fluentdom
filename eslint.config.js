@@ -30,7 +30,7 @@ module.exports = defineConfig({
         // syntax rules
         'no-extra-boolean-cast': 'off',
         'no-prototype-builtins': 'warn',
-        'no-unused-vars': 'warn',
+        'no-unused-vars': ['warn', { varsIgnorePattern: '^_+$' }],
         'no-undef': 'error',
         'no-dupe-args': 'error',
         'no-dupe-keys': 'error',

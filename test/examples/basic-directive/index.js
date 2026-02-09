@@ -4,7 +4,7 @@
 
 var FB = fluent.builder;
 
-fluent.addDirective('model', function (vn, callback, options) {
+fluent.addDirective('model', function (vn, callback) {
     var modelObj = {
         _value: '',
         set (val) {

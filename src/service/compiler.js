@@ -11,12 +11,13 @@ import VFragment from '../model/VFragment';
 import VComponent, { PROPERTY_SCHEMA } from '../model/VComponent';
 import { VTemplate, VSlotTemplate, VComponentTemplate, VIfTemplate, VElementTemplate } from '../model/VTemplate';
 import { Expr } from '../model/Expr';
+import Directive from '../model/Directive';
 
 import utility from './utility';
 import LOG from './log';
 import * as NODE from './node';
 import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlots } from './component';
-import { loadDirectives } from './directive';
+import { loadDirective } from './directive';
 import { value2Expr } from './expr';
 
 
@@ -25,6 +26,9 @@ import { value2Expr } from './expr';
  */
 class CompileContext {
     constructor () {
+        /**
+         * @type {ReturnType<typeof CompileContext.prototype.pushState>[]}
+         */
         this.stack = [];
     }
 
@@ -35,8 +39,17 @@ class CompileContext {
         var state;
         if (node) {
             state = {
+                /**
+                 * @type {VNode?}
+                 */
                 node: node,
+                /**
+                 * @type {Record<String, any>?}
+                 */
                 context: node.ctx,
+                /**
+                 * @type {VNode?}
+                 */
                 depNode: NODE.isDepNode(node) ? node : (node.dep || this.getDepNode())
             };
         } else {
@@ -52,6 +65,9 @@ class CompileContext {
         return state;
     }
 
+    /**
+     * @returns {ReturnType<typeof CompileContext.prototype.pushState>}
+     */
     popState () {
         return this.stack.pop();
     }
@@ -60,16 +76,25 @@ class CompileContext {
         return utility.lastArrItem(this.stack, null);
     }
 
+    /**
+     * @returns {VNode?}
+     */
     getNode () {
         var state = this._getTopState();
         return state ? state.node : null;
     }
 
+    /**
+     * @returns {VNode?}
+     */
     getDepNode () {
         var state = this._getTopState();
         return state ? state.depNode : null;
     }
 
+    /**
+     * @returns {Record<String, any>?}
+     */
     getNodeContext () {
         var state = this._getTopState();
         return state ? state.context : null;
@@ -88,11 +113,16 @@ export class CompilerExtension {
     init (node) { return; }
 }
 
-//#region  compiler constants & helper functions
+//#region  compiler constants
 
 const FALLTHROUGH_OPTION_PREFIX = 'inherit:';
 const FALLTHROUGH_TARGET_OPTION = 'inherit';
 const COMPONENT_PROP_OPTION_PREFIX = 'prop:';
+const DIRECTIVE_OPTION_PREFIX = 'directive:';
+
+//#endregion
+
+//#region  compiler helper functions
 
 /**
  * @param {Record<String, any>} options
@@ -157,6 +187,35 @@ function expandComponentTemplates (tpl) {
     return tpl;
 }
 
+/**
+ * create node context based on optional top-level context object and list of template contexts
+ */
+function createNodeContext (topCtx, ...ctxTemplateList) {
+    var newCtx;
+    if (topCtx) {
+        newCtx = Object.create(topCtx);
+    } else {
+        newCtx = {};
+    }
+
+    for (let ctxTpl of ctxTemplateList.reverse()) {
+        if (ctxTpl) {
+            for (let [ctxKey, ctxVal] of utility.entries(ctxTpl)) {
+                if (!utility.hasOwn(newCtx, ctxKey)) {
+                    if (ctxVal instanceof Expr) {
+                        // evaluate expression to get compile-time generated context value
+                        newCtx[ctxKey] = ctxVal.eval();
+                    } else {
+                        newCtx[ctxKey] = ctxVal;
+                    }
+                }
+            }
+        }
+    }
+
+    return newCtx;
+}
+
 //#endregion
 
 /**
@@ -218,14 +277,20 @@ export class Compiler {
         return this._compileTemplate(template, this.ctx);
     }
 
+    /**
+     * @param {VTemplate} tpl
+     * @param {CompileContext} ctx
+     *
+     * @returns {VNode}
+     */
     _compileTemplate (tpl, ctx) {
         var compileFunc = this._compileFuncs[tpl.type];
         if (compileFunc) {
             // load directives
-            var directives = tpl.options ? loadDirectives(tpl.options) : null;
+            var directives = tpl.options ? this._loadDirectives(tpl.options) : [];
 
-            // pre template transformation using directives
-            if (directives) {
+            // transformation template using directives
+            if (directives.length > 0) {
                 tpl = this._transformTemplateByDirectives(tpl, directives);
             }
 
@@ -242,8 +307,8 @@ export class Compiler {
             this._attachNodeHooks(node, tpl.options);
 
             // attach directives to node
-            if (directives) {
-                this._configNodeByDirectives(node, directives, tpl.options);
+            if (directives.length > 0) {
+                this._configNodeByDirectives(node, directives);
             }
 
             // invoke node init hook
@@ -257,56 +322,77 @@ export class Compiler {
 
     //#region  common compilation pass methods
 
-    _transformTemplateByDirectives (tpl, directives) {
-        for (let directive of directives) {
-            tpl = directive.precompile(tpl);
-        }
+    /**
+     * @param {Record<String, any>} options
+     * @returns {[Directive, String, any][]}
+     */
+    _loadDirectives (options) {
+        var directives = [];
+        var loaded = new Set();
 
-        return tpl;
-    }
-
-    _configNodeByDirectives (node, directives, options) {
-        for (let directive of directives) {
-            directive.postcompile(node, options);
-            node.directives.push(directive);
-        }
-    }
-
-    _createNodeContext (topCtx, ...ctxTemplateList) {
-        var newCtx;
-        if (topCtx) {
-            newCtx = Object.create(topCtx);
-        } else {
-            newCtx = {};
-        }
-
-        for (let ctxTpl of ctxTemplateList.reverse()) {
-            if (ctxTpl) {
-                for (let [ctxKey, ctxVal] of utility.entries(ctxTpl)) {
-                    if (!utility.hasOwn(newCtx, ctxKey)) {
-                        if (ctxVal instanceof Expr) {
-                            // evaluate expression to get compile-time generated context value
-                            newCtx[ctxKey] = ctxVal.eval();
-                        } else {
-                            newCtx[ctxKey] = ctxVal;
-                        }
+        var entries = utility.entries(options).sort((e1, e2) => e2[0].length - e1[0].length);
+        for (let [key, opt] of entries) {
+            if (opt !== false) {
+                var name = key.startsWith(DIRECTIVE_OPTION_PREFIX) ? key.substring(DIRECTIVE_OPTION_PREFIX.length) : key;
+                if (name && !loaded.has(name)) {
+                    let directive = loadDirective(name);
+                    if (directive) {
+                        directives.push([directive, name, opt]);
                     }
                 }
             }
         }
 
-        return newCtx;
+        if (directives.length > 0) {
+            return utility.stableSort(directives, (a, b) => a[0].priority - b[0].priority);
+        } else {
+            return directives;
+        }
     }
 
+    /**
+     * @param {VTemplate} tpl
+     * @param {[Directive, String, any][]} directives
+     *
+     * @returns {VTemplate}
+     */
+    _transformTemplateByDirectives (tpl, directives) {
+        for (let [directive, _, opt] of directives) {
+            tpl = directive.precompile(tpl, opt);
+        }
+
+        return tpl;
+    }
+
+    /**
+     * @param {VNode} node
+     * @param {[Directive, String, any][]} directives
+     */
+    _configNodeByDirectives (node, directives) {
+        for (let [directive, name, opt] of directives) {
+            directive.postcompile(node, opt);
+            node.directives[name] = directive;
+        }
+    }
+
+    /**
+     * @param {VNode} node
+     * @param {Record<String, any>} options
+     * @param {CompileContext} compileCtx
+     */
     _attachNodeContext (node, options, compileCtx) {
         var context = utility.getOptionValue(options, 'context', null);
         if (context) {
-            node.ctx = this._createNodeContext(compileCtx.getNodeContext(), options.context);
+            node.ctx = createNodeContext(compileCtx.getNodeContext(), options.context);
         } else {
             node.ctx = compileCtx.getNodeContext();
         }
     }
 
+    /**
+     * @param {VNode} node
+     * @param {Record<String, any>} options
+     */
     _setNodeBasicProps (node, options) {
         // set alias
         var alias = utility.getOptionValue(options, 'alias', '');
@@ -315,6 +401,10 @@ export class Compiler {
         }
     }
 
+    /**
+     * @param {VNode} node
+     * @param {Record<String, any>} options
+     */
     _attachNodeHooks (node, options) {
         var hooks = utility.getOptionValue(options, 'hooks', null);
         if (hooks) {
@@ -324,6 +414,11 @@ export class Compiler {
         }
     }
 
+    /**
+     * @param {VTemplate[]} children
+     * @param {VNode} node
+     * @param {CompileContext} ctx
+     */
     _compileChildren (children, node, ctx) {
         ctx.pushState(node);
 
@@ -657,7 +752,7 @@ export class Compiler {
         // init context
         if (cdef.context || optionsCtx) {
             var topCtx = cdef.contextMode == CONTEXT_MODE.INHERIT ? ctx.getNodeContext() : null;
-            componentNode.ctx = this._createNodeContext(topCtx, cdef.context, optionsCtx);
+            componentNode.ctx = createNodeContext(topCtx, cdef.context, optionsCtx);
         }
 
         // init component properties

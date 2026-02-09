@@ -57,11 +57,11 @@ class VNode {
         this.alias = '';
 
         /**
-         * list of directives attached to this node
+         * directives attached to this node
          *
-         * @type {import('../service/directive').Directive[]}
+         * @type {Record<String, import('./Directive').default>}
          */
-        this.directives = [];
+        this.directives = {};
 
         /**
          * hook registration
@@ -247,7 +247,7 @@ class VNode {
         NODE.destroyNodes(this.children);
 
         // destroy all directives
-        for (let directive of this.directives) {
+        for (let directive of utility.values(this.directives)) {
             directive.destroy();
         }
 
