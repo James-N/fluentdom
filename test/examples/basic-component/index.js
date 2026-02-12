@@ -26,7 +26,7 @@ var CardBuilder = fluent.newComponent({
         .class('card-wrapper'),
     args: ['title', 'content'],
     context: {},
-    properties: {
+    node: {
         title: { schema: 'value' },
         content: { schema: 'value' },
         state: {
@@ -35,6 +35,9 @@ var CardBuilder = fluent.newComponent({
         },
         execAction: function (data) {
             window.alert(data);
+        },
+        init: function (component) {
+            console.log('init: ', component);
         }
     },
     options: {

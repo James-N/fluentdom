@@ -415,8 +415,8 @@ export function getComponentBuilder (componentDef, bindToTpl = false) {
 
         // create component tempalte instance
         var tpl;
-        if (componentDef.templateFactory) {
-            tpl = componentDef.templateFactory.call(null, componentDef.name, nodeArgs, options);
+        if (componentDef.templateBuilder) {
+            tpl = componentDef.templateBuilder.call(null, componentDef.name, nodeArgs, options);
 
             if (!(tpl instanceof VComponentTemplate)) {
                 throw new TypeError(`invalid component template created by ${componentDef.name} template factory`);
