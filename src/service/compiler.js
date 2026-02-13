@@ -145,6 +145,43 @@ function scanEventOptions (options, receiver) {
 }
 
 /**
+ * @param {Record<String, any>?} opt1
+ * @param {Record<String, any>?} opt2
+ *
+ * @returns {Record<String, any>?}
+ */
+function smartMergeElmTplOptions (opt1, opt2) {
+    if (opt1 && opt2) {
+        utility.entries(opt2).forEach(([key, val]) => {
+            if (utility.hasOwn(opt1, key)) {
+                if (key == 'attrs' || key == 'props' || key == 'styles' || key == 'context') {
+                    utility.extend(opt1[key], val);
+                } else if (key == 'class') {
+                    utility.setOptionValue(opt1, [key], val, false, true);
+                } else if (key == 'events' || key == 'hooks') {
+                    var val1 = utility.ensureArr(opt1[key]);
+                    if (utility.isArr(val)) {
+                        val1.push(...val);
+                    } else {
+                        val1.push(val);
+                    }
+
+                    opt1[key] = val1;
+                } else {
+                    opt1[key] = val;
+                }
+            } else {
+                opt1[key] = val;
+            }
+        });
+
+        return opt1;
+    } else {
+        return opt1 || opt2 || null;
+    }
+}
+
+/**
  * expand all deferred component templates in the template tree
  *
  * @param {VTemplate} tpl
@@ -157,6 +194,7 @@ function expandComponentTemplates (tpl) {
      */
     function expand (tpl) {
         // expand deferred template to actual template
+        var deferOptions = null;
         if (tpl.$deferred) {
             // fetch and invoke component builder manually to get the actual component template
             var builder = getComponentBuilder(tpl.name);
@@ -164,12 +202,19 @@ function expandComponentTemplates (tpl) {
                 throw new Error(`fail to expand deferred template [${tpl.name}]: unrecognized component`);
             }
 
+            // cache deferred template options
+            deferOptions = tpl.options;
+
             // build actual component template
             tpl = builder(...tpl.args);
         }
 
         // clone template
         tpl = tpl.clone();
+
+        if (deferOptions) {
+            tpl.options = smartMergeElmTplOptions(tpl.options, deferOptions);
+        }
 
         return tpl;
     }
@@ -565,37 +610,6 @@ export class Compiler {
      * @param {CompileContext} ctx
      */
     _compileComponent (tpl, ctx) {
-        function mergeOptions (opt1, opt2) {
-            if (opt1 && opt2) {
-                utility.entries(opt2).forEach(([key, val]) => {
-                    if (utility.hasOwn(opt1, key)) {
-                        if (key == 'attrs' || key == 'props' || key == 'styles' || key == 'context') {
-                            utility.extend(opt1[key], val);
-                        } else if (key == 'class') {
-                            utility.setOptionValue(opt1, [key], val, false, true);
-                        } else if (key == 'events' || key == 'hooks') {
-                            var val1 = utility.ensureArr(opt1[key]);
-                            if (utility.isArr(val)) {
-                                val1.push(...val);
-                            } else {
-                                val1.push(val);
-                            }
-
-                            opt1[key] = val1;
-                        } else {
-                            opt1[key] = val;
-                        }
-                    } else {
-                        opt1[key] = val;
-                    }
-                });
-
-                return opt1;
-            } else {
-                return opt1 || opt2 || null;
-            }
-        }
-
         /**
          * @param {import('./component').ComponentDefinition} cdef
          * @param {VComponentTemplate} tpl
@@ -606,16 +620,18 @@ export class Compiler {
             var componentOptions = {}, throughOptions = {};
 
             // split input template options
-            utility.entries(tpl.options)
-                .forEach(([key, val]) => {
-                    if (key == 'id' || key == 'attrs' || key == 'props' || key == 'styles' || key == 'class') {
-                        throughOptions[key] = val;
-                    } else if (key.startsWith(FALLTHROUGH_OPTION_PREFIX)) {
-                        throughOptions[key.substring(FALLTHROUGH_OPTION_PREFIX.length)] = val;
-                    } else {
-                        componentOptions[key] = val;
-                    }
-                });
+            if (tpl.options) {
+                utility.entries(tpl.options)
+                    .forEach(([key, val]) => {
+                        if (key == 'id' || key == 'attrs' || key == 'props' || key == 'styles' || key == 'class') {
+                            throughOptions[key] = val;
+                        } else if (key.startsWith(FALLTHROUGH_OPTION_PREFIX)) {
+                            throughOptions[key.substring(FALLTHROUGH_OPTION_PREFIX.length)] = val;
+                        } else {
+                            componentOptions[key] = val;
+                        }
+                    });
+            }
 
             // inject builder args into component options
             if (cdef.args.length > 0) {
@@ -626,7 +642,7 @@ export class Compiler {
 
             // merge fall-through options
             if (cdef.options) {
-                throughOptions = mergeOptions(utility.simpleDeepClone(cdef.options), throughOptions);
+                throughOptions = smartMergeElmTplOptions(utility.simpleDeepClone(cdef.options), throughOptions);
             }
 
             return [componentOptions, throughOptions];
@@ -759,7 +775,7 @@ export class Compiler {
         } else {
             var throughTarget = findFallThroughTarget(children, true);
             if (throughTarget) {
-                throughTarget.options = mergeOptions(throughTarget.options, throughOptions);
+                throughTarget.options = smartMergeElmTplOptions(throughTarget.options, throughOptions);
             }
         }
 
