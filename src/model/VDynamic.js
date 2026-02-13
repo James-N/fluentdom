@@ -10,11 +10,15 @@ import { loadCompiler } from '../service/compiler';
 
 
 /**
+ * @typedef {(function(VNode):VTemplate|VTemplate[]?)|Expr<VTemplate|VTemplate[]?>} TemplateProvider
+ */
+
+/**
  * virtual node for dynamic node creation
  */
 class VDynamic extends VNode {
     /**
-     * @param {(function(VNode):VTemplate|VTemplate[])|Expr<VTemplate|VTemplate[]?>} provider  template provider
+     * @param {TemplateProvider} provider  template provider
      */
     constructor (provider) {
         super();

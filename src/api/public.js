@@ -11,7 +11,7 @@ import * as compiler from '../service/compiler';
 import * as component from '../service/component';
 import * as directive from '../service/directive';
 import { value2Expr } from '../service/expr';
-import { HandlerOption } from '../service/template';
+import { CallbackBuilder } from '../service/template';
 
 
 /**
@@ -239,12 +239,12 @@ createExpr.ref = function (value) { return value instanceof RefExpr ? new RefExp
 createExpr.comp = function (evaluator, args, defaultValue) { return new CompoundExpr(evaluator, args.map(value2Expr), defaultValue); };
 
 /**
- * handler option
+ * callback option builder
  *
- * @param {Function} handler
+ * @param {Function} callback
  */
-export function createHandlerOption (handler) {
-    return new HandlerOption(handler);
+export function createCallbackBuilder (callback) {
+    return new CallbackBuilder(callback);
 }
 
 /**

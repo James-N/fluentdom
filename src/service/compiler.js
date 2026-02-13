@@ -18,6 +18,7 @@ import LOG from './log';
 import * as NODE from './node';
 import { CONTEXT_MODE, getComponent, getComponentBuilder, findTemplateSlots, PROPERTY_SCHEMA, VInlineComponent, addProperty } from './component';
 import { loadDirective } from './directive';
+import { CallbackBuilder } from './template';
 
 
 /**
@@ -125,20 +126,18 @@ const DIRECTIVE_OPTION_PREFIX = 'directive:';
 
 /**
  * @param {Record<String, any>} options
- * @param {function(String, Function, Record<String, any>?):void} callback
+ * @param {function(String, Function, Record<String, any>?):void} receiver
  */
-function scanEventOptions (options, callback) {
+function scanEventOptions (options, receiver) {
     for (let [name, value] of utility.entries(options)) {
         if (value) {
             value = utility.ensureArr(value);
 
-            for (let handler of value) {
-                if (utility.isFunc(handler)) {
-                    callback(name, handler, null);
-                } else if (utility.isObj(handler)) {
-                    if (utility.isFunc(handler.handler)) {
-                        callback(name, handler.handler, handler.flags);
-                    }
+            for (let callback of value) {
+                if (utility.isFunc(callback)) {
+                    receiver(name, callback, null);
+                } else if (callback instanceof CallbackBuilder) {
+                    receiver(name, callback.fn, callback.flags);
                 }
             }
         }

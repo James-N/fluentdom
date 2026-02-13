@@ -1,32 +1,107 @@
 import NodeType from '../model/NodeType';
-import VNode from '../model/VNode';
 import VText from '../model/VText';
-import VFragment from '../model/VFragment';
 import { VTemplate, VElementTemplate, VComponentTemplate, VIfTemplate, VSlotTemplate } from '../model/VTemplate';
+import { Expr } from '../model/Expr';
 
 import utility from './utility';
 
 
-function ensuerNotTemplate (obj, msg) {
-    if (obj instanceof VTemplate) {
-        throw new TypeError(msg);
+//#region  utility builders
+
+/**
+ * special option builder class for handlers
+ */
+export class CallbackBuilder {
+    /**
+     * @param {Function} cb
+     */
+    constructor (cb) {
+        if (!utility.isFunc(cb)) {
+            throw new TypeError("cb must be function");
+        }
+
+        /**
+         * @type {Function}
+         */
+        this.fn = cb;
+
+        /**
+         * @type {Record<String, any>}
+         */
+        this.flags = {};
+    }
+
+    once () {
+        this.flags.once = true;
+        return this;
     }
 }
 
-/* -------------------- --- -------------------- */
-// dom nodes template builder
-/* -------------------- --- -------------------- */
+//#endregion
+
+//#region  builder utility functions
 
 /**
- * create template for text node
- *
- * @param {String|function(VText):String} text
- * @param {Record<String, any>=} options
- *
- * @returns {VTemplate}
+ * @param {any} value
+ * @returns {Boolean}
  */
-export function buildText (text, options) {
-    return new VTemplate(NodeType.TEXT, [text], options);
+function maybeExpr (value) {
+    return utility.isFunc(value) || value instanceof Expr;
+}
+
+/**
+ * @param {any} value
+ * @returns {Boolean}
+ */
+function isCallback (value) {
+    return utility.isFunc(value) || value instanceof CallbackBuilder;
+}
+
+/**
+ * @param {any} value
+ * @returns {VTemplate?}
+ */
+function tryReadTemplate (value) {
+    if (utility.isStr(value)) {
+        return buildText(value);
+    } else if (value instanceof VTemplate) {
+        return value;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * @param {Array} tpls
+ * @param {(function(any, Number):String)=} errMsg
+ *
+ * @returns {VTemplate[]}
+ */
+function readTemplateList (tpls, errMsg) {
+    return tpls.map((t, i) => {
+        var tpl = tryReadTemplate(t);
+        if (tpl) {
+            return tpl;
+        } else {
+            throw new TypeError(errMsg ? errMsg(t, i) : "invalid item inside template list");
+        }
+    });
+}
+
+/**
+ * @param {any} value
+ * @param {(() => String)=} errMsg
+ *
+ * @returns {Record<String, any>?}
+ */
+function readOptions (value, errMsg) {
+    if (utility.isNullOrUndef(value)) {
+        return null;
+    } else if (utility.isObj(value)) {
+        return value;
+    } else {
+        throw new TypeError(errMsg ? errMsg() : "invalid template options");
+    }
 }
 
 /**
@@ -43,34 +118,63 @@ function readTemplateCreateArgs (args, start) {
 
     for (var i = start; i < args.length; i++) {
         var arg = args[i];
-        if (utility.isStr(arg)) {
-            children.push(buildText(arg));
-        } else if (utility.isArr(arg)) {
-            for (let a of arg) {
-                if (a instanceof VTemplate) {
-                    children.push(a);
-                } else if (utility.isStr(a)) {
-                    children.push(buildText(a));
-                } else {
-                    throw new TypeError("invalid item inside template list");
-                }
-            }
-        } else if (utility.isObj(arg) || arg === undefined) {
-            if (arg instanceof VTemplate) {
-                children.push(arg);
-            } else {
-                if (i == (args.length - 1)) {
-                    options = arg;
-                } else {
-                    throw new Error("template options must be the last argument");
-                }
-            }
+        var child;
+        if (utility.isArr(arg)) {
+            children.push(...readTemplateList(arg));
+        } else if (child = tryReadTemplate(arg)) {
+            children.push(child);
         } else {
-            throw new TypeError(`invalid argument[${i}] for template creation: ${arg}`);
+            if (i == (args.length - 1)) {
+                options = readOptions(arg);
+            } else {
+                throw new TypeError(`invalid argument[${i}] for template creation: ${arg}`);
+            }
         }
     }
 
     return [children, options];
+}
+
+/**
+ * parse parametrized template creation arguments
+ *
+ * @param {any[]} args  argument list
+ * @param {Number} start  start index
+ * @param {Number} paramCount  number of parametrized arguments
+ *
+ * @returns {[any[], Record<String, any>]}
+ */
+function readParametrizedTemplateArgs (args, start, paramCount) {
+    var tplArgs = [];
+    var options = null;
+
+    var optionIndex = start + paramCount;
+    var endIndex = Math.min(args.length, optionIndex + 1);
+    for (var i = start; i < endIndex; i++) {
+        if (i == optionIndex) {
+            options = readOptions(args[i]);
+        } else {
+            tplArgs.push(args[i]);
+        }
+    }
+
+    return [tplArgs, options];
+}
+
+//#endregion
+
+//#region  dom nodes template builder
+
+/**
+ * create template for text node
+ *
+ * @param {String|function(VText):String} text
+ * @param {Record<String, any>=} options
+ *
+ * @returns {VTemplate}
+ */
+export function buildText (text, options) {
+    return new VTemplate(NodeType.TEXT, [text], options);
 }
 
 /**
@@ -115,8 +219,8 @@ export function buildElement (tagName, ...args) {
  * @returns {VTemplate}
  */
 export function buildVoidElement (tagName, options) {
-    if (!utility.isNullOrUndef(options)) {
-        ensuerNotTemplate(options, `${tagName} element cannot contain any child nodes`);
+    if (!utility.isNullOrUndef(options) && options instanceof VTemplate) {
+        throw new TypeError(`${tagName.toUpperCase()} element cannot contain any child nodes`);
     }
 
     var tpl = createElementTemplate(tagName, null, options);
@@ -126,62 +230,24 @@ export function buildVoidElement (tagName, options) {
 }
 
 /**
- * parse parametrized template creation arguments
+ * create template for void element with `src` attribute
  *
- * @param {any[]} args  argument list
- * @param {Number} start  start index
- * @param {Number} paramCount  number of parametrized arguments
- *
- * @returns {[any[], Record<String, any>]}
- */
-function readParametrizedTemplateArgs (args, start, paramCount) {
-    var elmArgs = [];
-    var options = null;
-
-    var optionIndex = start + paramCount;
-    var endIndex = Math.min(args.length, optionIndex + 1);
-    for (var i = start; i < endIndex; i++) {
-        var arg = args[i];
-        if (i == optionIndex) {
-            if (utility.isNullOrUndef(arg) || utility.isStrictObj(arg)) {
-                options = arg || null;
-            } else {
-                throw new TypeError(`invalid argument[${i}] for template creation: ${arg}`);
-            }
-        } else {
-            elmArgs.push(arg);
-        }
-    }
-
-    for (var j = elmArgs.length; j < paramCount; j++) {
-        elmArgs.push(null);
-    }
-
-    return [elmArgs, options];
-}
-
-/**
- * create template for img node
- *
- * @param {String} src  image source
- * @param {Record<String, any>=} options
+ * @param {String} tagName
+ * @param  {...any} args
  * @returns {VTemplate}
  */
-export function buildImage (src, options) {
-    [[src], options] = readParametrizedTemplateArgs(arguments, 0, 1);
+export function buildSrcElement (tagName, ...args) {
+    var src, options;
+    [[src], options] = readParametrizedTemplateArgs(args, 0, 1);
 
     if (utility.isNullOrUndef(src)) {
         src = '';
-    } else if (!utility.isStr(src)) {
-        throw new TypeError("src must be string");
+    } else if (!utility.isStr(src) && !maybeExpr(src)) {
+        throw new TypeError(`invalid ${tagName.toUpperCase()} src`);
     }
 
-    ensuerNotTemplate(options, 'IMG element cannot contain any child nodes');
-
-    options = utility.setOptionValue(options, ['attrs', 'src'], src);
-
-    var tpl = createElementTemplate('img', null, options);
-    tpl.$allowChildren = false;
+    var tpl = buildVoidElement(tagName, options);
+    tpl.options = utility.setOptionValue(tpl.options, ['attrs', 'src'], src);
 
     return tpl;
 }
@@ -197,8 +263,8 @@ export function buildImage (src, options) {
 export function buildMediaElement (tagName, src, ...args) {
     if (utility.isNullOrUndef(src)) {
         src = '';
-    } else if (!utility.isStr(src)) {
-        throw new TypeError("src input must be string");
+    } else if (!utility.isStr(src) && !maybeExpr(src)) {
+        throw new TypeError("invalid media src");
     }
 
     var [children, options] = readTemplateCreateArgs(args, 0);
@@ -224,12 +290,8 @@ export function buildInput (type, options) {
         throw new TypeError("type input must be string");
     }
 
-    ensuerNotTemplate(options, 'INPUT element cannot contain any child nodes');
-
-    options = utility.setOptionValue(options, ['attrs', 'type'], type);
-
-    var tpl = createElementTemplate('input', null, options);
-    tpl.$allowChildren = false;
+    var tpl = buildVoidElement('input', options);
+    tpl.options = utility.setOptionValue(tpl.options, ['attrs', 'type'], type);
 
     return tpl;
 }
@@ -241,16 +303,15 @@ export function buildInput (type, options) {
  * @returns {VTemplate}
  */
 export function buildHLink (...args) {
-    var href = null;
+    var href = '';
     var children = null;
     var options = null;
 
     if (args.length > 0) {
-        if (utility.isStr(args[0]) || utility.isFunc(args[0])) {
+        if (utility.isStr(args[0]) || maybeExpr(args[0])) {
             href = args[0];
             [children, options] = readTemplateCreateArgs(args, 1);
         } else {
-            href = '';
             [children, options] = readTemplateCreateArgs(args, 0);
         }
     }
@@ -260,9 +321,46 @@ export function buildHLink (...args) {
     return createElementTemplate('a', children, options);
 }
 
-/* -------------------- --- -------------------- */
-// control nodes template builder
-/* -------------------- --- -------------------- */
+export function buildButton (...args) {
+    var cb = null;
+    var children = null;
+    var options = null;
+
+    if (args.length > 0) {
+        if (isCallback(args[1])) {
+            if (args.length > 3) {
+                throw new Error("too much arguments");
+            }
+
+            cb = args[1];
+
+            if (!utility.isNullOrUndef(args[0])) {
+                var child;
+                if (Array.isArray(args[0])) {
+                    children = readTemplateList(args[0]);
+                } else if (child = tryReadTemplate(args[0])) {
+                    children = [child];
+                } else {
+                    throw new TypeError("invalid button content");
+                }
+            }
+
+            options = readOptions(args[2], () => "invalid button options");
+        } else {
+            [children, options] = readTemplateCreateArgs(args, 0);
+        }
+    }
+
+    if (cb) {
+        options = utility.setOptionValue(options, ['events', 'click'], cb);
+    }
+
+    return createElementTemplate('button', children, options);
+}
+
+//#endregion
+
+//#region  control nodes template builder
 
 /**
  * create template for empty node
@@ -333,7 +431,7 @@ export function buildRepeat (repeatSrc, ...args) {
 /**
  * create template for dynamic node
  *
- * @param {function(VNode):VTemplate|VTemplate[]} provider  dynamic provider
+ * @param {import('../model/VDynamic').TemplateProvider} provider  dynamic provider
  * @param {Boolean=} once  whether template will only be compiled once
  *
  * @returns {VTemplate}
@@ -349,7 +447,7 @@ export function buildDynamic (provider, once = true) {
 /**
  * create template for fragment node
  *
- * @param {String|Node|Node[]|function(VFragment):String|Node|Node[]} content  fragment content or provider
+ * @param {import('../model/VFragment').FragmentContentProvider} content  fragment content provider
  * @param {Record<String, any>=} options  fragment options
  *
  * @returns {VTemplate}
@@ -390,10 +488,9 @@ export function buildSlot (...args) {
     return template;
 }
 
+//#endregion
 
-/* -------------------- --- -------------------- */
-// component template builder
-/* -------------------- --- -------------------- */
+//#region  component template builder
 
 /**
  * create builder function for component
@@ -455,27 +552,4 @@ export function buildDeferredComponent(name, ...args) {
     return template;
 }
 
-/**
- * special option builder class for handlers
- */
-export class HandlerOption {
-    /**
-     * @param {Function} handler
-     */
-    constructor (handler) {
-        /**
-         * @type {Function}
-         */
-        this.handler = handler;
-
-        /**
-         * @type {Record<String, any>}
-         */
-        this.flags = {};
-    }
-
-    once () {
-        this.flags.once = true;
-        return this;
-    }
-}
+//#endregion

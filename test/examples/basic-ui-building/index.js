@@ -19,14 +19,10 @@ window.addEventListener('DOMContentLoaded', evt => {
             FB.Div(
                 FB.Button(
                     FB.TEXT(vn => data.btnText),
+                    (evt, vn) => window.alert("button clicked"),
                     {
                         class: 'click-btn',
-                        attrs: { title: 'click please', disabled: vn => !data.clickable },
-                        events: {
-                            click: (evt, nv) => {
-                                window.alert("button clicked");
-                            }
-                        }
+                        attrs: { title: 'click please', disabled: vn => !data.clickable }
                     }
                 ),
                 FB.If(

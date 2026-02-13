@@ -8,6 +8,7 @@ import { str2DOM } from '../service/dom';
 
 /**
  * @typedef {String|Node|Node[]} FragmentContent
+ * @typedef {FragmentContent|(function(VFragment):FragmentContent)|Expr<FragmentContent>} FragmentContentProvider
  */
 
 /**
@@ -15,7 +16,7 @@ import { str2DOM } from '../service/dom';
  */
 class VFragment extends VNode {
     /**
-     * @param {FragmentContent|(function(VFragment):FragmentContent)|Expr<FragmentContent>} content  fragment content or provider
+     * @param {FragmentContentProvider} content  fragment content or provider
      */
     constructor (content) {
         super();
