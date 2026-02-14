@@ -119,6 +119,7 @@ const FALLTHROUGH_OPTION_PREFIX = 'inherit:';
 const FALLTHROUGH_TARGET_OPTION = 'inherit';
 const COMPONENT_PROP_OPTION_PREFIX = 'prop:';
 const DIRECTIVE_OPTION_PREFIX = 'directive:';
+const ELM_TEMPLATE_SPECIAL_OPTIONS = new Set(['id', 'attrs', 'props', 'styles', 'class']);
 
 //#endregion
 
@@ -144,6 +145,9 @@ function scanEventOptions (options, receiver) {
     }
 }
 
+const SMART_MERGE_EXTEND_OPTIONS = new Set(['attrs', 'props', 'styles', 'context']);
+const SMART_MERGE_EVENT_OPTIONS = new Set(['events', FALLTHROUGH_OPTION_PREFIX + 'events', 'hooks']);
+
 /**
  * @param {Record<String, any>?} opt1
  * @param {Record<String, any>?} opt2
@@ -154,11 +158,11 @@ function smartMergeElmTplOptions (opt1, opt2) {
     if (opt1 && opt2) {
         utility.entries(opt2).forEach(([key, val]) => {
             if (utility.hasOwn(opt1, key)) {
-                if (key == 'attrs' || key == 'props' || key == 'styles' || key == 'context') {
+                if (SMART_MERGE_EXTEND_OPTIONS.has(key)) {
                     utility.extend(opt1[key], val);
                 } else if (key == 'class') {
                     utility.setOptionValue(opt1, [key], val, false, true);
-                } else if (key == 'events' || key == 'hooks') {
+                } else if (SMART_MERGE_EVENT_OPTIONS.has(key)) {
                     var val1 = utility.ensureArr(opt1[key]);
                     if (utility.isArr(val)) {
                         val1.push(...val);
@@ -623,7 +627,7 @@ export class Compiler {
             if (tpl.options) {
                 utility.entries(tpl.options)
                     .forEach(([key, val]) => {
-                        if (key == 'id' || key == 'attrs' || key == 'props' || key == 'styles' || key == 'class') {
+                        if (ELM_TEMPLATE_SPECIAL_OPTIONS.has(key)) {
                             throughOptions[key] = val;
                         } else if (key.startsWith(FALLTHROUGH_OPTION_PREFIX)) {
                             throughOptions[key.substring(FALLTHROUGH_OPTION_PREFIX.length)] = val;
