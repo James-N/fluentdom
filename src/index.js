@@ -2,6 +2,7 @@ import Core from './api/core';
 import Builder from './api/builder';
 import Component from './api/component';
 import * as pub from './api/public';
+import './api/prelude';
 
 export default {
     core: Core,

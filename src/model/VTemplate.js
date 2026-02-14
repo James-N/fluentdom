@@ -2,33 +2,7 @@ import NodeType from './NodeType';
 import MethodExtension from './internal/MethodExtension';
 
 import utility from '../service/utility';
-import { buildText } from '../service/template';
-
-
-/**
- * update key-value type option for given template
- *
- * @param {VTemplate} tpl
- * @param {String} option
- * @param {String|Record<String, any>} nameOrSet
- * @param {any} value
- * @param {Boolean=} arrayValue
- */
-function updateTplKVOption (tpl, option, nameOrSet, value, arrayValue) {
-    if (utility.isStr(nameOrSet)) {
-        tpl.options = utility.setOptionValue(tpl.options, [option, nameOrSet], value);
-    } else if (utility.isObj(nameOrSet)) {
-        tpl.options = utility.setOptionValue(tpl.options, [option], {}, true);
-
-        var optionSet = tpl.options[option];
-        utility.entries(nameOrSet)
-            .forEach(entry => {
-                utility.setOptionValue(optionSet, [entry[0]], entry[1], false, !!arrayValue);
-            });
-    } else {
-        throw new TypeError(`invalid value for [${option}] option.`);
-    }
-}
+import { buildText, setTemplateKVOption } from '../service/template';
 
 
 /**
@@ -94,11 +68,11 @@ export class VTemplate extends MethodExtension {
     }
 
     /**
-     * set `hooks` callback
+     * register `hooks` callback
      * @returns {this}
      */
     hook (nameOrSet, callback) {
-        updateTplKVOption(this, 'hooks', nameOrSet, callback, true);
+        setTemplateKVOption(this, 'hooks', nameOrSet, callback, true);
         return this;
     }
 
@@ -118,7 +92,7 @@ export class VTemplate extends MethodExtension {
     /**
      * override template options
      *
-     * @param {Record<String, Object>} options
+     * @param {Record<String, Object>?} options
      * @returns {this}
      */
     withOptions (options) {
@@ -376,72 +350,6 @@ export class VComponentTemplate extends VAbstractElementTemplate {
         return cloned;
     }
 }
-
-// register common extension methods to VElement and VComponentTemplate
-MethodExtension.extend(
-    [VElementTemplate, VComponentTemplate],
-    {
-        /**
-         * set `class` option
-         * @returns {this}
-         */
-        class (clsOrSet, value) {
-            if (utility.isStrictObj(clsOrSet)) {
-                clsOrSet = utility.extend({}, clsOrSet);
-            } else if (utility.isStr(clsOrSet) && utility.isFunc(value)) {
-                clsOrSet = { [clsOrSet]: value };
-            }
-
-            this.options = utility.setOptionValue(this.options, ['class'], clsOrSet, false, true);
-            return this;
-        },
-
-        /**
-         * set `id` option
-         * @returns {this}
-         */
-        id (id) {
-            this.options = utility.setOptionValue(this.options, ['id'], id);
-            return this;
-        },
-
-        /**
-         * set `styles` option
-         * @returns {this}
-         */
-        style (nameOrSet, value) {
-            updateTplKVOption(this, 'styles', nameOrSet, value);
-            return this;
-        },
-
-        /**
-         * set `attrs` option
-         * @returns {this}
-         */
-        attr (nameOrSet, value) {
-            updateTplKVOption(this, 'attrs', nameOrSet, value);
-            return this;
-        },
-
-        /**
-         * set `props` option
-         * @returns {this}
-         */
-        prop (nameOrSet, value) {
-            updateTplKVOption(this, 'props', nameOrSet, value);
-            return this;
-        },
-
-        /**
-         * set `events` handle
-         * @returns {this}
-         */
-        event (nameOrSet, handle) {
-            updateTplKVOption(this, 'events', nameOrSet, handle, true);
-            return this;
-        }
-    }
-);
 
 /**
  * special placeholder template that is used to insert custom templates into template tree at compile time

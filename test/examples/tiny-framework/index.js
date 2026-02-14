@@ -200,22 +200,22 @@ contentTree.render();
 fluent.new({
     elm: '.controller',
     template: [
-        builder.Button('change title', { events: { click: (vn, evt) => {
+        builder.Button('change title', (vn, evt) => {
             model.pageIndex++;
             headerTree.render();
-        } } }),
-        builder.Button('toggle article', { events: { click: (vn, evt) => {
+        }),
+        builder.Button('toggle article', (vn, evt) => {
             model.showArticle = !model.showArticle;
             contentTree.render();
-        } } }),
-        builder.Button('toggle highlight', { events: { click: (vn, evt) => {
+        }),
+        builder.Button('toggle highlight', (vn, evt) => {
             model.highlightArticle = !model.highlightArticle;
             contentTree.render();
-        } } }),
-        builder.Button('add tag', { events: { click: (vn, evt) => {
+        }),
+        builder.Button('add tag', (vn, evt) => {
             model.tags.push(`tag ${model.tags.length + 1}`);
             contentTree.render();
-        } } })
+        })
     ]
 });
 

@@ -161,6 +161,31 @@ function readParametrizedTemplateArgs (args, start, paramCount) {
     return [tplArgs, options];
 }
 
+/**
+ * set key-value type option for given template
+ *
+ * @param {VTemplate} tpl  the template to set option
+ * @param {String} option  root option name
+ * @param {String|Record<String, any>} nameOrSet  sub option name or option value set
+ * @param {any=} value  sub option value if sub option name provided
+ * @param {Boolean=} arrayValue  whether option value should be treat as array
+ */
+export function setTemplateKVOption (tpl, option, nameOrSet, value, arrayValue) {
+    if (utility.isStr(nameOrSet)) {
+        tpl.options = utility.setOptionValue(tpl.options, [option, nameOrSet], value);
+    } else if (utility.isObj(nameOrSet)) {
+        tpl.options = utility.setOptionValue(tpl.options, [option], {}, true);
+
+        var optionSet = tpl.options[option];
+        utility.entries(nameOrSet)
+            .forEach(entry => {
+                utility.setOptionValue(optionSet, [entry[0]], entry[1], false, !!arrayValue);
+            });
+    } else {
+        throw new TypeError(`invalid value for [${option}] option`);
+    }
+}
+
 //#endregion
 
 //#region  dom nodes template builder
