@@ -17,16 +17,26 @@ import { CallbackBuilder } from '../service/template';
 /**
  * compile template into VNode
  *
- * @param {VTemplate|VTemplate[]} template  the input template
- * @returns {VNode|VNode[]}
+ * @overload
+ * @param {VTemplate} template  the input template
+ * @param {VNode?} srcNode  the node that triggers compilation
+ * @returns {VNode}
+ *
+ *
+ * @overload
+ * @param {VTemplate[]} template  the input template
+ * @param {VNode?} srcNode  the node that triggers compilation
+ * @returns {VNode[]}
  */
-export function compileTemplate (template) {
+export function compileTemplate (template, srcNode) {
+    var tCompiler = compiler.loadCompiler(srcNode);
+
     if (template instanceof VTemplate) {
-        return compiler.compile(template);
+        return tCompiler.compile(template);
     } else if (utility.isArr(template)) {
         return template.map(t => {
             if (t instanceof VTemplate) {
-                return compiler.compile(t);
+                return tCompiler.compile(t);
             } else {
                 throw new TypeError("template input contains invalid item");
             }
@@ -37,9 +47,17 @@ export function compileTemplate (template) {
 }
 
 /**
+ * @typedef FluentTreeOptions
+ * @property {Element|DocumentFragment|String=} elm  target location to append fluent tree
+ * @property {VTemplate|VTemplate[]} template  fluent tree template
+ * @property {Boolean=} render  render fluent tree automatically
+ * @property {Record<String, any>=} context  fluent tree context values
+ */
+
+/**
  * create a new instance of fluent tree
  *
- * @param {Record<String, any>} options  config options
+ * @param {FluentTreeOptions} options  config options
  * @returns {VTree}
  */
 export function createFluentTree (options) {
@@ -51,16 +69,19 @@ export function createFluentTree (options) {
         throw new Error("missing template option");
     }
 
-    // compile content nodes
-    var node = compileTemplate(options.template);
-
     // construct tree
     var tree = new VTree();
-    if (utility.isArr(node)) {
-        for (let n of node) {
-            tree.addChild(n);
-        }
-    } else {
+
+    if (options.context) {
+        tree.ctx = options.context;
+    }
+
+    // compile content nodes
+    var templates = utility.ensureArr(options.template);
+    var nodes = compileTemplate(templates, tree);
+
+    // assemble tree
+    for (let node of nodes) {
         tree.addChild(node);
     }
 
@@ -86,6 +107,7 @@ export function createFluentTree (options) {
  * @property {(function(Text, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertText  text node conversion method
  * @property {(function(Comment, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertComment  comment node conversion method
  * @property {any=} state  custom stete object
+ * @property {Record<String, any>=} context  context values for created fluent tree
  */
 
 /**
@@ -240,7 +262,8 @@ export function fluentTreeFromDOM (domNode, options) {
     // create fluent tree
     return createFluentTree({
         elm: domNode.parentNode,
-        template: tpl
+        template: tpl,
+        context: options.context
     });
 }
 

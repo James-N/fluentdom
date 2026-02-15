@@ -863,14 +863,3 @@ export function useCompilerExtension (factory) {
 
     COMPILER_EXTENSIONS.push(factory);
 }
-
-/**
- * compile the given template
- *
- * @param {VTemplate} template
- * @returns {VNode}
- */
-export function compile (template) {
-    var compiler = loadCompiler(null);
-    return compiler.compile(template);
-}
