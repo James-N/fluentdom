@@ -177,7 +177,7 @@ function convertElementNode (node, parentTpl, state) {
     vnext = vElmTpl;
 
     return {
-        tpl: vtpl,
+        template: vtpl,
         next: vnext,
         state: newState
     };
@@ -185,14 +185,15 @@ function convertElementNode (node, parentTpl, state) {
 
 var headerTree = fluent.fromDOM('.header', {
     convertText: convertTextNode,
-    fixedRoot: true
+    convertElement: elm => new core.VElementTemplate(elm.tagName, { domNode: elm })
 });
 
 headerTree.render();
 
 var contentTree = fluent.fromDOM('.content', {
     convertText: convertTextNode,
-    convertElement: convertElementNode
+    convertElement: convertElementNode,
+    state: {}
 });
 
 contentTree.render();

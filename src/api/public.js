@@ -74,40 +74,62 @@ export function createFluentTree (options) {
 }
 
 /**
- * @param {Node|String} input
- * @returns {Node?}
+ * @typedef DOMConvertResult
+ * @property {VTemplate?} template
+ * @property {VTemplate?} next
+ * @property {any} state
  */
-function getDOMNode (input) {
-    if (utility.isDOMNode(input)) {
-        return input;
-    } else if (utility.isStr(input)) {
-        return DOM.query(input);
-    } else {
-        throw new TypeError(`invalid element selector [${input}]`);
-    }
-}
+
+/**
+ * @typedef DOM2TemplateOptions
+ * @property {(function(Element, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertElement  element node conversion method
+ * @property {(function(Text, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertText  text node conversion method
+ * @property {(function(Comment, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertComment  comment node conversion method
+ * @property {any=} state  custom stete object
+ */
 
 /**
  * convert existing dom node tree into vtemplate tree
  *
- * @param {Node} domNode  the root dom node
- * @param {Record<String, any>=} options
+ * @param {Node|String} domNode  the root dom node
+ * @param {DOM2TemplateOptions=} options
  *
  * @returns {VTemplate}
  */
 export function templateFromDOM (domNode, options) {
-    function convertTextDefault (domNode, parentTpl, state) {
-        if (domNode.textContent.trim() == '') {
+    /**
+     * @param {Text} textNode
+     * @param {VTemplate?} parentTpl
+     * @param {any} state
+     *
+     * @returns {VTemplate?}
+     */
+    function convertTextDefault (textNode, parentTpl, state) {
+        if (textNode.textContent.trim() == '') {
             return null;
         } else {
-            return new VTemplate(NodeType.TEXT, [domNode.textContent]);
+            return new VTemplate(NodeType.TEXT, [textNode.textContent]);
         }
     }
 
-    function convertElmDefault (domNode, parentTpl, state) {
-        return new VElementTemplate(domNode.tagName, { domNode: domNode });
+    /**
+     * @param {Element} elmNode
+     * @param {VTemplate?} parentTpl
+     * @param {any} state
+     *
+     * @returns {VTemplate?}
+     */
+    function convertElmDefault (elmNode, parentTpl, state) {
+        return new VElementTemplate(elmNode.tagName);
     }
 
+    /**
+     * @param {Node} node
+     * @param {VTemplate?} parentTpl
+     * @param {any} state
+     *
+     * @returns {VTemplate?}
+     */
     function convert (node, parentTpl, state) {
         var result, vtpl;
         switch (node.nodeType) {
@@ -120,9 +142,9 @@ export function templateFromDOM (domNode, options) {
                         vtpl = result;
                         vnextTpl = result;
                     } else {
-                        vtpl = result.tpl;
-                        vnextTpl = result.next || null;
-                        state = result.state || null;
+                        vtpl = result.template;
+                        vnextTpl = result.next;
+                        state = result.state;
                     }
 
                     if (vtpl && vnextTpl) {
@@ -144,7 +166,7 @@ export function templateFromDOM (domNode, options) {
                     if (result instanceof VTemplate) {
                         vtpl = result;
                     } else {
-                        vtpl = result.tpl || null;
+                        vtpl = result.template;
                     }
                 } else {
                     vtpl = null;
@@ -158,7 +180,7 @@ export function templateFromDOM (domNode, options) {
                         if (result instanceof VTemplate) {
                             vtpl = result;
                         } else {
-                            vtpl = result.tpl || null;
+                            vtpl = result.template;
                         }
                     } else {
                         vtpl = null;
@@ -170,7 +192,7 @@ export function templateFromDOM (domNode, options) {
             case 9:     // document node
             case 10:    // document type node
             case 11:    // document fragment node
-                throw new Error(`cannot convert node of type [${node.nodeType}]`);
+                throw new Error(`cannot convert DOM node of type [${node.nodeType}]`);
             default:
                 vtpl = null;
                 break;
@@ -179,21 +201,35 @@ export function templateFromDOM (domNode, options) {
         return vtpl;
     }
 
-    domNode = getDOMNode(domNode);
-    if (domNode) {
-        options = utility.extend({ state: {} }, options);
-        // convert dom nodes to vtemplate recursively
-        return convert(domNode, null, options.state);
-    } else {
-        throw new TypeError("cannot locate dom node");
+    /**
+     * @param {Node|String} input
+     * @returns {Node}
+     */
+    function getDOMNode (input) {
+        if (utility.isDOMNode(input)) {
+            return input;
+        } else if (utility.isStr(input)) {
+            var node = DOM.query(input);
+            if (node) {
+                return node;
+            } else {
+                throw new Error(`cannot locate DOM node by selector [${input}]`);
+            }
+        } else {
+            throw new TypeError("invalid DOM node");
+        }
     }
+
+    // convert DOM nodes to vtemplate recursively
+    options = options || {};
+    return convert(getDOMNode(domNode), null, options.state);
 }
 
 /**
- * convert existing dom node tree into fluent tree
+ * convert existing DOM node tree into fluent tree
  *
  * @param {Node} domNode  the root dom node
- * @param {Record<String, any>=} options
+ * @param {DOM2TemplateOptions=} options
  *
  * @returns {VTree}
  */
@@ -201,13 +237,11 @@ export function fluentTreeFromDOM (domNode, options) {
     // create template
     var tpl = templateFromDOM(domNode, options);
 
-    // prepare fluent tree options
-    options = options || {};
-    options.elm = domNode.parentNode;
-    options.template = tpl;
-
     // create fluent tree
-    return createFluentTree(options);
+    return createFluentTree({
+        elm: domNode.parentNode,
+        template: tpl
+    });
 }
 
 /**
