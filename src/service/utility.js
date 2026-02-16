@@ -1,8 +1,7 @@
 import global from './global';
 
-/* -------------------- --- -------------------- */
-// type checking & manipulation utilities
-/* -------------------- --- -------------------- */
+
+//#region  type checking & manipulation utilities
 
 const isNullOrUndef = o => o === null || o === undefined;
 const isStr = s => typeof s == 'string';
@@ -21,8 +20,7 @@ const isDocumentFragment = n => n instanceof global.DocumentFragment;
 
 /**
  * subclass checking, only works for ES6 `class` syntax based classes
- *
- * @returns {Boolean}
+ *K
  */
 function isSubclass (cls1, cls2) {
     if (!isFunc(cls1) || !cls1.prototype) {
@@ -46,7 +44,7 @@ function isSubclass (cls1, cls2) {
  * @template T
  *
  * @param {T?} obj
- * @returns {(new () => T)?}
+ * @returns {(new function(...any): T)?}
  */
 function classOf (obj) {
     return (obj && obj.constructor) || null;
@@ -65,21 +63,21 @@ function baseClassOf (cls) {
 
 /**
  * @param {any} value
- * @param {String} identiry
+ * @param {String} identifier
  */
-function validString (value, identiry) {
+function validString (value, identifier) {
     if (!isStr(value)) {
-        throw new TypeError(`'${identiry}' must be string`);
+        throw new TypeError(`'${identifier}' must be string`);
     }
 
     if (value.length === 0) {
-        throw new Error(`'${identiry}' is empty string`);
+        throw new Error(`'${identifier}' is empty string`);
     }
 }
 
-/* -------------------- --- -------------------- */
-// object manipulation utilities
-/* -------------------- --- -------------------- */
+//#endregion
+
+//#region  object manipulation utilities
 
 const extendObject = Object.assign || function (target, ...sources) {
     if (isNullOrUndef(target)) {
@@ -212,9 +210,9 @@ function simpleDeepClone (obj) {
     }
 }
 
-/* -------------------- --- -------------------- */
-// string manipulation utilities
-/* -------------------- --- -------------------- */
+//#endregion
+
+//#region  string manipulation utilities
 
 /**
  * convert kebab-case string to camelCase
@@ -246,9 +244,9 @@ function camel2KebabCase (str) {
     return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-/* -------------------- --- -------------------- */
-// array manipulation utilities
-/* -------------------- --- -------------------- */
+//#endregion
+
+//#region  array manipulation utilities
 
 /**
  * perform stable sort on array
@@ -288,9 +286,9 @@ function ensureArr (value, converter) {
     return isArr(value) ? value : (converter ? converter(value) : [value]);
 }
 
-/* -------------------- --- -------------------- */
-// utility namespace
-/* -------------------- --- -------------------- */
+//#endregion
+
+//#region  utility namespace
 
 export default {
     isNullOrUndef: isNullOrUndef,
@@ -328,3 +326,5 @@ export default {
     lastArrItem: lastArrItem,
     ensureArr: ensureArr
 };
+
+//#endregion

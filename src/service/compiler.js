@@ -22,34 +22,33 @@ import { CallbackBuilder } from './template';
 
 
 /**
- * store context information drution compilation
+ * @typedef CompileContextState
+ * @property {VNode?} node  parent node
+ * @property {Record<String, any>?} context  parent context values
+ * @property {VNode?} depNode  current depdency node
+ */
+
+/**
+ * track context information drution compilation
  */
 class CompileContext {
     constructor () {
         /**
-         * @type {ReturnType<typeof CompileContext.prototype.pushState>[]}
+         * @type {CompileContextState[]}
          */
         this.stack = [];
     }
 
     /**
      * @param {VNode?} node
+     * @returns {CompileContextState}
      */
     pushState (node) {
         var state;
         if (node) {
             state = {
-                /**
-                 * @type {VNode?}
-                 */
                 node: node,
-                /**
-                 * @type {Record<String, any>?}
-                 */
                 context: node.ctx,
-                /**
-                 * @type {VNode?}
-                 */
                 depNode: NODE.isDepNode(node) ? node : (node.dep || this.getDepNode())
             };
         } else {
@@ -66,7 +65,7 @@ class CompileContext {
     }
 
     /**
-     * @returns {ReturnType<typeof CompileContext.prototype.pushState>}
+     * @returns {CompileContextState?}
      */
     popState () {
         return this.stack.pop();

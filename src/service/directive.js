@@ -2,7 +2,7 @@ import utility from './utility';
 import Directive from '../model/Directive';
 
 /**
- * @typedef {(new (any=) => Directive)|((any=) => Directive)} DriectiveFactory
+ * @typedef {(new function(any=): Directive)|(function(any=): Directive)} DriectiveFactory
  */
 
 /**
@@ -58,7 +58,7 @@ class DirectiveDelegate extends Directive {
  * @param {String} name  directive name
  * @param {Record<String, any>} impl  directive implementation
  *
- * @returns {(any) => DirectiveDelegate}
+ * @returns {function(any): DirectiveDelegate}
  */
 function getDelegateFactory (name, impl) {
     return function () {

@@ -15,7 +15,7 @@ import { CallbackBuilder } from '../service/template';
 
 
 /**
- * compile template into VNode
+ * compile template to VNode
  *
  * @overload
  * @param {VTemplate} template  the input template
@@ -55,7 +55,7 @@ export function compileTemplate (template, srcNode) {
  */
 
 /**
- * create a new instance of fluent tree
+ * create a new fluent tree instance
  *
  * @param {FluentTreeOptions} options  config options
  * @returns {VTree}
@@ -106,14 +106,14 @@ export function createFluentTree (options) {
  * @property {(function(Element, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertElement  element node conversion method
  * @property {(function(Text, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertText  text node conversion method
  * @property {(function(Comment, VTemplate?, any):VTemplate|DOMConvertResult|null)=} convertComment  comment node conversion method
- * @property {any=} state  custom stete object
+ * @property {any=} state  custom state object
  * @property {Record<String, any>=} context  context values for created fluent tree
  */
 
 /**
- * convert existing dom node tree into vtemplate tree
+ * convert existing DOM node tree into virtual template tree
  *
- * @param {Node|String} domNode  the root dom node
+ * @param {Node|String} domNode  the root DOM node
  * @param {DOM2TemplateOptions=} options
  *
  * @returns {VTemplate}
@@ -278,12 +278,12 @@ export const defineComponent = component.defineComponent;
 export const registerDirective = directive.registerDirective;
 
 /**
- * override the internal compiler factory
+ * register extension for compiler globally
  */
 export const useCompilerExtension = compiler.useCompilerExtension;
 
 /**
- * expression factory
+ * create expression automatically from given value
  */
 export function createExpr (value) {
     return value2Expr(value);
@@ -296,7 +296,7 @@ createExpr.ref = function (value) { return value instanceof RefExpr ? new RefExp
 createExpr.comp = function (evaluator, args, defaultValue) { return new CompoundExpr(evaluator, args.map(value2Expr), defaultValue); };
 
 /**
- * callback option builder
+ * create callback option builder
  *
  * @param {Function} callback
  */
