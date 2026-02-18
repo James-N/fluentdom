@@ -40,7 +40,7 @@ window.addEventListener('DOMContentLoaded', evt => {
                     styles: {
                         cursor: vn => vn.ctx._node.children.length > 0 ? 'pointer' : null
                     },
-                    events: {
+                    listeners: {
                         click: (evt, vn) => {
                             evt.stopPropagation();
 
@@ -56,8 +56,8 @@ window.addEventListener('DOMContentLoaded', evt => {
                     FB.Dynamic(vn => treeNodeTpl),
 
                     {
-                        hooks: {
-                            repeating: (msg, cvn, value, index) => {
+                        events: {
+                            repeating: (evt, cvn, value, index) => {
                                 cvn.ctx._node = value;
                             }
                         }
@@ -69,8 +69,8 @@ window.addEventListener('DOMContentLoaded', evt => {
             {
                 class: 'tree-node',
                 context: { open: true },
-                hooks: {
-                    nodeInit: msg => {
+                events: {
+                    $init: msg => {
                         console.log(msg);
                     }
                 }

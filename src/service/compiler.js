@@ -1,4 +1,5 @@
 import NodeType from '../model/NodeType';
+import LifecycleEvents from '../enum/LifecycleEvents';
 import VNode from '../model/VNode';
 import VText from '../model/VText';
 import VElement from '../model/VElement';
@@ -118,7 +119,7 @@ const FALLTHROUGH_OPTION_PREFIX = 'inherit:';
 const FALLTHROUGH_TARGET_OPTION = 'inherit';
 const COMPONENT_PROP_OPTION_PREFIX = 'prop:';
 const DIRECTIVE_OPTION_PREFIX = 'directive:';
-const ELM_TEMPLATE_SPECIAL_OPTIONS = new Set(['id', 'attrs', 'props', 'styles', 'class']);
+const ELM_TEMPLATE_SPECIAL_OPTIONS = new Set(['id', 'attrs', 'props', 'styles', 'class', 'listeners']);
 
 //#endregion
 
@@ -145,7 +146,7 @@ function scanEventOptions (options, receiver) {
 }
 
 const SMART_MERGE_EXTEND_OPTIONS = new Set(['attrs', 'props', 'styles', 'context']);
-const SMART_MERGE_EVENT_OPTIONS = new Set(['events', FALLTHROUGH_OPTION_PREFIX + 'events', 'hooks']);
+const SMART_MERGE_EVENT_OPTIONS = new Set(['events', 'listeners']);
 
 /**
  * @param {Record<String, any>?} opt1
@@ -349,16 +350,16 @@ export class Compiler {
             // set basic infos
             this._setNodeBasicProps(node, tpl.options);
 
-            // register hooks
-            this._attachNodeHooks(node, tpl.options);
+            // register event handlers
+            this._attachNodeEvents(node, tpl.options);
 
             // attach directives to node
             if (directives.length > 0) {
                 this._configNodeByDirectives(node, directives);
             }
 
-            // invoke node init hook
-            node.invokeHook('nodeInit');
+            // trigger node init event
+            node.emit(LifecycleEvents.INIT);
 
             return node;
         } else {
@@ -451,11 +452,11 @@ export class Compiler {
      * @param {VNode} node
      * @param {Record<String, any>} options
      */
-    _attachNodeHooks (node, options) {
-        var hooks = utility.getOptionValue(options, 'hooks', null);
-        if (hooks) {
-            scanEventOptions(hooks, (name, hook, flags) => {
-                node.hook(name, hook, flags);
+    _attachNodeEvents (node, options) {
+        var evts = utility.getOptionValue(options, 'events', null);
+        if (evts) {
+            scanEventOptions(evts, (name, handler, flags) => {
+                node.on(name, handler, flags);
             });
         }
     }
@@ -550,10 +551,10 @@ export class Compiler {
                 });
             }
 
-            var events = options.events;
-            if (events) {
-                scanEventOptions(events, (name, handler, flags) => {
-                    node.on(name, handler, flags);
+            var evtListeners = options.listeners;
+            if (evtListeners) {
+                scanEventOptions(evtListeners, (name, handler, flags) => {
+                    node.listen(name, handler, flags);
                 });
             }
         }
@@ -788,7 +789,7 @@ export class Compiler {
         }
 
         // schedule initialization
-        componentNode.hook('nodeInit', () => {
+        componentNode.on(LifecycleEvents.INIT, () => {
             if (componentNode instanceof VInlineComponent) {
                 // invoke init function for inline component
                 var init = cdef.node.init;
