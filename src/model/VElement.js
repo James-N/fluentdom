@@ -1,5 +1,5 @@
 import VNode from './VNode';
-import NodeType from './NodeType';
+import NodeType from '../enum/NodeType';
 import LifecycleEvents from '../enum/LifecycleEvents';
 import EventTable from './internal/EventTable';
 import { Expr, DynExpr, ConstExpr } from './Expr';

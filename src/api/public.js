@@ -1,6 +1,6 @@
 import VTree from '../model/VTree';
 import VNode from '../model/VNode';
-import NodeType from '../model/NodeType';
+import NodeType from '../enum/NodeType';
 import { VTemplate, VElementTemplate } from '../model/VTemplate';
 import { ConstExpr, DynExpr, RefExpr, CompoundExpr } from '../model/Expr';
 import MethodExtension from '../model/internal/MethodExtension';

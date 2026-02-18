@@ -1,4 +1,4 @@
-import NodeType from './NodeType';
+import NodeType from '../enum/NodeType';
 import VNode from './VNode';
 import { VTemplate } from './VTemplate';
 import { Expr } from './Expr';

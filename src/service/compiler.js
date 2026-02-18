@@ -1,4 +1,4 @@
-import NodeType from '../model/NodeType';
+import NodeType from '../enum/NodeType';
 import LifecycleEvents from '../enum/LifecycleEvents';
 import VNode from '../model/VNode';
 import VText from '../model/VText';

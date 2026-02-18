@@ -1,4 +1,4 @@
-import NodeType from '../model/NodeType';
+import NodeType from '../enum/NodeType';
 import Event from '../model/Event';
 import VNode from '../model/VNode';
 import VElement from '../model/VElement';

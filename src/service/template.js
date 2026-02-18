@@ -1,4 +1,4 @@
-import NodeType from '../model/NodeType';
+import NodeType from '../enum/NodeType';
 import VText from '../model/VText';
 import { VTemplate, VElementTemplate, VComponentTemplate, VIfTemplate, VSlotTemplate } from '../model/VTemplate';
 import { Expr } from '../model/Expr';

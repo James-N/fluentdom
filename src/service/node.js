@@ -1,4 +1,4 @@
-import NodeType from '../model/NodeType';
+import NodeType from '../enum/NodeType';
 import VNode from '../model/VNode';
 
 import utility from './utility';

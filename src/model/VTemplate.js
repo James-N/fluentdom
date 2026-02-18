@@ -1,4 +1,4 @@
-import NodeType from './NodeType';
+import NodeType from '../enum/NodeType';
 import MethodExtension from './internal/MethodExtension';
 
 import utility from '../service/utility';
