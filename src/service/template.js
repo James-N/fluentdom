@@ -377,7 +377,7 @@ export function buildButton (...args) {
     }
 
     if (cb) {
-        options = utility.setOptionValue(options, ['listeners', 'click'], cb);
+        options = utility.setOptionValue(options, ['events', 'click'], cb);
     }
 
     return createElementTemplate('button', children, options);

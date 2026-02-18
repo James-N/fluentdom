@@ -68,11 +68,11 @@ export class VTemplate extends MethodExtension {
     }
 
     /**
-     * register event callback
+     * register `hooks` callback
      * @returns {this}
      */
-    on (nameOrSet, callback) {
-        setTemplateKVOption(this, 'events', nameOrSet, callback, true);
+    hook (nameOrSet, callback) {
+        setTemplateKVOption(this, 'hooks', nameOrSet, callback, true);
         return this;
     }
 
@@ -138,8 +138,8 @@ export class VTemplate extends MethodExtension {
         if (src.options) {
             var clonedOptions = utility.extend({}, src.options);
 
-            if (src.options.events) {
-                clonedOptions.events = utility.simpleDeepClone(src.options.events);
+            if (src.options.hooks) {
+                clonedOptions.hooks = utility.simpleDeepClone(src.options.hooks);
             }
 
             this.options = clonedOptions;
@@ -254,7 +254,7 @@ class VAbstractElementTemplate extends VTemplate {
                 this.options.id = src.options.id;
             }
 
-            ['styles', 'attrs', 'props', 'class', 'listeners'].forEach(opt => {
+            ['styles', 'attrs', 'props', 'class', 'events'].forEach(opt => {
                 if (src.options[opt]) {
                     this.options[opt] = utility.simpleDeepClone(src.options[opt]);
                 }

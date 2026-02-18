@@ -1,6 +1,7 @@
 import NodeType from './NodeType';
 import VNode from './VNode';
 import { VTemplate } from './VTemplate';
+import EventTable from './internal/EventTable';
 
 
 /**
@@ -20,6 +21,11 @@ class VComponent extends VNode {
          * @type {String}
          */
         this.name = name || '';
+
+        /**
+         * component events
+         */
+        this._events = new EventTable('VComponent::events');
     }
 
     /**
@@ -40,6 +46,37 @@ class VComponent extends VNode {
      */
     init () {
         // component post-initialization
+    }
+
+    /**
+     * register event
+     *
+     * @param {String} name  evnet name
+     * @param {Function} handler  the event handler function
+     * @param {Record<String, Boolean>=} flags  event flags
+     */
+    on (name, handler, flags) {
+        this._events.add(name, handler, flags);
+    }
+
+    /**
+     * deregister event
+     *
+     * @param {String} name  event name
+     * @param {Function=} handler  the event handler function to remove
+     */
+    off (name, handler) {
+        this._events.remove(name, handler);
+    }
+
+    /**
+     * emit event
+     *
+     * @param {String} name  event name
+     * @param  {...any} args  event arguments
+     */
+    emit (name, ...args) {
+        this._events.invoke(name, this, ...args);
     }
 }
 

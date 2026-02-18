@@ -19,7 +19,7 @@ fluent.addDirective('model', function (vn, callback) {
         onChange: null
     };
 
-    vn.listen('input', evt => {
+    vn.on('input', evt => {
         var inputVal = vn.domNode.value;
         if (modelObj._value !== inputVal) {
             modelObj._value = inputVal;
@@ -54,7 +54,7 @@ var tree = fluent.new({
             }),
             FB.Button('Add', {
                 attrs: { title: 'add new item', disabled: vn => !data.input || !data.input.get() },
-                listeners: {
+                events: {
                     click: evt => {
                         data.items.push(data.input.get());
                         data.input.set('');
@@ -76,7 +76,7 @@ var tree = fluent.new({
                         attrs: {
                             title: 'remove item'
                         },
-                        listeners: {
+                        events: {
                             click: (evt, vn) => {
                                 data.items.splice(vn.ctx.$index, 1);
                                 tree.render();

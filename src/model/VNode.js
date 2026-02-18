@@ -1,6 +1,5 @@
 import NodeType from './NodeType';
-import LifecycleEvents from '../enum/LifecycleEvents';
-import Event from './Event';
+import HookMessage from './HookMessage';
 import EventTable from './internal/EventTable';
 
 import * as NODE from '../service/node';
@@ -22,7 +21,7 @@ class VNode {
         this.nodeType = '';
 
         /**
-         * the actual DOM node(s)
+         * the actual dom node(s)
          * @type {Node|Node[]?}
          */
         this.domNode = null;
@@ -59,15 +58,15 @@ class VNode {
 
         /**
          * directives attached to this node
+         *
          * @type {Record<String, import('./Directive').default>}
          */
         this.directives = {};
 
         /**
-         * node event table
-         * @type {EventTable}
+         * hook registration
          */
-        this._events = new EventTable('VNode::events');
+        this._hooks = new EventTable('VNode::hook');
 
         /**
          * node flag table, this attribute shall only be accessed by internal functions
@@ -256,101 +255,64 @@ class VNode {
         this.parent = null;
         this.domNode = null;
 
-        // trigger `DESTROY` event
-        this.emit(LifecycleEvents.DESTROY);
+        // invoke destroy hooks
+        this.invokeHook('destroy');
     }
 
     /**
-     * register event handler
+     * register hook function
      *
-     * @param {String} name  event name
-     * @param {Function} handler  the event handler function
-     * @param {import('./internal/EventTable').EventFlags=} flags  event flags
+     * @param {String} name  hook name
+     * @param {Function} handler  the hook handler function
+     * @param {Record<String, Boolean>=} flags  hook flags
      */
-    on (name, handler, flags) {
+    hook (name, handler, flags) {
+        utility.ensureValidString(name, 'hook name');
+
         if (!utility.isFunc(handler)) {
-            throw new TypeError("event handler must be function");
+            throw new TypeError("hook handler must be function");
         }
 
-        this._events.add(name, handler, flags);
+        this._hooks.add(name, handler, flags);
     }
 
     /**
-     * deregister event handler(s)
+     * unregister hook function
      *
-     * @param {String} name  event name
-     * @param {Function=} handler  the event handler function to remove, all handlers will be removed if omitted
+     * @param {String} name  hook name
+     * @param {Function=} hook  the hook function
      *
      * @returns {Boolean}
      */
-    off (name, handler) {
-        return this._events.remove(name, handler);
+    unhook (name, hook) {
+        return this._hooks.remove(name, hook);
     }
 
     /**
-     * emit event
+     * invoke hook handler
      *
-     * @param {String} name  event name  event name
-     * @param {Record<String, any>?=} options  optional event options
-     * @param {...any} args  event arguments
+     * @param {String} name  hook name
+     * @param {HookMessage|Record<String, any>?=} msg  an optional pre-generated hook message
+     * @param  {...any} args  additional args
      */
-    emit (name, options, ...args) {
-        /**
-         * @param {VNode} node
-         * @param {Event} evt
-         * @param {any[]} args
-         */
-        function dispatchEvent (node, evt) {
-            while (node && evt.$dispatch) {
-                node._events.invoke(name, node, evt, ...args);
-                node = node.parent;
+    invokeHook (name, msg, ...args) {
+        // valid & construct hook message if necessary
+        if (!(msg instanceof HookMessage)) {
+            if (utility.isNullOrUndef(msg)) {
+                msg = new HookMessage(this);
+            } else if (utility.isStrictObj(msg)) {
+                msg = new HookMessage(this, msg);
+            } else {
+                throw new TypeError("invalid hook msg type");
             }
         }
 
-        /**
-         * @param {VNode[]} nodes
-         * @param {Event} evt
-         */
-        function broadcastEvent (nodes, evt) {
-            nodes = nodes.slice(0).reverse();
-            var node;
-            while (evt.$broadcast && (node = nodes.pop())) {
-                node._events.invoke(name, node, evt, ...args);
+        // invoke hook on this node
+        this._hooks.invoke(name, this, msg, ...args);
 
-                for (var i = node.children.length - 1; i >= 0; i--) {
-                    nodes.push(node.children[i]);
-                }
-            }
-        }
-
-        // create and config event
-        var evt = new Event(this);
-
-        if (options) {
-            if (options.dispatch && options.broadcast) {
-                throw new Error("cannot emit event that both dispatches and broadcasts");
-            }
-
-            if (options.dispatch) {
-                evt.$dispatch = true;
-            }
-
-            if (options.broadcast) {
-                evt.$broadcast = true;
-            }
-        }
-
-        // invoke event handler of this node
-        this._events.invoke(name, this, evt, ...args);
-
-        // dispatch event
-        if (evt.$dispatch) {
-            dispatchEvent(this.parent, evt);
-        }
-
-        // broadcast event
-        if (evt.$broadcast) {
-            broadcastEvent(this.children, evt);
+        // broadcast message to child nodes if necessary
+        if (msg.broadcast) {
+            this.children.forEach(c => c.invokeHook(name, msg, ...args));
         }
     }
 }

@@ -1,6 +1,5 @@
 import VNode from './VNode';
 import NodeType from './NodeType';
-import LifecycleEvents from '../enum/LifecycleEvents';
 import EventTable from './internal/EventTable';
 import { Expr, DynExpr, ConstExpr } from './Expr';
 
@@ -87,16 +86,14 @@ class VElement extends VNode {
 
         /**
          * element event registration
-         *
-         * @type {EventTable}
          */
-        this._elmEvents = new EventTable('VElement::events');
+        this._events = new EventTable('VElement::events');
         /**
          * element event trigger callback table
          *
          * @type {Record<String, Function>}
          */
-        this._elmEventTriggers = {};
+        this._eventTriggers = {};
     }
 
     /**
@@ -112,8 +109,8 @@ class VElement extends VNode {
 
             // update reflow flag
             this.$flags.reflow = true;
-            // trigger `DOM_CREATED` event
-            this.emit(LifecycleEvents.DOM_CREATED);
+            // trigger `domNodeCreated` hook
+            this.invokeHook('domNodeCreated');
 
             return elm;
         } else {
@@ -122,19 +119,19 @@ class VElement extends VNode {
     }
 
     _bindElmEvents (elm) {
-        utility.entries(this._elmEventTriggers)
+        utility.entries(this._eventTriggers)
             .forEach(([evt, cb]) => {
                 elm.addEventListener(evt, cb);
             });
     }
 
     _discardElmEvents (elm) {
-        utility.entries(this._elmEventTriggers)
+        utility.entries(this._eventTriggers)
             .forEach(([evt, cb]) => {
                 elm.removeEventListener(evt, cb);
             });
 
-        this._elmEvents.clear();
+        this._events.clear();
     }
 
     /**
@@ -346,19 +343,19 @@ class VElement extends VNode {
      *
      * @param {String} name  event name
      * @param {Function} handler  event handler
-     * @param {import('./internal/EventTable').EventFlags} flags  handler flags
+     * @param {Record<String, Boolean>=} flags  handler flags
      */
-    listen (name, handler, flags) {
+    on (name, handler, flags) {
         /**
          * @param {VElement} self
          */
         function makeTriggerCallback (self) {
             function triggerCallback (evt) {
-                self._elmEvents.invoke(name, self, evt, self);
+                self._events.invoke(name, self, evt, self);
 
-                if (self._elmEvents.removeSetIfEmpty(name)) {
+                if (self._events.removeSetIfEmpty(name)) {
                     // delete cached trigger callback
-                    delete self._elmEventTriggers[name];
+                    delete self._eventTriggers[name];
                     // unbind trigger callback from dom node
                     self.domNode.removeEventListener(name, triggerCallback);
                 }
@@ -373,12 +370,12 @@ class VElement extends VNode {
             throw new TypeError("handler must be function");
         }
 
-        var evtSet = this._elmEvents.add(name, handler, flags);
+        var evtSet = this._events.add(name, handler, flags);
         if (evtSet.handlers.length == 1) {
             // create trigger callback
             var triggerCb = makeTriggerCallback(this);
             // cache trigger callback
-            this._elmEventTriggers[name] = triggerCb;
+            this._eventTriggers[name] = triggerCb;
             // bind trigger callback to dom node if necessary
             if (this.domNode) {
                 this.domNode.addEventListener(name, triggerCb);
@@ -394,13 +391,13 @@ class VElement extends VNode {
      *
      * @returns {Boolean}
      */
-    unlisten (name, handler) {
+    off (name, handler) {
         utility.ensureValidString(name, 'name');
 
-        if (this._elmEvents.remove(name, handler) && this._elmEvents.removeSetIfEmpty()) {
-            var triggerCb = this._elmEventTriggers[name];
+        if (this._events.remove(name, handler) && this._events.removeSetIfEmpty()) {
+            var triggerCb = this._eventTriggers[name];
             // delete cached trigger callback
-            delete this._elmEventTriggers[name];
+            delete this._eventTriggers[name];
 
             // unbind trigger callback from dom node if necessary
             if (this.domNode) {

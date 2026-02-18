@@ -102,7 +102,7 @@ function convertElementNode (node, parentTpl, state) {
         }
     }
 
-    var tplOpt = { domNode: state.nobinding ? null : node, class: {}, listeners: {} };
+    var tplOpt = { domNode: state.nobinding ? null : node, class: {}, events: {} };
     var newState = state;
 
     var vtpl = null, vnext = null;
@@ -137,8 +137,8 @@ function convertElementNode (node, parentTpl, state) {
                         core.NodeType.REPEAT,
                         [vn => model[repeatInfo[1]]],
                         {
-                            events: {
-                                repeating: (evt, cvn, value, index) => {
+                            hooks: {
+                                repeating: (vn, cvn, value, index) => {
                                     cvn.ctx[repeatInfo[0]] = value;
                                 }
                             }
@@ -158,8 +158,8 @@ function convertElementNode (node, parentTpl, state) {
                 break;
             case 'v:click':
                 let clickHandle = (key => (vn, evt) => model[key].call(null, vn, evt))(attr.value);
-                tplOpt.listeners.click = tplOpt.listeners.click || [];
-                tplOpt.listeners.click.push(clickHandle);
+                tplOpt.events.click = tplOpt.events.click || [];
+                tplOpt.events.click.push(clickHandle);
                 break;
         }
     }

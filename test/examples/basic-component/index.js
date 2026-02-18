@@ -70,8 +70,8 @@ fluent.new({
         //     CardBuilder('', ''),
 
         //     {
-        //         events: {
-        //             repeating: (evt, cvn, value, index) => {
+        //         hooks: {
+        //             repeating: (vn, cvn, value, index) => {
         //                 var card = cvn.children[0];
         //                 card.title = value.title;
         //                 card.content = value.content;
@@ -86,7 +86,7 @@ fluent.new({
                     ctx.$value.title,
                     ctx.$value.content,
                     FB.Button(`action ${ctx.$index+1}`, {
-                        listeners: { click: (evt, vn) => vn.dep.execAction(ctx.$value.data) },
+                        events: { click: (evt, vn) => vn.dep.execAction(ctx.$value.data) },
                         autoDisable: vn => !ctx.$value.hasAction
                     })
                 )
