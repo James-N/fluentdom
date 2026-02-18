@@ -1,6 +1,6 @@
 import NodeType from './NodeType';
+import LifecycleEvents from '../enum/LifecycleEvents';
 import VNode from './VNode';
-import HookMessage from './HookMessage';
 
 import utility from '../service/utility';
 import * as DOM from '../service/dom';
@@ -65,8 +65,8 @@ class VTree extends VNode {
             this.render();
         }
 
-        // invoke mount hook
-        this.invokeHook('mounted', new HookMessage(this, { broadcast: true }));
+        // trigger `MOUNTED` event
+        this.emit(LifecycleEvents.MOUNTED, { broadcast: true });
     }
 
     /**
@@ -86,8 +86,8 @@ class VTree extends VNode {
             emptyNode(this.domNode);
             this.domNode = null;
 
-            // invoke unmount hook
-            this.invokeHook('unmounted', new HookMessage(this, { broadcast: true }));
+            // trigger `UNMOUNTED` event
+            this.emit(LifecycleEvents.UNMOUNTED, { broadcast: true });
         }
     }
 }

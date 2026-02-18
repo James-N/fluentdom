@@ -1,5 +1,6 @@
 import VNode from './VNode';
 import NodeType from './NodeType';
+import LifecycleEvents from '../enum/LifecycleEvents';
 import EventTable from './internal/EventTable';
 import { Expr, DynExpr, ConstExpr } from './Expr';
 
@@ -111,8 +112,8 @@ class VElement extends VNode {
 
             // update reflow flag
             this.$flags.reflow = true;
-            // trigger `domNodeCreated` hook
-            this.invokeHook('domNodeCreated');
+            // trigger `DOM_CREATED` event
+            this.emit(LifecycleEvents.DOM_CREATED);
 
             return elm;
         } else {
@@ -345,7 +346,7 @@ class VElement extends VNode {
      *
      * @param {String} name  event name
      * @param {Function} handler  event handler
-     * @param {Record<String, Boolean>=} flags  handler flags
+     * @param {import('./internal/EventTable').EventFlags} flags  handler flags
      */
     listen (name, handler, flags) {
         /**

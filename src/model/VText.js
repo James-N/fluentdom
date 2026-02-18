@@ -1,4 +1,5 @@
 import NodeType from './NodeType';
+import LifecycleEvents from '../enum/LifecycleEvents';
 import VNode from './VNode';
 import { Expr } from './Expr';
 
@@ -41,8 +42,8 @@ class VText extends VNode {
             this.domNode = DOM.createText('');
             // update reflow flag
             this.$flags.reflow = true;
-            // trigger `domNodeCreated` hook
-            this.invokeHook('domNodeCreated');
+            // trigger `DOM_CREATED` event
+            this.emit(LifecycleEvents.DOM_CREATED);
 
             return this.domNode;
         } else {

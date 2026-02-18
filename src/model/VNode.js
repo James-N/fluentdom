@@ -1,4 +1,5 @@
 import NodeType from './NodeType';
+import LifecycleEvents from '../enum/LifecycleEvents';
 import Event from './Event';
 import EventTable from './internal/EventTable';
 
@@ -255,8 +256,8 @@ class VNode {
         this.parent = null;
         this.domNode = null;
 
-        // invoke destroy hooks
-        this.invokeHook('destroy');
+        // trigger `DESTROY` event
+        this.emit(LifecycleEvents.DESTROY);
     }
 
     /**
