@@ -63,11 +63,11 @@ MethodExtension.extend(
         },
 
         /**
-         * register `events` callback
+         * register element event callback
          * @returns {this}
          */
-        on (nameOrSet, handle) {
-            setTemplateKVOption(this, 'events', nameOrSet, handle, true);
+        listen (nameOrSet, handle) {
+            setTemplateKVOption(this, 'listeners', nameOrSet, handle, true);
             return this;
         }
     }

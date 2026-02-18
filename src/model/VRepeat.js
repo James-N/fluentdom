@@ -232,8 +232,8 @@ class VRepeat extends VNode {
                 this._cache.arr = iter.values();
             }
 
-            // invoke repeat init hooks
-            this.children.forEach(c => this.invokeHook('repeating', null, c, c.ctx.$value, c.ctx.$index));
+            // trigger repeat init event
+            this.children.forEach(c => this.emit('repeating', null, c, c.ctx.$value, c.ctx.$index));
         }
     }
 }

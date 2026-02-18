@@ -1,5 +1,5 @@
 import NodeType from '../model/NodeType';
-import HookMessage from '../model/HookMessage';
+import Event from '../model/Event';
 import VNode from '../model/VNode';
 import VElement from '../model/VElement';
 import VText from '../model/VText';
@@ -19,7 +19,7 @@ import { CompilerExtension } from '../service/compiler';
 
 var API = {
     NodeType,
-    HookMessage,
+    Event,
     VNode,
     VElement,
     VText,
