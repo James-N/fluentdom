@@ -37,7 +37,7 @@ class VDynamic extends VNode {
          *
          * @type {Boolean}
          */
-        this._updated = false;
+        this._computed = false;
 
         /**
          * template expression
@@ -48,7 +48,7 @@ class VDynamic extends VNode {
     }
 
     compute () {
-        if (!this.once || !this._updated) {
+        if (!this.once || !this._computed) {
             if (this._tplExpr.evalChecked(this)) {
                 // clean old child nodes if necessary
                 if (this.children.length > 0) {
@@ -73,7 +73,7 @@ class VDynamic extends VNode {
                 this.$flags.reflow = true;
             }
 
-            this._updated = true;
+            this._computed = true;
         }
     }
 }
