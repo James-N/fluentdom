@@ -86,14 +86,16 @@ class VElement extends VNode {
 
         /**
          * element event registration
+         *
+         * @type {EventTable}
          */
-        this._events = new EventTable('VElement::events');
+        this._elmEvents = new EventTable('VElement::events');
         /**
          * element event trigger callback table
          *
          * @type {Record<String, Function>}
          */
-        this._eventTriggers = {};
+        this._elmEventTriggers = {};
     }
 
     /**
@@ -119,19 +121,19 @@ class VElement extends VNode {
     }
 
     _bindElmEvents (elm) {
-        utility.entries(this._eventTriggers)
+        utility.entries(this._elmEventTriggers)
             .forEach(([evt, cb]) => {
                 elm.addEventListener(evt, cb);
             });
     }
 
     _discardElmEvents (elm) {
-        utility.entries(this._eventTriggers)
+        utility.entries(this._elmEventTriggers)
             .forEach(([evt, cb]) => {
                 elm.removeEventListener(evt, cb);
             });
 
-        this._events.clear();
+        this._elmEvents.clear();
     }
 
     /**
@@ -345,17 +347,17 @@ class VElement extends VNode {
      * @param {Function} handler  event handler
      * @param {Record<String, Boolean>=} flags  handler flags
      */
-    on (name, handler, flags) {
+    listen (name, handler, flags) {
         /**
          * @param {VElement} self
          */
         function makeTriggerCallback (self) {
             function triggerCallback (evt) {
-                self._events.invoke(name, self, evt, self);
+                self._elmEvents.invoke(name, self, evt, self);
 
-                if (self._events.removeSetIfEmpty(name)) {
+                if (self._elmEvents.removeSetIfEmpty(name)) {
                     // delete cached trigger callback
-                    delete self._eventTriggers[name];
+                    delete self._elmEventTriggers[name];
                     // unbind trigger callback from dom node
                     self.domNode.removeEventListener(name, triggerCallback);
                 }
@@ -370,12 +372,12 @@ class VElement extends VNode {
             throw new TypeError("handler must be function");
         }
 
-        var evtSet = this._events.add(name, handler, flags);
+        var evtSet = this._elmEvents.add(name, handler, flags);
         if (evtSet.handlers.length == 1) {
             // create trigger callback
             var triggerCb = makeTriggerCallback(this);
             // cache trigger callback
-            this._eventTriggers[name] = triggerCb;
+            this._elmEventTriggers[name] = triggerCb;
             // bind trigger callback to dom node if necessary
             if (this.domNode) {
                 this.domNode.addEventListener(name, triggerCb);
@@ -391,13 +393,13 @@ class VElement extends VNode {
      *
      * @returns {Boolean}
      */
-    off (name, handler) {
+    unlisten (name, handler) {
         utility.ensureValidString(name, 'name');
 
-        if (this._events.remove(name, handler) && this._events.removeSetIfEmpty()) {
-            var triggerCb = this._eventTriggers[name];
+        if (this._elmEvents.remove(name, handler) && this._elmEvents.removeSetIfEmpty()) {
+            var triggerCb = this._elmEventTriggers[name];
             // delete cached trigger callback
-            delete this._eventTriggers[name];
+            delete this._elmEventTriggers[name];
 
             // unbind trigger callback from dom node if necessary
             if (this.domNode) {
