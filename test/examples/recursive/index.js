@@ -36,7 +36,7 @@ window.addEventListener('DOMContentLoaded', evt => {
                 FB.TEXT(vn => vn.ctx._node.name),
 
                 {
-                    class: 'tree-name',
+                    classes: 'tree-name',
                     styles: {
                         cursor: vn => vn.ctx._node.children.length > 0 ? 'pointer' : null
                     },
@@ -63,11 +63,11 @@ window.addEventListener('DOMContentLoaded', evt => {
                         }
                     }
                 ),
-                { class: { 'tree-list': true, show: vn => vn.ctx.open && vn.ctx._node.children.length > 0 } }
+                { classes: { 'tree-list': true, show: vn => vn.ctx.open && vn.ctx._node.children.length > 0 } }
             ),
 
             {
-                class: 'tree-node',
+                classes: 'tree-node',
                 context: { open: true },
                 events: {
                     $init: msg => {
@@ -82,7 +82,7 @@ window.addEventListener('DOMContentLoaded', evt => {
         template:
             FB.Div(treeNodeTpl)
                 .withOptions({
-                    class: 'tree',
+                    classes: 'tree',
                     context: {
                         _node: treeData
                     }

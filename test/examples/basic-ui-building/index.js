@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', evt => {
                     FB.TEXT(vn => data.btnText),
                     (evt, vn) => window.alert("button clicked"),
                     {
-                        class: 'click-btn',
+                        classes: 'click-btn',
                         attrs: { title: 'click please', disabled: vn => !data.clickable }
                     }
                 ),
@@ -90,7 +90,7 @@ window.addEventListener('DOMContentLoaded', evt => {
                 )
             )
             .withOptions({
-                class: 'test-container',
+                classes: 'test-container',
                 styles: {
                     'padding': '10px'
                 }

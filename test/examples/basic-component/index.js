@@ -41,7 +41,7 @@ var CardBuilder = fluent.newComponent({
         }
     },
     options: {
-        class: vn => 'state-' + vn.dep.state
+        classes: vn => 'state-' + vn.dep.state
     }
 });
 

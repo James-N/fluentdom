@@ -33,7 +33,7 @@ MethodExtension.extend(
                 clsOrSet = { [clsOrSet]: value };
             }
 
-            this.options = utility.setOptionValue(this.options, ['class'], clsOrSet, false, true);
+            this.options = utility.setOptionValue(this.options, ['classes'], clsOrSet, false, true);
             return this;
         },
 

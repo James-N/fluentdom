@@ -102,7 +102,7 @@ function convertElementNode (node, parentTpl, state) {
         }
     }
 
-    var tplOpt = { domNode: state.nobinding ? null : node, class: {}, listeners: {} };
+    var tplOpt = { domNode: state.nobinding ? null : node, classes: {}, listeners: {} };
     var newState = state;
 
     var vtpl = null, vnext = null;
@@ -122,7 +122,7 @@ function convertElementNode (node, parentTpl, state) {
                 if (clsInfo) {
                     Object.entries(clsInfo)
                         .forEach(([key, val]) => {
-                            tplOpt.class[key] = vn => !!model[val];
+                            tplOpt.classes[key] = vn => !!model[val];
                         });
                 }
 
@@ -165,7 +165,7 @@ function convertElementNode (node, parentTpl, state) {
     }
 
     for (let cls of node.classList) {
-        tplOpt.class[cls] = true;
+        tplOpt.classes[cls] = true;
     }
 
     var vElmTpl = new core.VTemplate(core.NodeType.ELEMENT, [node.tagName], tplOpt);

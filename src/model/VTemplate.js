@@ -245,7 +245,7 @@ class VAbstractElementTemplate extends VTemplate {
                 this.options.id = src.options.id;
             }
 
-            ['styles', 'attrs', 'props', 'class', 'listeners'].forEach(opt => {
+            ['styles', 'attrs', 'props', 'classes', 'listeners'].forEach(opt => {
                 if (src.options[opt]) {
                     this.options[opt] = utility.simpleDeepClone(src.options[opt]);
                 }

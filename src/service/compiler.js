@@ -119,7 +119,7 @@ const FALLTHROUGH_OPTION_PREFIX = 'inherit:';
 const FALLTHROUGH_TARGET_OPTION = 'inherit';
 const COMPONENT_PROP_OPTION_PREFIX = 'prop:';
 const DIRECTIVE_OPTION_PREFIX = 'directive:';
-const ELM_TEMPLATE_SPECIAL_OPTIONS = new Set(['id', 'attrs', 'props', 'styles', 'class', 'listeners']);
+const ELM_TEMPLATE_SPECIAL_OPTIONS = new Set(['id', 'attrs', 'props', 'styles', 'classes', 'listeners']);
 
 //#endregion
 
@@ -160,7 +160,7 @@ function smartMergeElmTplOptions (opt1, opt2) {
             if (utility.hasOwn(opt1, key)) {
                 if (SMART_MERGE_EXTEND_OPTIONS.has(key)) {
                     utility.extend(opt1[key], val);
-                } else if (key == 'class') {
+                } else if (key == 'classes') {
                     utility.setOptionValue(opt1, [key], val, false, true);
                 } else if (SMART_MERGE_EVENT_OPTIONS.has(key)) {
                     var val1 = utility.ensureArr(opt1[key]);
@@ -539,7 +539,7 @@ export class Compiler {
                 utility.entries(styles).forEach(e => node.setStyle(e[0], e[1]));
             }
 
-            var classes = options.class;
+            var classes = options.classes;
             if (classes) {
                 classes = utility.ensureArr(classes);
                 classes.forEach(cls => {

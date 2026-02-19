@@ -63,16 +63,16 @@ var tree = fluent.new({
                 }
             }),
 
-            { class: 'input-line' }
+            { classes: 'input-line' }
         ),
         FB.Div(
             FB.Repeat(
                 vn => data.items,
                 FB.Div(
-                    FB.Span(FB.TEXT(vn => vn.ctx.$index + 1), { class: 'item-index' }),
-                    FB.Span(FB.TEXT(vn => vn.ctx.$value), { class: 'item-text' }),
+                    FB.Span(FB.TEXT(vn => vn.ctx.$index + 1), { classes: 'item-index' }),
+                    FB.Span(FB.TEXT(vn => vn.ctx.$value), { classes: 'item-text' }),
                     FB.Button('×', {
-                        class: 'remove-btn',
+                        classes: 'remove-btn',
                         attrs: {
                             title: 'remove item'
                         },
@@ -84,11 +84,11 @@ var tree = fluent.new({
                         }
                     }),
 
-                    { class: 'list-item', attrs: { title: vn => vn.ctx.$value } }
+                    { classes: 'list-item', attrs: { title: vn => vn.ctx.$value } }
                 )
             ),
 
-            { class: 'input-list' }
+            { classes: 'input-list' }
         )
     ]
 });
