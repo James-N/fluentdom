@@ -1,11 +1,22 @@
 import MethodExtension from '../model/internal/MethodExtension';
-import { VElementTemplate, VComponentTemplate } from '../model/VTemplate';
+import { VTemplate, VElementTemplate, VComponentTemplate } from '../model/VTemplate';
 
 import { setTemplateKVOption } from '../service/template';
 import utility from '../service/utility';
 
 
 //#region  built-in VTemplate extensions
+
+// register common extension methods for VTemplate
+MethodExtension.extend(
+    VTemplate,
+    {
+        on (nameOrSet, callback) {
+            setTemplateKVOption(this, 'events', nameOrSet, callback, true);
+            return this;
+        }
+    }
+);
 
 // register common extension methods for VElementTemplate and VComponentTemplate
 MethodExtension.extend(
@@ -66,8 +77,8 @@ MethodExtension.extend(
          * register element event callback
          * @returns {this}
          */
-        listen (nameOrSet, handle) {
-            setTemplateKVOption(this, 'listeners', nameOrSet, handle, true);
+        listen (nameOrSet, callback) {
+            setTemplateKVOption(this, 'listeners', nameOrSet, callback, true);
             return this;
         }
     }

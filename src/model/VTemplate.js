@@ -2,7 +2,7 @@ import NodeType from '../enum/NodeType';
 import MethodExtension from './internal/MethodExtension';
 
 import utility from '../service/utility';
-import { buildText, setTemplateKVOption } from '../service/template';
+import { buildText } from '../service/template';
 
 
 /**
@@ -65,15 +65,6 @@ export class VTemplate extends MethodExtension {
      */
     arg (i, defaultValue = null) {
         return i < this.args.length ? this.args[i] : defaultValue;
-    }
-
-    /**
-     * register event callback
-     * @returns {this}
-     */
-    on (nameOrSet, callback) {
-        setTemplateKVOption(this, 'events', nameOrSet, callback, true);
-        return this;
     }
 
     /**
