@@ -32,50 +32,32 @@ window.addEventListener('DOMContentLoaded', evt => {
 
     var treeNodeTpl =
         FB.Div(
-            FB.Div(
-                FB.TEXT(vn => vn.ctx._node.name),
+            FB.Div(FB.TEXT(vn => vn.ctx._node.name))
+                .class('tree-name')
+                .style('cursor', vn => vn.ctx._node.children.length > 0 ? 'pointer' : null)
+                .listen('click', (evt, vn) => {
+                    evt.stopPropagation();
 
-                {
-                    classes: 'tree-name',
-                    styles: {
-                        cursor: vn => vn.ctx._node.children.length > 0 ? 'pointer' : null
-                    },
-                    listeners: {
-                        click: (evt, vn) => {
-                            evt.stopPropagation();
-
-                            vn.ctx.open = !vn.ctx.open;
-                            vn.parent.render();
-                        }
-                    }
-                }
-            ),
+                    vn.ctx.open = !vn.ctx.open;
+                    vn.parent.render();
+                }),
             FB.Div(
                 FB.Repeat(
                     vn => vn.ctx._node.children,
-                    FB.Dynamic(vn => treeNodeTpl),
-
-                    {
-                        events: {
-                            repeating: (evt, cvn, value, index) => {
-                                cvn.ctx._node = value;
-                            }
-                        }
-                    }
-                ),
-                { classes: { 'tree-list': true, show: vn => vn.ctx.open && vn.ctx._node.children.length > 0 } }
-            ),
-
-            {
-                classes: 'tree-node',
-                context: { open: true },
-                events: {
-                    $init: msg => {
-                        console.log(msg);
-                    }
-                }
-            }
-        );
+                    FB.Dynamic(vn => treeNodeTpl)
+                )
+                .on('repeating', (evt, cvn, value, index) => {
+                    cvn.ctx._node = value;
+                })
+            )
+            .class('tree-list')
+            .class('show', vn => vn.ctx.open && vn.ctx._node.children.length > 0)
+        )
+        .class('tree-node')
+        .on('$init', evt => {
+            console.log(evt);
+        })
+        .option('context', { open: true });
 
     fluent.new({
         elm: '#container',

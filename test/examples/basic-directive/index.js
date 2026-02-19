@@ -52,44 +52,39 @@ var tree = fluent.new({
                     data.input = model;
                 }
             }),
-            FB.Button('Add', {
-                attrs: { title: 'add new item', disabled: vn => !data.input || !data.input.get() },
-                listeners: {
-                    click: evt => {
-                        data.items.push(data.input.get());
-                        data.input.set('');
-                        tree.render();
-                    }
-                }
-            }),
-
-            { classes: 'input-line' }
-        ),
+            FB.Button('Add')
+                .attr({
+                    title: 'add new item',
+                    disabled: vn => !data.input || !data.input.get()
+                })
+                .listen('click', evt => {
+                    data.items.push(data.input.get());
+                    data.input.set('');
+                    tree.render();
+                }),
+        )
+        .class('input-line'),
         FB.Div(
             FB.Repeat(
                 vn => data.items,
                 FB.Div(
-                    FB.Span(FB.TEXT(vn => vn.ctx.$index + 1), { classes: 'item-index' }),
-                    FB.Span(FB.TEXT(vn => vn.ctx.$value), { classes: 'item-text' }),
-                    FB.Button('×', {
-                        classes: 'remove-btn',
-                        attrs: {
-                            title: 'remove item'
-                        },
-                        listeners: {
-                            click: (evt, vn) => {
-                                data.items.splice(vn.ctx.$index, 1);
-                                tree.render();
-                            }
-                        }
-                    }),
-
-                    { classes: 'list-item', attrs: { title: vn => vn.ctx.$value } }
+                    FB.Span(FB.TEXT(vn => vn.ctx.$index + 1))
+                        .class('item-index'),
+                    FB.Span(FB.TEXT(vn => vn.ctx.$value))
+                        .class('item-text'),
+                    FB.Button('×')
+                        .class('remove-btn')
+                        .attr('title', 'remove item')
+                        .listen('click', (evt, vn) => {
+                            data.items.splice(vn.ctx.$index, 1);
+                            tree.render();
+                        })
                 )
-            ),
-
-            { classes: 'input-list' }
+                .class('list-item')
+                .attr('title', vn => vn.ctx.$value)
+            )
         )
+        .class('input-list')
     ]
 });
 
