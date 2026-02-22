@@ -3,9 +3,120 @@ import LOG from '../../service/log';
 
 
 /**
- * @typedef {ReturnType<typeof EventTable.prototype._createEventSet>} EventSet
- * @typedef {ReturnType<typeof EventTable.prototype._createEventFlags>} EventFlags
+ * @typedef {ReturnType<createEventFlags>} EventFlags
  */
+
+/**
+ * @typedef EventHandler
+ * @property {Function} fn  handler function
+ * @property {EventFlags} flags  handler flags
+ */
+
+
+function createEventFlags () {
+    return {
+        /**
+         * the handler will be deregistered after first invocation
+         */
+        once: false
+    };
+}
+
+/**
+ * class holds event handlers for single evnet
+ */
+class EventSet {
+    /**
+     * @param {String} name  event name
+     */
+    constructor (name) {
+        /**
+         * event name
+         *
+         * @type {String}
+         */
+        this.name = name;
+
+        /**
+         * event handlers
+         *
+         * @type {EventHandler[]}
+         */
+        this.handlers = [];
+    }
+
+    /**
+     * number of handlers
+     */
+    get length () {
+        return this.handlers.length;
+    }
+
+    /**
+     * add new event handler
+     *
+     * @param {Function} handler  event handler function
+     * @param {EventFlags=} flags  event handler flags
+     */
+    add (handler, flags) {
+        this.handlers.push({
+            fn: handler,
+            flags: utility.extend(createEventFlags(), flags)
+        });
+    }
+
+    /**
+     * remove event handler
+     *
+     * @param {Function} handler  event handler function to remove
+     * @returns {Boolean}
+     */
+    remove (handler) {
+        if (handler) {
+            for (let i = 0; i < this.handlers.length; i++) {
+                if (this.handlers[i].fn === handler) {
+                    this.handlers.splice(i, 1);
+                    return true;
+                }
+
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * remove all event handlers
+     */
+    clear () {
+        this.handlers.length = 0;
+    }
+
+    /**
+     * invoke event handlers
+     *
+     * @param {any=} thisArg  the value to be passed as the `this` parameter to the handlers
+     * @param  {...any} args  invocation arguments
+     */
+    invoke (thisArg, ...args) {
+        var handlers = this.handlers;
+        for (var i = 0; i < handlers.length; i++) {
+            var handler = handlers[i];
+            try {
+                handler.fn.apply(thisArg, args);
+            } catch (err) {
+                LOG.error(`error invoking [${this.name}] event handler`, err);
+            }
+
+            // remove handler with `once` flag
+            if (handler.flags.once) {
+                handlers.splice(i, 1);
+                i--;
+            }
+        }
+    }
+}
 
 class EventTable {
     /**
@@ -26,31 +137,6 @@ class EventTable {
     }
 
     /**
-     * @param {String} name  event set name
-     */
-    _createEventSet (name) {
-        return {
-            /**
-             * @type {String}
-             */
-            name: name,
-            /**
-             * @type {Function[]}
-             */
-            handlers: []
-        };
-    }
-
-    _createEventFlags () {
-        return {
-            /**
-             * the handler will be deregistered after first invocation
-             */
-            once: false
-        };
-    }
-
-    /**
      * register a new event handler, create event set if not exists
      *
      * @param {String} name  event name
@@ -63,16 +149,12 @@ class EventTable {
         // ensure event set existance
         var evtSet = this.events[name];
         if (!evtSet) {
-            evtSet = this._createEventSet(name);
+            evtSet = new EventSet(`${this.id}::${name}`);
             this.events[name] = evtSet;
         }
 
-        // save flags attribute
-        flags = utility.extend(this._createEventFlags(), flags);
-        handler.$flags = flags;
-
         // register handler
-        evtSet.handlers.push(handler);
+        evtSet.add(handler, flags);
 
         return evtSet;
     }
@@ -81,7 +163,7 @@ class EventTable {
      * deregister handler from event set, or remove the whole event if no handler specified
      *
      * @param {String} name  event name
-     * @param {Function=} handler  the handler to remove
+     * @param {Function=} handler  the handler function to remove
      *
      * @returns {Boolean}
      */
@@ -89,15 +171,9 @@ class EventTable {
         var evtSet = this.events[name];
         if (evtSet) {
             if (handler) {
-                var idx = evtSet.handlers.indexOf(handler);
-                if (idx >= 0) {
-                    evtSet.handlers.splice(idx, 1);
-                    return true;
-                } else {
-                    return false;
-                }
+                return evtSet.remove(handler);
             } else {
-                evtSet.handlers.length = 0;
+                evtSet.clear();
                 return true;
             }
         } else {
@@ -113,7 +189,7 @@ class EventTable {
      */
     removeSetIfEmpty (name) {
         var evtSet = this.events[name];
-        if (evtSet && evtSet.handlers.length === 0) {
+        if (evtSet && evtSet.length === 0) {
             delete this.events[name];
             return true;
         } else {
@@ -138,22 +214,10 @@ class EventTable {
     invoke (name, thisArg, ...args) {
         var evtSet = this.events[name];
         if (evtSet) {
-            for (var i = 0; i < evtSet.handlers.length; i++) {
-                var handler = evtSet.handlers[i];
-                try {
-                    handler.apply(thisArg, args);
-                } catch (err) {
-                    LOG.error(`error invoking ${this.id} event [${name}] handler`, err);
-                }
-
-                // remove handler with `once` flag
-                if (handler.$flags.once) {
-                    evtSet.handlers.splice(i, 1);
-                    i--;
-                }
-            }
+            evtSet.invoke(thisArg, ...args);
         }
     }
 }
 
+export { EventSet };
 export default EventTable;
