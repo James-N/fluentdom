@@ -10,6 +10,7 @@ const isValidNum = n => typeof n == 'number' && !isNaN(n) && n !== Infinity;
 const isBool = b => typeof b == 'boolean';
 const isFunc = f => typeof f == 'function';
 const isObj = o => typeof o == 'object';
+const isPlainObj = o => typeof o == 'object' && Object.getPrototypeOf(o) === Object.prototype;
 const isStrictObj = o => Object.prototype.toString.call(o).indexOf('Object') >= 0;
 const isArr = Array.isArray;
 const isIterable = o => !!o && (typeof o[Symbol.iterator] == 'function');
@@ -189,14 +190,14 @@ function getOptionValue (options, key, defaultValue) {
 }
 
 /**
- * do naive deep-cloning for given object, plain objects and arrays are cloned recursively while primitive
- * types, functions and values of complex types will be kept as-is
+ * do naive deep-cloning for given object, plain objects and arrays are cloned recursively while
+ * primitive types, functions and values of complex types will be kept as-is
  *
  * @param {any} obj
  * @returns {any}
  */
 function simpleDeepClone (obj) {
-    if (isStrictObj(obj)) {
+    if (isPlainObj(obj)) {
         var cloned = {};
         objectEntries(obj).forEach(entry => {
             cloned[entry[0]] = simpleDeepClone(entry[1]);
@@ -298,6 +299,7 @@ export default {
     isBool: isBool,
     isFunc: isFunc,
     isObj: isObj,
+    isPlainObj: isPlainObj,
     isStrictObj: isStrictObj,
     isArr: isArr,
     isIterable: isIterable,
