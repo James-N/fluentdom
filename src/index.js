@@ -1,24 +1,20 @@
-import Core from './api/core';
-import Builder from './api/builder';
-import Component from './api/component';
-import * as pub from './api/public';
 import './api/prelude';
 
-export default {
-    core: Core,
-    builder: Builder,
-    component: Component,
-    version: '__VERSION__',
+export const version = '__VERSION__';
 
-    new: pub.createFluentTree,
-    fromDOM: pub.fluentTreeFromDOM,
-    templateFromDOM: pub.templateFromDOM,
-    newComponent: pub.defineComponent,
-    addDirective: pub.registerDirective,
-    expr: pub.createExpr,
-    callback: pub.createCallbackBuilder,
-    extendClass: pub.extendClass,
+export { default as core } from './api/core';
+export { default as Builder } from './api/builder';
+export { default as component } from './api/component';
 
-    compile: pub.compileTemplate,
-    extendCompiler: pub.useCompilerExtension
-};
+export {
+    createFluentTree as new,
+    fluentTreeFromDOM as fromDOM,
+    templateFromDOM,
+    defineComponent as newComponent,
+    registerDirective as addDirective,
+    createExpr as expr,
+    createCallbackBuilder as callback,
+    extendClass,
+    compileTemplate as compile,
+    useCompilerExtension as extendCompiler
+} from './api/public';
