@@ -1,11 +1,12 @@
-const os = require('os');
+import os from 'node:os';
 
-const globals = require('globals');
-const { defineConfig } = require('eslint/config');
-const jsdocPlugin = require('eslint-plugin-jsdoc');
-const stylisticPlugin = require('@stylistic/eslint-plugin');
+import globals from 'globals';
+import { defineConfig } from 'eslint/config';
+import jsdocPlugin from 'eslint-plugin-jsdoc';
+import stylisticPlugin from '@stylistic/eslint-plugin';
 
-module.exports = defineConfig({
+
+export default defineConfig({
     ignores: ['eslint.config.*'],
     languageOptions: {
         ecmaVersion: 2018,
@@ -67,7 +68,7 @@ module.exports = defineConfig({
         'jsdoc/no-undefined-types': [
             'warn',
             {
-                definedTypes: ['Any', 'Promise', 'Map', 'Set', 'Iterator', 'Iterable']
+                definedTypes: ['Iterator', 'Iterable']
             }
         ]
     }
