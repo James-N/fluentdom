@@ -8,6 +8,7 @@ import progress from 'rollup-plugin-progress';
 
 
 const PKG = loadPkgInfo();
+const ES5 = process.env.es5 == 'true';
 
 function loadPkgInfo () {
     let pkgFile = path.join(import.meta.dirname, 'package.json');
@@ -71,7 +72,7 @@ const pluginBanner = {
     }
 };
 
-const es5Plugins = process.env.es5 == 'true' ?
+const es5Plugins = ES5 ?
     [
         getBabelOutputPlugin({
             presets: ['@babel/preset-env'],
@@ -86,7 +87,6 @@ const tasks = [{
     input: './src/index.js',
     output: {
         file: `./dist/fluentdom-${PKG.version}.js`,
-        chunkFileNames: '[name].[hash].js',
         format: 'iife',
         name: 'fluent'
     },
@@ -100,6 +100,27 @@ const tasks = [{
     },
     plugins: [pluginReplaceGlobalVars, ...es5Plugins, pluginMinify, pluginBanner, pluginProgress]
 }];
+
+if (!ES5) {
+    tasks.push(
+        {
+            input: './src/index.js',
+            output: {
+                file: `./dist/fluentdom-${PKG.version}.esm.js`,
+                format: 'es'
+            },
+            plugins: [pluginReplaceGlobalVars, pluginCleanJSDoc, pluginBanner, pluginProgress]
+        },
+        {
+            input: './src/index.js',
+            output: {
+                file: `./dist/fluentdom-${PKG.version}.esm.min.js`,
+                format: 'es'
+            },
+            plugins: [pluginReplaceGlobalVars, pluginMinify, pluginBanner, pluginProgress]
+        }
+    );
+}
 
 
 export default tasks;
