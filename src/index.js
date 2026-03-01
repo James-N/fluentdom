@@ -8,7 +8,7 @@ export default {
     core: Core,
     builder: Builder,
     component: Component,
-    version: __VERSION__,
+    version: '__VERSION__',
 
     new: pub.createFluentTree,
     fromDOM: pub.fluentTreeFromDOM,
