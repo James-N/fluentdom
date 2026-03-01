@@ -25,6 +25,7 @@
     "eslint-plugin-jsdoc": "^61.5.0",
     "globals": "^16.5.0",
     "rollup": "^4.59.0",
+    "rollup-plugin-delete": "^3.0.2",
     "rollup-plugin-progress": "^1.1.2"
   }
 }

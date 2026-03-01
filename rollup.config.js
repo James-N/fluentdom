@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import replace from '@rollup/plugin-replace';
 import terser from '@rollup/plugin-terser';
 import { getBabelOutputPlugin  } from '@rollup/plugin-babel';
+import del from 'rollup-plugin-delete';
 import progress from 'rollup-plugin-progress';
 
 
@@ -52,6 +53,10 @@ const pluginMinify = terser({
     mangle: true
 });
 
+const pluginDel = del({
+    targets: path.join(import.meta.dirname, 'dist')
+});
+
 const pluginProgress = progress({ clearLine: true });
 
 const pluginBanner = {
@@ -90,7 +95,7 @@ const tasks = [{
         format: 'iife',
         name: 'fluent'
     },
-    plugins: [pluginReplaceGlobalVars, pluginCleanJSDoc, ...es5Plugins, pluginBanner, pluginProgress]
+    plugins: [pluginDel, pluginReplaceGlobalVars, pluginCleanJSDoc, ...es5Plugins, pluginBanner, pluginProgress]
 }, {
     input: './src/index.js',
     output: {
